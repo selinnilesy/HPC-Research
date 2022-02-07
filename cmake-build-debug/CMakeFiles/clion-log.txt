@@ -1,0 +1,2 @@
+CMakeLists.txt not found in /Users/selin/Desktop/Yunan-Implementation Select CMakeLists.txt
+CMake executable not found: /usr/bin/cmake Configure Disable profile
