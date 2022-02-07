@@ -13,7 +13,14 @@ vector<int> x;
 vector<int> y;
 vector<int> elm_row; // use this to find out row_ptr values
 #define MATRIX_COUNT 6
-
+void init(){
+    for(int i=0; i<6; i++) {
+        valuesPtrs.push_back(new double);
+        dvaluesPtrs.push_back(new double);
+        colindPtrs.push_back(new int);
+        rowptrPtrs.push_back(new int);
+    }
+}
 int readSSSFormat() {
     double tempVal;
     vector<double> tempVec;
@@ -27,19 +34,25 @@ int readSSSFormat() {
                 while (myfile >> tempValInt) {
                     tempVecInt.push_back(tempValInt);
                 }
-                rowptr_read.push_back(tempVecInt);
+                rowptrPtrs[i] = new int[tempVecInt.size()];
+                int *temp = rowptrPtrs[i];
+                for(int i=0; i<tempVecInt.size(); i++) temp[i]=tempVecInt[i];
+                rowptrSize.push_back(tempVecInt.size());
+
                 cout << dir_entry.path() << " has been read." << endl;
                 myfile.close();
                 continue;
             }
-            /*
             else if(dir_entry.path().stem() == "col") {
                 int tempValInt;
                 vector<int> tempVecInt;
                 while (myfile >> tempValInt) {
                     tempVecInt.push_back(tempValInt);
                 }
-                colind_read.push_back(tempVecInt);
+                colindPtrs[i] = new int[tempVecInt.size()];
+                int *temp = colindPtrs[i];
+                for(int i=0; i<tempVecInt.size(); i++) temp[i]=tempVecInt[i];
+                colindSize.push_back(tempVecInt.size());
                 cout << dir_entry.path() << " has been read." << endl;
                 myfile.close();
                 continue;
@@ -47,10 +60,20 @@ int readSSSFormat() {
             while (myfile >> tempVal) {
                 tempVec.push_back(tempVal);
             }
-            if(dir_entry.path().stem() == "dvalues") dvalues_read.push_back(tempVec);
-            else if(dir_entry.path().stem() == "nond_values") values_read.push_back(tempVec);
+
+            if(dir_entry.path().stem() == "dvalues"){
+                dvaluesPtrs[i] = new double[tempVec.size()];
+                double *temp = dvaluesPtrs[i];
+                for(int i=0; i<tempVec.size(); i++) temp[i]=tempVec[i];
+                dvaluesSize.push_back(tempVec.size());
+            }
+            else if(dir_entry.path().stem() == "nond_values"){
+                valuesPtrs[i] = new double[tempVec.size()];
+                double *temp = valuesPtrs[i];
+                for(int i=0; i<tempVec.size(); i++) temp[i]=tempVec[i];
+                valuesSize.push_back(tempVec.size());
+            }
             else cout << "unexpected file name: " << dir_entry.path() << endl;
-            */
             cout << dir_entry.path() << " has been read." << endl;
             tempVec.clear();
             myfile.close();
@@ -73,34 +96,57 @@ int main(int argc, char **argv) {
 
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-    vector<vector<double>> values_read_local, dvalues_read_local;
-    vector<vector<int>> rowptr_read_local, colind_read_local;
     unsigned long long size;
     if(my_rank==0) {
         cout << "i call readSSSFormat. " << endl;
+        init();
         readSSSFormat();
         for(int i=0; i<MATRIX_COUNT; i++){
-            size =rowptr_read[i].size();
-            cout << size << endl;
+            size =rowptrSize[i];
+            std::cout << "Rank: " << my_rank << "Size: " << size << std::endl;
             MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
-            MPI_Bcast(&rowptr_read[i], size, MPI_INT, 0, MPI_COMM_WORLD);
+            MPI_Bcast(rowptrPtrs[i], size, MPI_INT, 0, MPI_COMM_WORLD);
+            size =colindSize[i];
+            // std::cout << "Rank: " << my_rank << "Size: " << size << std::endl;
+            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
+            MPI_Bcast(colindPtrs[i], size, MPI_INT, 0, MPI_COMM_WORLD);
+            size =valuesSize[i];
+            // std::cout << "Rank: " << my_rank << "Size: " << size << std::endl;
+            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
+            MPI_Bcast(valuesPtrs[i], size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            size =dvaluesSize[i];
+            // std::cout << "Rank: " << my_rank << "Size: " << size << std::endl;
+            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
+            MPI_Bcast(dvaluesPtrs[i], size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
         }
     }
     else {
-        for(int i=0; i<MATRIX_COUNT; i++){
+        vector<double*> Local_valuesPtrs, Local_dvaluesPtrs;
+        vector<int*> Local_colindPtrs, Local_rowptrPtrs;
+        for (int i = 0; i < MATRIX_COUNT; i++) {
             MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
-            vector<int> temp;
-            temp.resize(size);
-            MPI_Bcast(&temp.front(), size, MPI_INT, 0, MPI_COMM_WORLD);
-            rowptr_read_local.push_back(temp);
+            int *temp = new int[size];
+            MPI_Bcast(temp, size, MPI_INT, 0, MPI_COMM_WORLD);
+            Local_rowptrPtrs.push_back(temp);
 
+            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
+            int *temp2 = new int[size];
+            MPI_Bcast(temp2, size, MPI_INT, 0, MPI_COMM_WORLD);
+            Local_colindPtrs.push_back(temp2);
+
+            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
+            double* temp3 = new double[size];
+            MPI_Bcast(temp3, size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            Local_valuesPtrs.push_back(temp3);
+
+            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
+            double* temp4 = new double[size];
+            MPI_Bcast(temp4, size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            Local_dvaluesPtrs.push_back(temp4);
+
+
+            std::cout <<"Rank: " << my_rank << "Completed Matrix Type: " << i << std::endl;
         }
-
-        std::cout << "World Size: " << world_size << "   Rank: " << my_rank << std::endl;
-        std::cout << "rowptr_read_local Size: " << rowptr_read_local.size() << std::endl;
-        //std::cout << "colind_read Size: " << colind_read.size() << std::endl;
-        //std::cout << "values_read Size: " << values_read.size() << std::endl;
-        //std::cout << "dvalues_read Size: " << dvalues_read.size() << std::endl;
     }
 
     // Finalize MPI
