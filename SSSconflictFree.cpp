@@ -24,7 +24,7 @@ void init(){
 int readSSSFormat() {
     double tempVal;
     vector<double> tempVec;
-    for (int i=0; i<matrix_names.size(); i++) {
+    for (int i=0; i<1; i++) {
         const fs::path matrixFolder{"/home/selin/Paper-Implementation/CSR-Data/" + matrix_names[i]};
         for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
             std::fstream myfile(dir_entry.path(), std::ios_base::in);
@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
         cout << "i call readSSSFormat. " << endl;
         init();
         readSSSFormat();
-        for(int i=0; i<MATRIX_COUNT; i++){
+        /*for(int i=0; i<MATRIX_COUNT; i++){
             size =rowptrSize[i];
             std::cout << "Rank: " << my_rank << "Size: " << size << std::endl;
             MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
@@ -118,12 +118,31 @@ int main(int argc, char **argv) {
             // std::cout << "Rank: " << my_rank << "Size: " << size << std::endl;
             MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
             MPI_Bcast(dvaluesPtrs[i], size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        }*/
+        double *boneS10OffDiagonal = valuesPtrs[0];
+        int *boneS10colind = colindPtrs[0];
+        int *boneS10rowptr = rowptrPtrs[0];
+        vector<pair<int, int> > conflicts;
+        // matrix size : boneS10_DiagonalSize x boneS10_DiagonalSize
+        // rowptrSize = boneS10_DiagonalSize + 1
+        int count = 0;
+        int rowLimit = rowptrSize[0]/4;
+        for(int i=0; i<rowLimit; i++){
+            int elmCount = boneS10rowptr[i+1] - boneS10rowptr[i];
+            int rowInd = i;
+            for(int j=0; j<elmCount; j++){
+                int colInd = boneS10colind[count++];
+                if(colInd > rowLimit) {
+                    conflicts.push_back(pair<int, int>(rowInd, colInd));
+                }
+            }
         }
+        std::cout << "Rank: " << my_rank << " Conflict count: " << conflicts.size() << endl;
     }
     else {
         vector<double*> Local_valuesPtrs, Local_dvaluesPtrs;
         vector<int*> Local_colindPtrs, Local_rowptrPtrs;
-        for (int i = 0; i < MATRIX_COUNT; i++) {
+        /*for (int i = 0; i < MATRIX_COUNT; i++) {
             MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
             int *temp = new int[size];
             MPI_Bcast(temp, size, MPI_INT, 0, MPI_COMM_WORLD);
@@ -147,6 +166,7 @@ int main(int argc, char **argv) {
 
             std::cout <<"Rank: " << my_rank << "Completed Matrix Type: " << i << std::endl;
         }
+         */
     }
 
     // Finalize MPI
