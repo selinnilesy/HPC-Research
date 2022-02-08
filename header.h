@@ -11,6 +11,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <iterator>
+#include <unordered_set>
 #include <algorithm>    // std::sort, std::stable_sort
 #include <experimental/filesystem>
 

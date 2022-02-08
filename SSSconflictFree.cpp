@@ -21,6 +21,31 @@ void init(){
         rowptrPtrs.push_back(new int);
     }
 }
+
+struct FooHasher {
+    size_t operator()(const pair<int, int>&) const {
+        return 1;
+    }
+};
+struct Equal_to {
+    bool operator()(const pair<int, int> &lhs, const pair<int, int> &rhs) const {
+        return (lhs.first == rhs.first && lhs.second == rhs.second) || (lhs.second == rhs.first && lhs.first == rhs.second);
+    }
+};
+void removeDuplicateEdges(std::vector<pair<int, int>> &v)
+{
+    std::vector<pair<int, int>>::iterator itr = v.begin();
+    std::unordered_set<pair<int, int>, FooHasher, Equal_to> s;
+
+    for (auto curr = v.begin(); curr != v.end(); ++curr)
+    {
+        if (s.insert(*curr).second) {
+            *itr++ = pair<int,int>(curr->first, curr->second);
+        }
+    }
+
+    v.erase(itr, v.end());
+}
 int readSSSFormat() {
     double tempVal;
     vector<double> tempVec;
@@ -101,29 +126,33 @@ int main(int argc, char **argv) {
         cout << "i call readSSSFormat. " << endl;
         init();
         readSSSFormat();
-        /*for(int i=0; i<MATRIX_COUNT; i++){
-            size =rowptrSize[i];
-            std::cout << "Rank: " << my_rank << "Size: " << size << std::endl;
-            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
-            MPI_Bcast(rowptrPtrs[i], size, MPI_INT, 0, MPI_COMM_WORLD);
-            size =colindSize[i];
-            // std::cout << "Rank: " << my_rank << "Size: " << size << std::endl;
-            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
-            MPI_Bcast(colindPtrs[i], size, MPI_INT, 0, MPI_COMM_WORLD);
-            size =valuesSize[i];
-            // std::cout << "Rank: " << my_rank << "Size: " << size << std::endl;
-            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
-            MPI_Bcast(valuesPtrs[i], size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-            size =dvaluesSize[i];
-            // std::cout << "Rank: " << my_rank << "Size: " << size << std::endl;
-            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
-            MPI_Bcast(dvaluesPtrs[i], size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        }*/
         double *matrixOffDiagonal;
         int *matrixColind, *matrixRowptr;
         vector<vector <pair<int, int>>> globalConflicts;
         int rowLimit;
-        for(int z=0; z<matrix_names.size(); z++) {
+        vector<pair<int, int>>::iterator it, it_symmetric;
+        for(int z=0; z<MATRIX_COUNT; z++){
+            size =rowptrSize[i];
+            std::cout << "Rank: " << my_rank << "Size: " << size << std::endl;
+            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
+            MPI_Bcast(rowptrPtrs[z], size, MPI_INT, 0, MPI_COMM_WORLD);
+
+            size = colindSize[i];
+            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
+            MPI_Bcast(colindPtrs[z], size, MPI_INT, 0, MPI_COMM_WORLD);
+
+            size =valuesSize[z];
+            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
+            MPI_Bcast(valuesPtrs[z], size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+            size =dvaluesSize[z];
+            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
+            MPI_Bcast(dvaluesPtrs[z], size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+            // broadcast row limit
+            size =(dvaluesSize[z]) / world_size;
+            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
+
             vector<pair<int, int> > conflicts;
             matrixOffDiagonal = valuesPtrs[z];
             matrixColind = colindPtrs[z];
@@ -133,30 +162,42 @@ int main(int argc, char **argv) {
             int rowInd, colInd;
             int global_OffDCount = 0;
             std::cout << "Rank: " << my_rank << "Matrix: " << matrix_names[z] << " rowLimit: " << rowLimit << endl;
-            for(int k=0; k<world_size; k++) {
-                int rowBegin = k*rowLimit;
-                int rowEnd = (k+1)*rowLimit;
-                for (int i = rowBegin; i < rowEnd; i++) {
-                    int elmCountPerRow = matrixRowptr[i + 1] - matrixRowptr[i];
-                    for (int j = 0; j < elmCountPerRow; j++) {
-                        colInd = matrixColind[ global_OffDCount++ ];
-                        if (colInd > rowEnd || colInd < rowBegin) {
-                            conflicts.push_back(pair<int, int>(i, colInd));
-                            //std::cout << "Rank: " << my_rank << " Latest illegalColInd: " << colInd
-                            //          << " Latest illegalRowInd: " << rowInd << endl;
-                        }
+
+            int rowBegin = my_rank*rowLimit;
+            int rowEnd = (my_rank+1)*rowLimit;
+            for (int i = rowBegin; i < rowEnd; i++) {
+                int elmCountPerRow = matrixRowptr[i + 1] - matrixRowptr[i];
+                for (int j = 0; j < elmCountPerRow; j++) {
+                    colInd = matrixColind[ global_OffDCount++ ];
+                    if (colInd > rowEnd || colInd < rowBegin) {
+                        conflicts.push_back(pair<int, int>(i, colInd));
+                        //std::cout << "Rank: " << my_rank << " Latest illegalColInd: " << colInd << " Latest illegalRowInd: " << rowInd << endl;
                     }
                 }
-                std::cout  << "Row piece " << k << " end --------------------------------------------------------  # Conflicts: " << conflicts.size() << endl;
             }
+            std::cout  << "Rank: " << my_rank << " end --------------------------------------------------------  # Conflicts: " << conflicts.size() << endl;
+        }
+
+        for(int z=0; z<matrix_names.size(); z++) {
+
             globalConflicts.push_back(conflicts);
+        }
+        // cleansing phase. keep unique edges as graph is undirectional.
+        for(int z=0; z<matrix_names.size(); z++) {
+            removeDuplicateEdges(globalConflicts[z]);
             std::cout  << "---------------------------------------------------------------------------------------------------------------- # Total conflicts " <<  globalConflicts[z].size() << endl;
         }
     }
     else {
         vector<double*> Local_valuesPtrs, Local_dvaluesPtrs;
         vector<int*> Local_colindPtrs, Local_rowptrPtrs;
-        /*for (int i = 0; i < MATRIX_COUNT; i++) {
+        double *matrixOffDiagonal;
+        int *matrixColind, *matrixRowptr;
+        vector<vector <pair<int, int>>> globalConflicts;
+        int rowLimit;
+        vector<pair<int, int>>::iterator it, it_symmetric;
+
+        for (int z = 0; z < MATRIX_COUNT; z++) {
             MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
             int *temp = new int[size];
             MPI_Bcast(temp, size, MPI_INT, 0, MPI_COMM_WORLD);
@@ -177,10 +218,34 @@ int main(int argc, char **argv) {
             MPI_Bcast(temp4, size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
             Local_dvaluesPtrs.push_back(temp4);
 
+            // broadcast row limit
+            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
+            rowLimit = size;
 
-            std::cout <<"Rank: " << my_rank << "Completed Matrix Type: " << i << std::endl;
+            std::cout <<"Rank: " << my_rank << "Received Matrix Type: " << i << std::endl;
+
+            vector<pair<int, int> > conflicts;
+            matrixOffDiagonal = valuesPtrs[z];
+            matrixColind = colindPtrs[z];
+            matrixRowptr = rowptrPtrs[z];
+            int rowInd, colInd;
+            int global_OffDCount = 0;
+
+            int rowBegin = my_rank*rowLimit;
+            int rowEnd = (my_rank+1)*rowLimit;
+            for (int i = rowBegin; i < rowEnd; i++) {
+                int elmCountPerRow = matrixRowptr[i + 1] - matrixRowptr[i];
+                for (int j = 0; j < elmCountPerRow; j++) {
+                    colInd = matrixColind[ global_OffDCount++ ];
+                    if (colInd > rowEnd || colInd < rowBegin) {
+                        conflicts.push_back(pair<int, int>(i, colInd));
+                        //std::cout << "Rank: " << my_rank << " Latest illegalColInd: " << colInd << " Latest illegalRowInd: " << rowInd << endl;
+                    }
+                }
+            }
+            std::cout  << "Rank: " << my_rank << " end --------------------------------------------------------  # Conflicts: " << conflicts.size() << endl;
+
         }
-         */
     }
 
     // Finalize MPI
