@@ -32,24 +32,24 @@ struct Equal_to {
         return (lhs.first == rhs.first && lhs.second == rhs.second) || (lhs.second == rhs.first && lhs.first == rhs.second);
     }
 };
-void removeDuplicateEdges(std::vector<pair<int, int>> &v)
+void removeDuplicateEdges(std::vector<pair<int, int>> &v, int vecsize)
 {
     std::vector<pair<int, int>>::iterator itr = v.begin();
     std::unordered_set<pair<int, int>, FooHasher, Equal_to> s;
 
-    for (auto curr = v.begin(); curr != v.end(); ++curr)
+    for (auto curr = v.begin(); curr != v.begin()+vecsize; ++curr)
     {
         if (s.insert(*curr).second) {
             *itr++ = pair<int,int>(curr->first, curr->second);
         }
     }
 
-    v.erase(itr, v.end());
+    v.erase(itr, v.begin()+vecsize);
 }
 int readSSSFormat() {
     double tempVal;
     vector<double> tempVec;
-    for (int i=0; i<matrix_names.size(); i++) {
+    for (int i=0; i<1; i++) {
         const fs::path matrixFolder{"/home/selin/Paper-Implementation/CSR-Data/" + matrix_names[i]};
         for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
             std::fstream myfile(dir_entry.path(), std::ios_base::in);
@@ -126,78 +126,108 @@ int main(int argc, char **argv) {
         cout << "i call readSSSFormat. " << endl;
         init();
         readSSSFormat();
-        double *matrixOffDiagonal;
-        int *matrixColind, *matrixRowptr;
-        vector<vector <pair<int, int>>> globalConflicts;
-        int rowLimit;
-        vector<pair<int, int>>::iterator it, it_symmetric;
-        for(int z=0; z<MATRIX_COUNT; z++){
+        /*for(int i=0; i<MATRIX_COUNT; i++){
             size =rowptrSize[i];
             std::cout << "Rank: " << my_rank << "Size: " << size << std::endl;
             MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
-            MPI_Bcast(rowptrPtrs[z], size, MPI_INT, 0, MPI_COMM_WORLD);
-
-            size = colindSize[i];
+            MPI_Bcast(rowptrPtrs[i], size, MPI_INT, 0, MPI_COMM_WORLD);
+            size =colindSize[i];
+            // std::cout << "Rank: " << my_rank << "Size: " << size << std::endl;
             MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
-            MPI_Bcast(colindPtrs[z], size, MPI_INT, 0, MPI_COMM_WORLD);
-
-            size =valuesSize[z];
+            MPI_Bcast(colindPtrs[i], size, MPI_INT, 0, MPI_COMM_WORLD);
+            size =valuesSize[i];
+            // std::cout << "Rank: " << my_rank << "Size: " << size << std::endl;
             MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
-            MPI_Bcast(valuesPtrs[z], size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-            size =dvaluesSize[z];
+            MPI_Bcast(valuesPtrs[i], size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            size =dvaluesSize[i];
+            // std::cout << "Rank: " << my_rank << "Size: " << size << std::endl;
             MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
-            MPI_Bcast(dvaluesPtrs[z], size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            MPI_Bcast(dvaluesPtrs[i], size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        }*/
+        double *matrixOffDiagonal;
+        int *matrixColind, *matrixRowptr;
+        vector <pair<int, int>> globalConf_BoneS10, globalConf_Emilia, globalConf_ldoor, globalConf_af_5_k101, globalConf_Serena, globalConf_audikw_1;
+        vector <pair<int, int>> *vecPtr = new vector <pair<int, int>>[6];
+        vecPtr[0]=globalConf_BoneS10;
+        vecPtr[1]=globalConf_Emilia;
+        vecPtr[2]=globalConf_ldoor;
+        vecPtr[3]=globalConf_af_5_k101;
+        vecPtr[4]=globalConf_Serena;
+        vecPtr[5]=globalConf_audikw_1;
 
-            // broadcast row limit
-            size =(dvaluesSize[z]) / world_size;
-            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
-
-            vector<pair<int, int> > conflicts;
+        int rowLimit;
+        vector<pair<int, int>>::iterator it, it_symmetric;
+        for(int z=0; z<1; z++) {
+            bool **graph = new bool*[dvaluesSize[z]];
+            for(int x = 0; x < dvaluesSize[z]; ++x)
+                graph[x] = new bool[dvaluesSize[z]]();
+            //vector<pair<int, int> > conflicts;
             matrixOffDiagonal = valuesPtrs[z];
             matrixColind = colindPtrs[z];
             matrixRowptr = rowptrPtrs[z];
             // matrix size : boneS10_DiagonalSize x boneS10_DiagonalSize
-            rowLimit = (dvaluesSize[z]) / world_size;
+            rowLimit = (dvaluesSize[z]) / 4;
             int rowInd, colInd;
             int global_OffDCount = 0;
+            int confSize=0;
             std::cout << "Rank: " << my_rank << "Matrix: " << matrix_names[z] << " rowLimit: " << rowLimit << endl;
-
-            int rowBegin = my_rank*rowLimit;
-            int rowEnd = (my_rank+1)*rowLimit;
-            for (int i = rowBegin; i < rowEnd; i++) {
-                int elmCountPerRow = matrixRowptr[i + 1] - matrixRowptr[i];
-                for (int j = 0; j < elmCountPerRow; j++) {
-                    colInd = matrixColind[ global_OffDCount++ ];
-                    if (colInd > rowEnd || colInd < rowBegin) {
-                        conflicts.push_back(pair<int, int>(i, colInd));
-                        //std::cout << "Rank: " << my_rank << " Latest illegalColInd: " << colInd << " Latest illegalRowInd: " << rowInd << endl;
+            for(int k=0; k<world_size; k++) {
+                int rowBegin = k*rowLimit;
+                int rowEnd = (k+1)*rowLimit;
+                if(k==world_size) rowEnd = dvaluesSize[z];
+                for (int i = rowBegin; i < rowEnd; i++) {
+                    int elmCountPerRow = matrixRowptr[i + 1] - matrixRowptr[i];
+                    for (int j = 0; j < elmCountPerRow; j++) {
+                        colInd = matrixColind[ global_OffDCount++ ];
+                        if (colInd > rowEnd || colInd < rowBegin) {
+                            //if(!graph[i][colInd] && !graph[colInd][i]){
+                                graph[i][colInd] = 1;
+                                //confSize++;
+                            //}
+                        }
                     }
                 }
+                std::cout  << "Row piece " << k << " end --------------------------------------------------------  # Conflicts: " << endl;
             }
-            std::cout  << "Rank: " << my_rank << " end --------------------------------------------------------  # Conflicts: " << conflicts.size() << endl;
-        }
+            /*vecPtr[z] = conflicts;
 
-        for(int z=0; z<matrix_names.size(); z++) {
+            int pieceVecSize= vecPtr[z].size()/(world_size-1) + 0.5; // ceiling function
+            int nwSize;
+            for(int t=1; t<world_size; t++){
+                vector<pair<int,int>> pieceVector;
+                int upperLimit = min( t*pieceVecSize , (int) vecPtr[z].size() );
+                std::copy(vecPtr[z].begin()+((t-1)*pieceVecSize), vecPtr[z].begin()+upperLimit , back_inserter(pieceVector));
+                nwSize=pieceVector.size();
+                // send it to child^th process
+                cout << "Rank 0 sending Child " << t << " conf piece of size: " << nwSize << endl;
+                MPI_Send(&nwSize, 1, MPI_INT, t, 0, MPI_COMM_WORLD);
+                MPI_Send((void*) pieceVector.data(), sizeof(pair<int,int>) * nwSize, MPI_BYTE, t, 0, MPI_COMM_WORLD);
+            }
+            vector<pair<int,int>> pieceVector;
+            for(int t=1; t<world_size; t++){
+                vector<pair<int,int>> pieceVector_temp;
+                MPI_Recv(&nwSize, 1, MPI_INT, t, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                pieceVector_temp.resize(nwSize);
+                MPI_Recv((void*)  pieceVector_temp.data(), sizeof(pair<int,int>) * nwSize, MPI_BYTE, t, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                std::copy(pieceVector_temp.begin(), pieceVector_temp.begin()+nwSize , back_inserter(pieceVector));
 
-            globalConflicts.push_back(conflicts);
-        }
-        // cleansing phase. keep unique edges as graph is undirectional.
-        for(int z=0; z<matrix_names.size(); z++) {
-            removeDuplicateEdges(globalConflicts[z]);
-            std::cout  << "---------------------------------------------------------------------------------------------------------------- # Total conflicts " <<  globalConflicts[z].size() << endl;
+                if(t==1) continue;
+                cout << "Rank 0 received computed vectors from: " << t << endl;
+                double t1 = MPI_Wtime();
+                removeDuplicateEdges(pieceVector, pieceVector.size());
+                double t2 = MPI_Wtime();
+                printf( "Elapsed time for joint vectors cleansing: %f\n", t2 - t1 );
+            }
+
+
+            cout << "Result: " << pieceVector.size() <<  endl;
+             */
         }
     }
     else {
         vector<double*> Local_valuesPtrs, Local_dvaluesPtrs;
         vector<int*> Local_colindPtrs, Local_rowptrPtrs;
-        double *matrixOffDiagonal;
-        int *matrixColind, *matrixRowptr;
-        vector<vector <pair<int, int>>> globalConflicts;
-        int rowLimit;
-        vector<pair<int, int>>::iterator it, it_symmetric;
-
-        for (int z = 0; z < MATRIX_COUNT; z++) {
+        /*for (int i = 0; i < MATRIX_COUNT; i++) {
             MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
             int *temp = new int[size];
             MPI_Bcast(temp, size, MPI_INT, 0, MPI_COMM_WORLD);
@@ -218,34 +248,28 @@ int main(int argc, char **argv) {
             MPI_Bcast(temp4, size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
             Local_dvaluesPtrs.push_back(temp4);
 
-            // broadcast row limit
-            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
-            rowLimit = size;
 
-            std::cout <<"Rank: " << my_rank << "Received Matrix Type: " << i << std::endl;
-
-            vector<pair<int, int> > conflicts;
-            matrixOffDiagonal = valuesPtrs[z];
-            matrixColind = colindPtrs[z];
-            matrixRowptr = rowptrPtrs[z];
-            int rowInd, colInd;
-            int global_OffDCount = 0;
-
-            int rowBegin = my_rank*rowLimit;
-            int rowEnd = (my_rank+1)*rowLimit;
-            for (int i = rowBegin; i < rowEnd; i++) {
-                int elmCountPerRow = matrixRowptr[i + 1] - matrixRowptr[i];
-                for (int j = 0; j < elmCountPerRow; j++) {
-                    colInd = matrixColind[ global_OffDCount++ ];
-                    if (colInd > rowEnd || colInd < rowBegin) {
-                        conflicts.push_back(pair<int, int>(i, colInd));
-                        //std::cout << "Rank: " << my_rank << " Latest illegalColInd: " << colInd << " Latest illegalRowInd: " << rowInd << endl;
-                    }
-                }
-            }
-            std::cout  << "Rank: " << my_rank << " end --------------------------------------------------------  # Conflicts: " << conflicts.size() << endl;
-
+            std::cout <<"Rank: " << my_rank << "Completed Matrix Type: " << i << std::endl;
         }
+         x
+        int vecsize;
+        vector<pair<int,int>> conflicts_bones10;
+        MPI_Recv(&vecsize, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        conflicts_bones10.resize(vecsize);
+        MPI_Recv((void*)  conflicts_bones10.data(), sizeof(pair<int,int>) * vecsize, MPI_BYTE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        // cleansing phase. keep unique edges as graph is undirectional.
+        /*for(int z=0; z<1; z++) {
+            removeDuplicateEdges(globalConflicts_bones10);
+            std::cout  << "---------------------------------------------------------------------------------------------------------------- # Total conflicts globalConflicts_bones10" <<  globalConflicts_bones10.size() << endl;
+        }
+        removeDuplicateEdges(conflicts_bones10, vecsize);
+        cout << "Rank " << my_rank << " received conf piece of size: " << conflicts_bones10.size() << " finished cleansing." << endl;
+
+        vecsize = conflicts_bones10.size();
+        MPI_Send(&vecsize, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+        MPI_Send((void*) conflicts_bones10.data(), sizeof(pair<int,int>) * vecsize, MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+        //cout << "Rank " << my_rank << " sent back: " << vecsize <<  endl;
+        */
     }
 
     // Finalize MPI
