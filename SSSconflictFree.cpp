@@ -147,9 +147,10 @@ int main(int argc, char **argv) {
                         }
                     }
                 }
-                std::cout << "Rank: " << my_rank << "Row piece " << k << " end --------------------------------------------------------  # Conflicts: " << conflicts.size() << endl;
-                globalConflicts.push_back(conflicts);
+                std::cout  << "Row piece " << k << " end --------------------------------------------------------  # Conflicts: " << conflicts.size() << endl;
             }
+            globalConflicts.push_back(conflicts);
+            std::cout  << "---------------------------------------------------------------------------------------------------------------- # Total conflicts " <<  globalConflicts[z].size() << endl;
         }
     }
     else {
