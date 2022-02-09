@@ -1,6 +1,6 @@
 # HPC-Research
 Bitmap Solution: <br />
-Mock on Rank only, split Matrix into 4 :   <br />
+Mock on Root only, split Matrix into 4 :   <br />
 Rank: 0 Matrix: boneS10 rowLimit: 228724 <br />
 Row piece 0 end --------------------------------------------------------  # Conflicts: 0 <br />
 Row piece 1 end --------------------------------------------------------  # Accumulated Conflicts: 128556 <br />
@@ -10,7 +10,7 @@ Elapsed Time: 513.729 <br />
 <br />
 <br />
 Unordered Set Solution: <br />
-Mock on Rank only, split Matrix into 4 :   <br />
+Mock on Root only, split Matrix into 4 :   <br />
 Rank: 0 Matrix: boneS10 rowLimit: 228724 <br />
 Rank: 0Row piece 0 end --------------------------------------------------------  # Conflicts: 0 <br />
 Rank: 0Row piece 1 end --------------------------------------------------------  # Conflicts: 128556 <br />
