@@ -1,10 +1,21 @@
 # HPC-Research
-SpMV with MPI <br />
-Rank: 0Matrix: boneS10 rowLimit: 228724 <br />
+Bitmap Solution: <br />
+Mock on Rank only, split Matrix into 4 :   <br />
+Rank: 0 Matrix: boneS10 rowLimit: 228724 <br />
+Row piece 0 end --------------------------------------------------------  # Conflicts: 0 <br />
+Row piece 1 end --------------------------------------------------------  # Accumulated Conflicts: 128556 <br />
+Row piece 2 end --------------------------------------------------------  # Accumulated Conflicts: 371497 <br />
+Row piece 3 end --------------------------------------------------------  # Accumulated Conflicts: 728528 <br />
+Elapsed Time: 513.729 <br />
+<br />
+<br />
+Unordered Set Solution: <br />
+Mock on Rank only, split Matrix into 4 :   <br />
+Rank: 0 Matrix: boneS10 rowLimit: 228724 <br />
 Rank: 0Row piece 0 end --------------------------------------------------------  # Conflicts: 0 <br />
 Rank: 0Row piece 1 end --------------------------------------------------------  # Conflicts: 128556 <br />
 Rank: 0Row piece 2 end --------------------------------------------------------  # Conflicts: 242941 <br />
-Rank: 0Row piece 3 end --------------------------------------------------------  # Conflicts: 357031 <br />
+Rank: 0Row piece 3 end --------------------------------------------------------  # Conflicts: 357031 : (Accumulated Result is equal to that of Bitmap Solution) <br />
 Rank: 0Matrix: Emilia_923 rowLimit: 230784 <br />
 Rank: 0Row piece 0 end --------------------------------------------------------  # Conflicts: 0 <br />
 Rank: 0Row piece 1 end --------------------------------------------------------  # Conflicts: 180942 <br />
