@@ -157,52 +157,101 @@ int main(int argc, char **argv) {
 
         int rowLimit;
         vector<pair<int, int>>::iterator it, it_symmetric;
+        double time1 = MPI_Wtime();
         for(int z=0; z<1; z++) {
-            bool **graph = new bool*[dvaluesSize[z]];
-            for(int x = 0; x < dvaluesSize[z]; ++x)
-                graph[x] = new bool[dvaluesSize[z]]();
+            bitset<914898> *graph0;
+            bitset<923136> *graph1;
+            bitset<952203> *graph2;
+            bitset<503625> *graph3;
+            bitset<1391349> *graph4;
+            bitset<943695> *graph5;
+            int n = dvaluesSize[z];
+            if(z==0) graph0 = new bitset<914898>[914898];
+            else if(z==1) graph1 = new bitset<923136>[923136];
+            else if(z==2) graph2 = new bitset<952203>[952203];
+            else if(z==3) graph3 = new bitset<503625>[503625];
+            else if(z==4) graph4 = new bitset<1391349>[1391349];
+            else if(z==5) graph5 = new bitset<943695>[943695];
+
             //vector<pair<int, int> > conflicts;
             matrixOffDiagonal = valuesPtrs[z];
             matrixColind = colindPtrs[z];
             matrixRowptr = rowptrPtrs[z];
             // matrix size : boneS10_DiagonalSize x boneS10_DiagonalSize
-            rowLimit = (dvaluesSize[z]) / 4;
+            rowLimit = (n) / world_size + 0.5; // ceiling function
             int rowInd, colInd;
             int global_OffDCount = 0;
             int confSize=0;
-            std::cout << "Rank: " << my_rank << "Matrix: " << matrix_names[z] << " rowLimit: " << rowLimit << endl;
-            for(int k=0; k<world_size; k++) {
-                int rowBegin = k*rowLimit;
-                int rowEnd = (k+1)*rowLimit;
-                if(k==world_size) rowEnd = dvaluesSize[z];
-                for (int i = rowBegin; i < rowEnd; i++) {
-                    int elmCountPerRow = matrixRowptr[i + 1] - matrixRowptr[i];
-                    for (int j = 0; j < elmCountPerRow; j++) {
-                        colInd = matrixColind[ global_OffDCount++ ];
-                        if (colInd > rowEnd || colInd < rowBegin) {
-                            //if(!graph[i][colInd] && !graph[colInd][i]){
-                                graph[i][colInd] = 1;
-                                //confSize++;
-                            //}
-                        }
-                    }
-                }
-                std::cout  << "Row piece " << k << " end --------------------------------------------------------  # Conflicts: " << endl;
-            }
-            /*vecPtr[z] = conflicts;
+            std::cout << "Rank: " << my_rank << "Matrix: " << matrix_names[z] << " broadcasted rowLimit: " << rowLimit << endl;
+            MPI_Bcast(&rowLimit, 1, MPI_INT, t, MPI_COMM_WORLD);
 
-            int pieceVecSize= vecPtr[z].size()/(world_size-1) + 0.5; // ceiling function
             int nwSize;
+
             for(int t=1; t<world_size; t++){
-                vector<pair<int,int>> pieceVector;
-                int upperLimit = min( t*pieceVecSize , (int) vecPtr[z].size() );
-                std::copy(vecPtr[z].begin()+((t-1)*pieceVecSize), vecPtr[z].begin()+upperLimit , back_inserter(pieceVector));
-                nwSize=pieceVector.size();
+                int lowerLimit = rowLimit*(t+1);
+                int upperLimit = min( (t+2)*rowLimit , (int) n );
+                nwSize= upperLimit - lowerLimit;
                 // send it to child^th process
                 cout << "Rank 0 sending Child " << t << " conf piece of size: " << nwSize << endl;
                 MPI_Send(&nwSize, 1, MPI_INT, t, 0, MPI_COMM_WORLD);
-                MPI_Send((void*) pieceVector.data(), sizeof(pair<int,int>) * nwSize, MPI_BYTE, t, 0, MPI_COMM_WORLD);
+                MPI_Send(&n, 1, MPI_INT, t, 0, MPI_COMM_WORLD);
+
+                if(z==0) MPI_Send((void*) graph0[lowerLimit], (914898*1 / sizeof(byte)) * nwSize, MPI_BYTE, t, 0, MPI_COMM_WORLD);
+                else if(z==1) MPI_Send((void*) graph0[lowerLimit], (923136*1 / sizeof(byte)) * nwSize, MPI_BYTE, t, 0, MPI_COMM_WORLD);
+                else if(z==2) MPI_Send((void*) graph0[lowerLimit], (952203*1 / sizeof(byte)) * nwSize, MPI_BYTE, t, 0, MPI_COMM_WORLD);
+                else if(z==3) MPI_Send((void*) graph0[lowerLimit], (503625*1 / sizeof(byte)) * nwSize, MPI_BYTE, t, 0, MPI_COMM_WORLD);
+                else if(z==4) MPI_Send((void*) graph0[lowerLimit], (1391349*1 / sizeof(byte)) * nwSize, MPI_BYTE, t, 0, MPI_COMM_WORLD);
+                else if(z==5) MPI_Send((void*) graph0[lowerLimit], (943695*1 / sizeof(byte)) * nwSize, MPI_BYTE, t, 0, MPI_COMM_WORLD);
             }
+
+
+            /*int rowBegin = rowLimit;
+            int rowEnd = 2*rowLimit;
+            // include remaining rows
+            for (int i = rowBegin; i < rowEnd; i++) {
+                int elmCountPerRow = matrixRowptr[i + 1] - matrixRowptr[i];
+                for (int j = 0; j < elmCountPerRow; j++) {
+                    colInd = matrixColind[ global_OffDCount++ ];
+                    if (colInd < rowBegin || colInd > rowEnd) {
+                        if(z==0)  {if(!graph0[i].test(colInd) && !graph0[colInd].test(i)) graph0[i].set(colInd);}
+                        else if(z==1) {if(!graph1[i].test(colInd) && !graph1[colInd].test(i)) graph1[i].set(colInd);}
+                        else if(z==2) {if(!graph2[i].test(colInd) && !graph2[colInd].test(i)) graph2[i].set(colInd);}
+                        else if(z==3) {if(!graph3[i].test(colInd) && !graph3[colInd].test(i)) graph3[i].set(colInd);}
+                        else if(z==4) {if(!graph4[i].test(colInd) && !graph4[colInd].test(i)) graph4[i].set(colInd);}
+                        else if(z==5) {if(!graph5[i].test(colInd) && !graph5[colInd].test(i)) graph5[i].set(colInd);}
+                    }
+                }
+            }
+            double time2 = MPI_Wtime();
+            // count found conflicts.
+            if(z==0){
+                for(int x=0; x<n; x++)
+                    confSize += graph0[x].count();
+            }
+            if(z==1){
+                for(int x=0; x<n; x++)
+                    confSize += graph1[x].count();
+            }
+            else if(z==2){
+                for(int x=0; x<n; x++)
+                    confSize += graph2[x].count();
+            }
+            else if(z==3){
+                for(int x=0; x<n; x++)
+                    confSize += graph3[x].count();
+            }
+            else if(z==4){
+                for(int x=0; x<n; x++)
+                    confSize += graph4[x].count();
+            }
+            else if(z==5){
+                for(int x=0; x<n; x++)
+                    confSize += graph5[x].count();
+            }
+            std::cout  << "Rank: " << my_rank << " -----------------------------------------------------------  # Conflicts: " << confSize << " Elapsed Time" << time2-time1 << endl;
+
+
+
             vector<pair<int,int>> pieceVector;
             for(int t=1; t<world_size; t++){
                 vector<pair<int,int>> pieceVector_temp;
@@ -218,10 +267,7 @@ int main(int argc, char **argv) {
                 double t2 = MPI_Wtime();
                 printf( "Elapsed time for joint vectors cleansing: %f\n", t2 - t1 );
             }
-
-
-            cout << "Result: " << pieceVector.size() <<  endl;
-             */
+            */
         }
     }
     else {
@@ -251,25 +297,59 @@ int main(int argc, char **argv) {
 
             std::cout <<"Rank: " << my_rank << "Completed Matrix Type: " << i << std::endl;
         }
-         x
-        int vecsize;
-        vector<pair<int,int>> conflicts_bones10;
-        MPI_Recv(&vecsize, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        conflicts_bones10.resize(vecsize);
-        MPI_Recv((void*)  conflicts_bones10.data(), sizeof(pair<int,int>) * vecsize, MPI_BYTE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        // cleansing phase. keep unique edges as graph is undirectional.
-        /*for(int z=0; z<1; z++) {
-            removeDuplicateEdges(globalConflicts_bones10);
-            std::cout  << "---------------------------------------------------------------------------------------------------------------- # Total conflicts globalConflicts_bones10" <<  globalConflicts_bones10.size() << endl;
-        }
-        removeDuplicateEdges(conflicts_bones10, vecsize);
-        cout << "Rank " << my_rank << " received conf piece of size: " << conflicts_bones10.size() << " finished cleansing." << endl;
 
-        vecsize = conflicts_bones10.size();
-        MPI_Send(&vecsize, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-        MPI_Send((void*) conflicts_bones10.data(), sizeof(pair<int,int>) * vecsize, MPI_BYTE, 0, 0, MPI_COMM_WORLD);
-        //cout << "Rank " << my_rank << " sent back: " << vecsize <<  endl;
-        */
+         */
+
+        int rowLimit,n;
+        MPI_Bcast(&rowLimit, 1, MPI_INT, t, MPI_COMM_WORLD); // receive row partition size
+        MPI_Bcast(&n, 1, MPI_INT, t, MPI_COMM_WORLD); // receive row partition size
+        int rowBegin = (my_rank+1)*rowLimit;
+        int rowEnd = (my_rank+2)*rowLimit;
+        if(my_rank==world_size) rowEnd = n;
+        for (int i = rowBegin; i < rowEnd; i++) {
+            int elmCountPerRow = matrixRowptr[i + 1] - matrixRowptr[i];
+            for (int j = 0; j < elmCountPerRow; j++) {
+                colInd = matrixColind[ global_OffDCount++ ];
+                if (colInd < rowBegin || colInd > rowEnd) {
+                    if(z==0)  {if(!graph0[i].test(colInd) && !graph0[colInd].test(i)) graph0[i].set(colInd);}
+                    else if(z==1) {if(!graph1[i].test(colInd) && !graph1[colInd].test(i)) graph1[i].set(colInd);}
+                    else if(z==2) {if(!graph2[i].test(colInd) && !graph2[colInd].test(i)) graph2[i].set(colInd);}
+                    else if(z==3) {if(!graph3[i].test(colInd) && !graph3[colInd].test(i)) graph3[i].set(colInd);}
+                    else if(z==4) {if(!graph4[i].test(colInd) && !graph4[colInd].test(i)) graph4[i].set(colInd);}
+                    else if(z==5) {if(!graph5[i].test(colInd) && !graph5[colInd].test(i)) graph5[i].set(colInd);}
+                }
+            }
+        }
+
+        if(z==0){
+            for(int x=0; x<n; x++)
+                confSize += graph0[x].count();
+        }
+        if(z==1){
+            for(int x=0; x<n; x++)
+                confSize += graph1[x].count();
+        }
+        else if(z==2){
+            for(int x=0; x<n; x++)
+                confSize += graph2[x].count();
+        }
+        else if(z==3){
+            for(int x=0; x<n; x++)
+                confSize += graph3[x].count();
+        }
+        else if(z==4){
+            for(int x=0; x<n; x++)
+                confSize += graph4[x].count();
+        }
+        else if(z==5){
+            for(int x=0; x<n; x++)
+                confSize += graph5[x].count();
+        }
+        std::cout  << "Row piece " << k << " end --------------------------------------------------------  # Conflicts: " << confSize << endl;
+
+        double time2 = MPI_Wtime();
+        std::cout  << "Elapsed Time: " << time2-time1 << endl;
+
     }
 
     // Finalize MPI

@@ -11,6 +11,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <iterator>
+#include <bitset>
 #include <cmath>
 #include <unordered_set>
 #include <algorithm>    // std::sort, std::stable_sort
