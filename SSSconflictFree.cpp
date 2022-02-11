@@ -14,42 +14,17 @@ vector<int> y;
 vector<int> elm_row; // use this to find out row_ptr values
 #define MATRIX_COUNT 6
 void init(){
-    for(int i=0; i<6; i++) {
-        valuesPtrs.push_back(new double);
-        dvaluesPtrs.push_back(new double);
-        colindPtrs.push_back(new int);
-        rowptrPtrs.push_back(new int);
-    }
+    double *values, *dvalues;
+    int *colind, *rowptr;
+    valuesPtrs.push_back(values);
+    dvaluesPtrs.push_back(dvalues);
+    colindPtrs.push_back(colind);
+    rowptrPtrs.push_back(rowptr);
 }
 
-struct FooHasher {
-    size_t operator()(const pair<int, int>&) const {
-        return 1;
-    }
-};
-struct Equal_to {
-    bool operator()(const pair<int, int> &lhs, const pair<int, int> &rhs) const {
-        return (lhs.first == rhs.first && lhs.second == rhs.second) || (lhs.second == rhs.first && lhs.first == rhs.second);
-    }
-};
-void removeDuplicateEdges(std::vector<pair<int, int>> &v, int vecsize)
-{
-    std::vector<pair<int, int>>::iterator itr = v.begin();
-    std::unordered_set<pair<int, int>, FooHasher, Equal_to> s;
-
-    for (auto curr = v.begin(); curr != v.begin()+vecsize; ++curr)
-    {
-        if (s.insert(*curr).second) {
-            *itr++ = pair<int,int>(curr->first, curr->second);
-        }
-    }
-
-    v.erase(itr, v.begin()+vecsize);
-}
-int readSSSFormat() {
+int readSSSFormat(int i) {
     double tempVal;
     vector<double> tempVec;
-    for (int i=0; i<1; i++) {
         const fs::path matrixFolder{"/home/selin/Paper-Implementation/CSR-Data/" + matrix_names[i]};
         for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
             std::fstream myfile(dir_entry.path(), std::ios_base::in);
@@ -103,155 +78,171 @@ int readSSSFormat() {
             tempVec.clear();
             myfile.close();
         }
-    }
     return 0;
 }
 int main(int argc, char **argv) {
-    int my_rank,  world_size;
+    int my_rank, world_size;
 
     // Initialize MPI
-    // This must always be called before any other MPI functions
     MPI_Init(&argc, &argv);
 
     // Get the number of processes in MPI_COMM_WORLD
-
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
     // Get the rank of this process in MPI_COMM_WORLD
-
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-    unsigned long long size;
+    bitset<914898> *graph0 = nullptr;
+    bitset<923136> *graph1 = nullptr;
+    bitset<952203> *graph2 = nullptr;
+    bitset<503625> *graph3 = nullptr;
+    bitset<1391349> *graph4 = nullptr;
+    bitset<943695> *graph5 = nullptr;
+
+    double time1,time2;
+    int n, rowLimit;
+
     if(my_rank==0) {
         cout << "i call readSSSFormat. " << endl;
         init();
-        readSSSFormat();
-        /*for(int i=0; i<MATRIX_COUNT; i++){
-            size =rowptrSize[i];
-            std::cout << "Rank: " << my_rank << "Size: " << size << std::endl;
-            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
-            MPI_Bcast(rowptrPtrs[i], size, MPI_INT, 0, MPI_COMM_WORLD);
-            size =colindSize[i];
-            // std::cout << "Rank: " << my_rank << "Size: " << size << std::endl;
-            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
-            MPI_Bcast(colindPtrs[i], size, MPI_INT, 0, MPI_COMM_WORLD);
-            size =valuesSize[i];
-            // std::cout << "Rank: " << my_rank << "Size: " << size << std::endl;
-            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
-            MPI_Bcast(valuesPtrs[i], size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-            size =dvaluesSize[i];
-            // std::cout << "Rank: " << my_rank << "Size: " << size << std::endl;
-            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
-            MPI_Bcast(dvaluesPtrs[i], size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        }*/
-        double *matrixOffDiagonal;
-        int *matrixColind, *matrixRowptr;
-        vector <pair<int, int>> globalConf_BoneS10, globalConf_Emilia, globalConf_ldoor, globalConf_af_5_k101, globalConf_Serena, globalConf_audikw_1;
-        vector <pair<int, int>> *vecPtr = new vector <pair<int, int>>[6];
-        vecPtr[0]=globalConf_BoneS10;
-        vecPtr[1]=globalConf_Emilia;
-        vecPtr[2]=globalConf_ldoor;
-        vecPtr[3]=globalConf_af_5_k101;
-        vecPtr[4]=globalConf_Serena;
-        vecPtr[5]=globalConf_audikw_1;
+        if(!argv[1]){
+            cout << "please provide input matrix index (int): boneS10, Emilia_923, ldoor, af_5_k101, Serena, audikw_1" << endl;
+            return -1;
+        }
+        readSSSFormat(atoi(argv[1]));
 
-        int rowLimit;
-        vector<pair<int, int>>::iterator it, it_symmetric;
-        double time1 = MPI_Wtime();
-        for(int z=0; z<1; z++) {
-            bitset<914898> *graph0;
-            bitset<923136> *graph1;
-            bitset<952203> *graph2;
-            bitset<503625> *graph3;
-            bitset<1391349> *graph4;
-            bitset<943695> *graph5;
-            int n = dvaluesSize[z];
-            if(z==0) graph0 = new bitset<914898>[914898];
-            else if(z==1) graph1 = new bitset<923136>[923136];
-            else if(z==2) graph2 = new bitset<952203>[952203];
-            else if(z==3) graph3 = new bitset<503625>[503625];
-            else if(z==4) graph4 = new bitset<1391349>[1391349];
-            else if(z==5) graph5 = new bitset<943695>[943695];
+        n = matrixSize[atoi(argv[1])];
+        int inputType = atoi(argv[1]);
+        double *matrixOffDiagonal = valuesPtrs[0];
+        int *matrixColind = colindPtrs[0];
+        int *matrixRowptr= rowptrPtrs[0];
+        rowLimit = n / world_size + 0.5; // ceiling function
 
-            //vector<pair<int, int> > conflicts;
-            matrixOffDiagonal = valuesPtrs[z];
-            matrixColind = colindPtrs[z];
-            matrixRowptr = rowptrPtrs[z];
-            // matrix size : boneS10_DiagonalSize x boneS10_DiagonalSize
-            rowLimit = (n) / world_size + 0.5; // ceiling function
-            int rowInd, colInd;
-            int global_OffDCount = 0;
-            int confSize=0;
-            std::cout << "Rank: " << my_rank << "Matrix: " << matrix_names[z] << " broadcasted rowLimit: " << rowLimit << endl;
-            MPI_Bcast(&rowLimit, 1, MPI_INT, t, MPI_COMM_WORLD);
-
-            int nwSize;
-
-            for(int t=1; t<world_size; t++){
-                int lowerLimit = rowLimit*(t+1);
-                int upperLimit = min( (t+2)*rowLimit , (int) n );
-                nwSize= upperLimit - lowerLimit;
-                // send it to child^th process
-                cout << "Rank 0 sending Child " << t << " conf piece of size: " << nwSize << endl;
-                MPI_Send(&nwSize, 1, MPI_INT, t, 0, MPI_COMM_WORLD);
-                MPI_Send(&n, 1, MPI_INT, t, 0, MPI_COMM_WORLD);
-
-                if(z==0) MPI_Send((void*) graph0[lowerLimit], (914898*1 / sizeof(byte)) * nwSize, MPI_BYTE, t, 0, MPI_COMM_WORLD);
-                else if(z==1) MPI_Send((void*) graph0[lowerLimit], (923136*1 / sizeof(byte)) * nwSize, MPI_BYTE, t, 0, MPI_COMM_WORLD);
-                else if(z==2) MPI_Send((void*) graph0[lowerLimit], (952203*1 / sizeof(byte)) * nwSize, MPI_BYTE, t, 0, MPI_COMM_WORLD);
-                else if(z==3) MPI_Send((void*) graph0[lowerLimit], (503625*1 / sizeof(byte)) * nwSize, MPI_BYTE, t, 0, MPI_COMM_WORLD);
-                else if(z==4) MPI_Send((void*) graph0[lowerLimit], (1391349*1 / sizeof(byte)) * nwSize, MPI_BYTE, t, 0, MPI_COMM_WORLD);
-                else if(z==5) MPI_Send((void*) graph0[lowerLimit], (943695*1 / sizeof(byte)) * nwSize, MPI_BYTE, t, 0, MPI_COMM_WORLD);
+        switch(inputType) {
+            case 0 : {
+                graph0 = new bitset<914898>[914898]; break;
             }
+            case 1 : {
+                graph1 = new bitset<923136>[923136]; break;
+            }
+            case 2 : {
+                graph2 = new bitset<952203>[952203]; break;
+            }
+            case 3 : {
+                graph3 = new bitset<503625>[503625]; break;
+            }
+            case 4 : {
+                graph4 = new bitset<1391349>[1391349]; break;
+            }
+            case 5 : {
+                graph5 = new bitset<943695>[943695]; break;
+            }
+        }
+        // double time1 = MPI_Wtime()
+        std::cout << "Rank:" << my_rank << " Matrix: " << matrix_names[inputType]  << endl;
 
+            int lowerLimit, upperLimit, pieceSize, elementCount, offset;
+            for(int t=1; t<world_size; t++){
+                //std::cout << "Rank:" << my_rank << " will send to: " << t  << endl;
+                lowerLimit = rowLimit*(t);
+                upperLimit = min( lowerLimit + rowLimit , n );
+                pieceSize= upperLimit - lowerLimit;
+                // send it to child^th process
+                MPI_Send(&n, 1, MPI_INT, t, 0, MPI_COMM_WORLD);
+                MPI_Send(&rowLimit, 1, MPI_INT, t, 0, MPI_COMM_WORLD);
 
-            /*int rowBegin = rowLimit;
-            int rowEnd = 2*rowLimit;
+                MPI_Send(&inputType, 1, MPI_INT, t, 0, MPI_COMM_WORLD);
+                MPI_Send(&pieceSize, 1, MPI_INT, t, 0, MPI_COMM_WORLD);
+
+                elementCount = matrixRowptr[upperLimit] - matrixRowptr[lowerLimit] ;
+                MPI_Send(matrixRowptr + lowerLimit, pieceSize+1, MPI_INT, t, 0, MPI_COMM_WORLD);
+                offset = (matrixRowptr[lowerLimit]);
+
+                MPI_Send(&elementCount, 1, MPI_INT, t, 0, MPI_COMM_WORLD);
+
+                MPI_Send(matrixColind+ offset, elementCount, MPI_INT, t, 0, MPI_COMM_WORLD);
+                MPI_Send(matrixOffDiagonal+ offset, elementCount, MPI_DOUBLE, t, 0, MPI_COMM_WORLD);
+                switch(inputType) {
+                    case 0 : {
+                        MPI_Send(graph0+ lowerLimit, pieceSize * 914898/sizeof(char), MPI_CHAR, t, 0, MPI_COMM_WORLD);
+                        break;
+                    }
+                    case 1 : {
+                        MPI_Send(graph1+ lowerLimit, pieceSize * 923136/sizeof(char), MPI_CHAR, t, 0, MPI_COMM_WORLD);
+                        break;
+                    }
+                    case 2 : {
+                        MPI_Send(graph2+ lowerLimit, pieceSize * 952203/sizeof(char), MPI_CHAR, t, 0, MPI_COMM_WORLD);
+                        break;
+                    }
+                    case 3 : {
+                        MPI_Send(graph3+ lowerLimit, pieceSize * 503625/sizeof(char), MPI_CHAR, t, 0, MPI_COMM_WORLD);
+                        break;
+                    }
+                    case 4 : {
+                        MPI_Send(graph4+ lowerLimit, pieceSize * 1391349/sizeof(char), MPI_CHAR, t, 0, MPI_COMM_WORLD);
+                        break;
+                    }
+                    case 5 : {
+                        MPI_Send(graph5+ lowerLimit, pieceSize * 943695/sizeof(char), MPI_CHAR, t, 0, MPI_COMM_WORLD);
+                        break;
+                     }
+                    }
+                    //std::cout << "Rank:" << my_rank << " has sent to: " << t  << endl;
+                }
+            //std::cout  << "Rank: " << my_rank << " sent all data" << endl;
+            int elmCountPerRow, rowBegin = 0;
+            int confCount=0, colInd, rowEnd = rowLimit;
+            time1=MPI_Wtime();
+            //std::cout  << "Rank: " << my_rank << " starts computing... " << endl;
             // include remaining rows
-            for (int i = rowBegin; i < rowEnd; i++) {
-                int elmCountPerRow = matrixRowptr[i + 1] - matrixRowptr[i];
+            for (int i = 0; i < rowEnd; i++) {
+                elmCountPerRow = matrixRowptr[i + 1] - matrixRowptr[i];
                 for (int j = 0; j < elmCountPerRow; j++) {
-                    colInd = matrixColind[ global_OffDCount++ ];
-                    if (colInd < rowBegin || colInd > rowEnd) {
-                        if(z==0)  {if(!graph0[i].test(colInd) && !graph0[colInd].test(i)) graph0[i].set(colInd);}
-                        else if(z==1) {if(!graph1[i].test(colInd) && !graph1[colInd].test(i)) graph1[i].set(colInd);}
-                        else if(z==2) {if(!graph2[i].test(colInd) && !graph2[colInd].test(i)) graph2[i].set(colInd);}
-                        else if(z==3) {if(!graph3[i].test(colInd) && !graph3[colInd].test(i)) graph3[i].set(colInd);}
-                        else if(z==4) {if(!graph4[i].test(colInd) && !graph4[colInd].test(i)) graph4[i].set(colInd);}
-                        else if(z==5) {if(!graph5[i].test(colInd) && !graph5[colInd].test(i)) graph5[i].set(colInd);}
+                    colInd = matrixColind[j];
+                    if (colInd < rowBegin) {
+                        switch(inputType) {
+                            case 0 : {
+                                   graph0[i].set(colInd);
+                                    confCount++;
+
+                                break;
+                            }
+                            case 1 : {
+                                    graph1[i].set(colInd);
+                                    confCount++;
+
+                                break;
+                            }
+                            case 2 : {
+                                    graph2[i].set(colInd);
+                                    confCount++;
+
+                                break;
+                            }
+                            case 3 : {
+                                   graph3[i].set(colInd);
+                                    confCount++;
+
+                                break;
+                            }
+                            case 4 : {
+                                    graph4[i].set(colInd);
+                                    confCount++;
+
+                                break;
+                            }
+                            case 5 : {
+                                    graph5[i].set(colInd);
+                                    confCount++;
+
+                                break;
+                            }
+                        }
                     }
                 }
             }
-            double time2 = MPI_Wtime();
-            // count found conflicts.
-            if(z==0){
-                for(int x=0; x<n; x++)
-                    confSize += graph0[x].count();
-            }
-            if(z==1){
-                for(int x=0; x<n; x++)
-                    confSize += graph1[x].count();
-            }
-            else if(z==2){
-                for(int x=0; x<n; x++)
-                    confSize += graph2[x].count();
-            }
-            else if(z==3){
-                for(int x=0; x<n; x++)
-                    confSize += graph3[x].count();
-            }
-            else if(z==4){
-                for(int x=0; x<n; x++)
-                    confSize += graph4[x].count();
-            }
-            else if(z==5){
-                for(int x=0; x<n; x++)
-                    confSize += graph5[x].count();
-            }
-            std::cout  << "Rank: " << my_rank << " -----------------------------------------------------------  # Conflicts: " << confSize << " Elapsed Time" << time2-time1 << endl;
-
-
-
+            /*
             vector<pair<int,int>> pieceVector;
             for(int t=1; t<world_size; t++){
                 vector<pair<int,int>> pieceVector_temp;
@@ -268,88 +259,121 @@ int main(int argc, char **argv) {
                 printf( "Elapsed time for joint vectors cleansing: %f\n", t2 - t1 );
             }
             */
-        }
+            time2=MPI_Wtime();
+           std::cout  << "Rank: " << my_rank << " computed # Conflicts: "  << confCount << " Time: " << time2-time1 << endl;
+            delete [] graph0;
+            delete [] matrixOffDiagonal;
+            delete [] matrixColind;
+            delete [] matrixRowptr;
+
     }
     else {
-        vector<double*> Local_valuesPtrs, Local_dvaluesPtrs;
-        vector<int*> Local_colindPtrs, Local_rowptrPtrs;
-        /*for (int i = 0; i < MATRIX_COUNT; i++) {
-            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
-            int *temp = new int[size];
-            MPI_Bcast(temp, size, MPI_INT, 0, MPI_COMM_WORLD);
-            Local_rowptrPtrs.push_back(temp);
 
-            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
-            int *temp2 = new int[size];
-            MPI_Bcast(temp2, size, MPI_INT, 0, MPI_COMM_WORLD);
-            Local_colindPtrs.push_back(temp2);
-
-            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
-            double* temp3 = new double[size];
-            MPI_Bcast(temp3, size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-            Local_valuesPtrs.push_back(temp3);
-
-            MPI_Bcast(&size, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
-            double* temp4 = new double[size];
-            MPI_Bcast(temp4, size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-            Local_dvaluesPtrs.push_back(temp4);
+        int inputType, pieceSize, elementCount;
+        int *piece_rowptr, *piece_colind;
+        double *piece_offdiags;
+        // ! index piece_rowptr with pieceSize
+        // ! index piece_colind,piece_offdiags with elementCount
+        MPI_Recv(&n, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+        MPI_Recv(&rowLimit, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
 
 
-            std::cout <<"Rank: " << my_rank << "Completed Matrix Type: " << i << std::endl;
+        MPI_Recv(&inputType, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+        MPI_Recv(&pieceSize, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+
+        piece_rowptr = new int[pieceSize+1];
+        MPI_Recv(piece_rowptr, pieceSize+1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+
+        MPI_Recv(&elementCount, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+        piece_colind = new int[elementCount];
+        piece_offdiags = new double[elementCount];
+        MPI_Recv(piece_colind, elementCount, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+        MPI_Recv(piece_offdiags, elementCount, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+        switch(inputType) {
+            case 0 : {
+                graph0 = new bitset<914898>[pieceSize];
+                MPI_Recv(graph0, pieceSize * 914898/sizeof(char), MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+                break;
+            }
+            case 1 : {
+                graph1 = new bitset<923136>[pieceSize];
+                MPI_Recv(graph1, pieceSize * 923136/sizeof(char), MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+                break;
+            }
+            case 2 : {
+                graph2 = new bitset<952203>[pieceSize];
+                MPI_Recv(graph2, pieceSize * 952203/sizeof(char), MPI_CHAR, 0, 0, MPI_COMM_WORLD,MPI_STATUSES_IGNORE);
+                break;
+            }
+            case 3 : {
+                graph3 = new bitset<503625>[pieceSize];
+                MPI_Recv(graph3, pieceSize * 503625/sizeof(char), MPI_CHAR, 0, 0, MPI_COMM_WORLD,MPI_STATUSES_IGNORE);
+                break;
+            }
+            case 4 : {
+                graph4 = new bitset<1391349>[pieceSize];
+                MPI_Recv(graph4, pieceSize * 1391349/sizeof(char), MPI_CHAR, 0, 0, MPI_COMM_WORLD,MPI_STATUSES_IGNORE);
+                break;
+            }
+            case 5 : {
+                graph5 = new bitset<943695>[pieceSize];
+                MPI_Recv(graph5, pieceSize * 943695/sizeof(char), MPI_CHAR, 0, 0, MPI_COMM_WORLD,MPI_STATUSES_IGNORE);
+                break;
+            }
         }
+        //std::cout  << "Rank: " << my_rank << " received all data with piece-size: " << pieceSize << endl;
 
-         */
-
-        int rowLimit,n;
-        MPI_Bcast(&rowLimit, 1, MPI_INT, t, MPI_COMM_WORLD); // receive row partition size
-        MPI_Bcast(&n, 1, MPI_INT, t, MPI_COMM_WORLD); // receive row partition size
-        int rowBegin = (my_rank+1)*rowLimit;
-        int rowEnd = (my_rank+2)*rowLimit;
-        if(my_rank==world_size) rowEnd = n;
-        for (int i = rowBegin; i < rowEnd; i++) {
-            int elmCountPerRow = matrixRowptr[i + 1] - matrixRowptr[i];
+        int elmCountPerRow, rowBegin = my_rank*rowLimit;
+        int confCount=0, colInd, rowEnd = pieceSize;
+        // include remaining rows
+        //std::cout  << "Rank: " << my_rank << " starts computing... " << endl;
+        time1= MPI_Wtime();
+        for (int i = 0; i < rowEnd; i++) {
+            elmCountPerRow = piece_rowptr[i + 1] - piece_rowptr[i];
             for (int j = 0; j < elmCountPerRow; j++) {
-                colInd = matrixColind[ global_OffDCount++ ];
-                if (colInd < rowBegin || colInd > rowEnd) {
-                    if(z==0)  {if(!graph0[i].test(colInd) && !graph0[colInd].test(i)) graph0[i].set(colInd);}
-                    else if(z==1) {if(!graph1[i].test(colInd) && !graph1[colInd].test(i)) graph1[i].set(colInd);}
-                    else if(z==2) {if(!graph2[i].test(colInd) && !graph2[colInd].test(i)) graph2[i].set(colInd);}
-                    else if(z==3) {if(!graph3[i].test(colInd) && !graph3[colInd].test(i)) graph3[i].set(colInd);}
-                    else if(z==4) {if(!graph4[i].test(colInd) && !graph4[colInd].test(i)) graph4[i].set(colInd);}
-                    else if(z==5) {if(!graph5[i].test(colInd) && !graph5[colInd].test(i)) graph5[i].set(colInd);}
+                colInd = piece_colind[j];
+                if (colInd < rowBegin) {
+                    switch(inputType) {
+                        case 0 : {
+                                graph0[i].set(colInd);
+                                confCount++;
+                            break;
+                        }
+                        case 1 : {
+                            graph1[i].set(colInd);
+                                confCount++;
+                            break;
+                        }
+                        case 2 : {
+                            graph2[i].set(colInd);
+                                confCount++;
+                            break;
+                        }
+                        case 3 : {
+                            graph3[i].set(colInd);
+                                confCount++;
+                            break;
+                        }
+                        case 4 : {
+                              graph4[i].set(colInd);
+                                confCount++;
+                            break;
+                        }
+                        case 5 : {
+                               graph5[i].set(colInd);
+                                confCount++;
+                            break;
+                        }
+                    }
                 }
             }
         }
-
-        if(z==0){
-            for(int x=0; x<n; x++)
-                confSize += graph0[x].count();
-        }
-        if(z==1){
-            for(int x=0; x<n; x++)
-                confSize += graph1[x].count();
-        }
-        else if(z==2){
-            for(int x=0; x<n; x++)
-                confSize += graph2[x].count();
-        }
-        else if(z==3){
-            for(int x=0; x<n; x++)
-                confSize += graph3[x].count();
-        }
-        else if(z==4){
-            for(int x=0; x<n; x++)
-                confSize += graph4[x].count();
-        }
-        else if(z==5){
-            for(int x=0; x<n; x++)
-                confSize += graph5[x].count();
-        }
-        std::cout  << "Row piece " << k << " end --------------------------------------------------------  # Conflicts: " << confSize << endl;
-
-        double time2 = MPI_Wtime();
-        std::cout  << "Elapsed Time: " << time2-time1 << endl;
-
+        time2= MPI_Wtime();
+        std::cout  << "Rank: " << my_rank << " computed # Conflicts: "  << confCount << " Time: " << time2-time1 << endl;
+        delete [] graph0;
+        delete [] piece_rowptr;
+        delete [] piece_colind;
+        delete [] piece_offdiags;
     }
 
     // Finalize MPI
