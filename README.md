@@ -1,5 +1,6 @@
 # HPC-Research
 Bitmap Solution: <br />
+Parallel Bitmap : <br />
 Rank:0 Matrix: Emilia_923 <br />
 Rank: 1 computed # Conflicts: 272886 Time: 0.0166561 <br />
 Rank: 2 computed # Conflicts: 286650 Time: 0.0177858 <br />
@@ -66,7 +67,6 @@ Rank: 62 computed # Conflicts: 316506 Time: 0.0168666 <br />
 Rank: 0 computed # Conflicts: 0 Time: 0.00116461 <br />
 Rank: 63 computed # Conflicts: 315624 Time: 0.0169214 <br />
  <br />
-Parallel Bitmap : <br />
 Rank:0 Matrix: boneS10 <br />
 Rank: 1 computed # Conflicts: 275089 Time: 0.0166504 <br />
 Rank: 2 computed # Conflicts: 235420 Time: 0.0167962 <br />
