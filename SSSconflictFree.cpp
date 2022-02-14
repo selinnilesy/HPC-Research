@@ -22,10 +22,10 @@ void init(){
     rowptrPtrs.push_back(rowptr);
 }
 
-int readSSSFormat(int i) {
+int readSSSFormat(int z) {
     double tempVal;
     vector<double> tempVec;
-        const fs::path matrixFolder{"/home/selin/Paper-Implementation/CSR-Data/" + matrix_names[i]};
+        const fs::path matrixFolder{"/home/selin/Paper-Implementation/CSR-Data/" + matrix_names[z]};
         for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
             std::fstream myfile(dir_entry.path(), std::ios_base::in);
             if(dir_entry.path().stem() == "rowptr") {
@@ -34,8 +34,8 @@ int readSSSFormat(int i) {
                 while (myfile >> tempValInt) {
                     tempVecInt.push_back(tempValInt);
                 }
-                rowptrPtrs[i] = new int[tempVecInt.size()];
-                int *temp = rowptrPtrs[i];
+                rowptrPtrs.push_back(new int[tempVecInt.size()]);
+                int *temp = rowptrPtrs[0];
                 for(int i=0; i<tempVecInt.size(); i++) temp[i]=tempVecInt[i];
                 rowptrSize.push_back(tempVecInt.size());
 
@@ -49,8 +49,8 @@ int readSSSFormat(int i) {
                 while (myfile >> tempValInt) {
                     tempVecInt.push_back(tempValInt);
                 }
-                colindPtrs[i] = new int[tempVecInt.size()];
-                int *temp = colindPtrs[i];
+                colindPtrs.push_back(new int[tempVecInt.size()]);
+                int *temp = colindPtrs[0];
                 for(int i=0; i<tempVecInt.size(); i++) temp[i]=tempVecInt[i];
                 colindSize.push_back(tempVecInt.size());
                 cout << dir_entry.path() << " has been read." << endl;
@@ -62,14 +62,14 @@ int readSSSFormat(int i) {
             }
 
             if(dir_entry.path().stem() == "dvalues"){
-                dvaluesPtrs[i] = new double[tempVec.size()];
-                double *temp = dvaluesPtrs[i];
+                dvaluesPtrs.push_back(new double[tempVec.size()]);
+                double *temp = dvaluesPtrs[0];
                 for(int i=0; i<tempVec.size(); i++) temp[i]=tempVec[i];
                 dvaluesSize.push_back(tempVec.size());
             }
             else if(dir_entry.path().stem() == "nond_values"){
-                valuesPtrs[i] = new double[tempVec.size()];
-                double *temp = valuesPtrs[i];
+                valuesPtrs.push_back(new double[tempVec.size()]);
+                double *temp = valuesPtrs[0];
                 for(int i=0; i<tempVec.size(); i++) temp[i]=tempVec[i];
                 valuesSize.push_back(tempVec.size());
             }
@@ -104,7 +104,7 @@ int main(int argc, char **argv) {
 
     if(my_rank==0) {
         cout << "i call readSSSFormat. " << endl;
-        init();
+        //init();
         if(!argv[1]){
             cout << "please provide input matrix index (int): boneS10, Emilia_923, ldoor, af_5_k101, Serena, audikw_1" << endl;
             return -1;
@@ -261,7 +261,32 @@ int main(int argc, char **argv) {
             */
             time2=MPI_Wtime();
            std::cout  << "Rank: " << my_rank << " computed # Conflicts: "  << confCount << " Time: " << time2-time1 << endl;
-            delete [] graph0;
+        switch(inputType) {
+            case 0 : {
+                delete [] graph0;
+                break;
+            }
+            case 1 : {
+                delete [] graph1;
+                break;
+            }
+            case 2 : {
+                delete [] graph2;
+                break;
+            }
+            case 3 : {
+                delete [] graph3;
+                break;
+            }
+            case 4 : {
+                delete [] graph4;
+                break;
+            }
+            case 5 : {
+                delete [] graph5;
+                break;
+            }
+        }
             delete [] matrixOffDiagonal;
             delete [] matrixColind;
             delete [] matrixRowptr;
@@ -370,10 +395,35 @@ int main(int argc, char **argv) {
         }
         time2= MPI_Wtime();
         std::cout  << "Rank: " << my_rank << " computed # Conflicts: "  << confCount << " Time: " << time2-time1 << endl;
-        delete [] graph0;
         delete [] piece_rowptr;
         delete [] piece_colind;
         delete [] piece_offdiags;
+        switch(inputType) {
+            case 0 : {
+                delete [] graph0;
+                break;
+            }
+            case 1 : {
+                delete [] graph1;
+                break;
+            }
+            case 2 : {
+                delete [] graph2;
+                break;
+            }
+            case 3 : {
+                delete [] graph3;
+                break;
+            }
+            case 4 : {
+                delete [] graph4;
+                break;
+            }
+            case 5 : {
+                delete [] graph5;
+                break;
+            }
+        }
     }
 
     // Finalize MPI
