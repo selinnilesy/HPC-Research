@@ -1,6 +1,72 @@
 # HPC-Research
 Bitmap Solution: <br />
 Parallel Bitmap : <br />
+Rank:0 Matrix: Emilia_923 <br />
+Rank: 1 computed # Conflicts: 272886 Time: 0.0166561 <br />
+Rank: 2 computed # Conflicts: 286650 Time: 0.0177858 <br />
+Rank: 3 computed # Conflicts: 275124 Time: 0.0148709 <br />
+Rank: 4 computed # Conflicts: 292032 Time: 0.0193805 <br />
+Rank: 5 computed # Conflicts: 283788 Time: 0.0180188 <br />
+Rank: 6 computed # Conflicts: 300576 Time: 0.0202578 <br />
+Rank: 7 computed # Conflicts: 287693 Time: 0.0154547 <br />
+Rank: 8 computed # Conflicts: 298938 Time: 0.0183333 <br />
+Rank: 9 computed # Conflicts: 292599 Time: 0.0201869 <br />
+Rank: 10 computed # Conflicts: 282490 Time: 0.0185248 <br />
+Rank: 11 computed # Conflicts: 290990 Time: 0.0169468 <br />
+Rank: 12 computed # Conflicts: 292843 Time: 0.0169442 <br />
+Rank: 13 computed # Conflicts: 292441 Time: 0.0173056 <br />
+Rank: 14 computed # Conflicts: 296775 Time: 0.0182685 <br />
+Rank: 15 computed # Conflicts: 290864 Time: 0.017904 <br />
+Rank: 16 computed # Conflicts: 286577 Time: 0.0201992 <br />
+Rank: 17 computed # Conflicts: 297842 Time: 0.0187531 <br />
+Rank: 18 computed # Conflicts: 301531 Time: 0.0188133 <br />
+Rank: 19 computed # Conflicts: 305838 Time: 0.0154767 <br />
+Rank: 20 computed # Conflicts: 308463 Time: 0.0200603 <br />
+Rank: 21 computed # Conflicts: 307896 Time: 0.0178529 <br />
+Rank: 22 computed # Conflicts: 313462 Time: 0.0183694 <br />
+Rank: 23 computed # Conflicts: 305362 Time: 0.0157273 <br />
+Rank: 24 computed # Conflicts: 305913 Time: 0.0192922 <br />
+Rank: 25 computed # Conflicts: 313635 Time: 0.019045 <br />
+Rank: 26 computed # Conflicts: 310983 Time: 0.0178338 <br />
+Rank: 27 computed # Conflicts: 315942 Time: 0.0152594 <br />
+Rank: 28 computed # Conflicts: 306285 Time: 0.0177279 <br />
+Rank: 29 computed # Conflicts: 315812 Time: 0.017973 <br />
+Rank: 30 computed # Conflicts: 315814 Time: 0.0214931 <br />
+Rank: 31 computed # Conflicts: 315814 Time: 0.0164181 <br />
+Rank: 32 computed # Conflicts: 315814 Time: 0.0178015 <br />
+Rank: 33 computed # Conflicts: 315814 Time: 0.0177228 <br />
+Rank: 34 computed # Conflicts: 315812 Time: 0.0181177 <br />
+Rank: 35 computed # Conflicts: 315814 Time: 0.0173166 <br />
+Rank: 36 computed # Conflicts: 315814 Time: 0.018203 <br />
+Rank: 37 computed # Conflicts: 315814 Time: 0.0176003 <br />
+Rank: 38 computed # Conflicts: 315814 Time: 0.018148 <br />
+Rank: 39 computed # Conflicts: 315814 Time: 0.0152212 <br />
+Rank: 40 computed # Conflicts: 315814 Time: 0.0200409 <br />
+Rank: 41 computed # Conflicts: 315814 Time: 0.0182865 <br />
+Rank: 42 computed # Conflicts: 315814 Time: 0.0182024 <br />
+Rank: 43 computed # Conflicts: 313458 Time: 0.0147966 <br />
+Rank: 44 computed # Conflicts: 315841 Time: 0.0194691 <br />
+Rank: 45 computed # Conflicts: 315537 Time: 0.0175852 <br />
+Rank: 46 computed # Conflicts: 300779 Time: 0.0179224 <br />
+Rank: 47 computed # Conflicts: 315600 Time: 0.0169677 <br />
+Rank: 48 computed # Conflicts: 310320 Time: 0.0178959 <br />
+Rank: 49 computed # Conflicts: 310827 Time: 0.0175781 <br />
+Rank: 50 computed # Conflicts: 314610 Time: 0.0178955 <br />
+Rank: 51 computed # Conflicts: 301787 Time: 0.0168755 <br />
+Rank: 52 computed # Conflicts: 316032 Time: 0.0179712 <br />
+Rank: 53 computed # Conflicts: 312096 Time: 0.0175864 <br />
+Rank: 54 computed # Conflicts: 312360 Time: 0.0171645 <br />
+Rank: 55 computed # Conflicts: 315654 Time: 0.0153655 <br />
+Rank: 56 computed # Conflicts: 303231 Time: 0.0177627 <br />
+Rank: 57 computed # Conflicts: 312004 Time: 0.0193344 <br />
+Rank: 58 computed # Conflicts: 307140 Time: 0.0196404 <br />
+Rank: 59 computed # Conflicts: 314835 Time: 0.0152121 <br />
+Rank: 60 computed # Conflicts: 314688 Time: 0.0196048 <br />
+Rank: 61 computed # Conflicts: 305370 Time: 0.0175495 <br />
+Rank: 62 computed # Conflicts: 316506 Time: 0.0168666 <br />
+Rank: 0 computed # Conflicts: 0 Time: 0.00116461 <br />
+Rank: 63 computed # Conflicts: 315624 Time: 0.0169214 <br />
+ <br />
 Rank:0 Matrix: boneS10 <br />
 Rank: 1 computed # Conflicts: 275089 Time: 0.0166504 <br />
 Rank: 2 computed # Conflicts: 235420 Time: 0.0167962 <br />
