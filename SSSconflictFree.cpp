@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
     bitset<943695> *graph5 = nullptr;
 
     double time1,time2;
-    int n, rowLimit;
+    int n, rowLimit, remainderRows;
 
     if(my_rank==0) {
         cout << "i call readSSSFormat. " << endl;
@@ -116,7 +116,8 @@ int main(int argc, char **argv) {
         double *matrixOffDiagonal = valuesPtrs[0];
         int *matrixColind = colindPtrs[0];
         int *matrixRowptr= rowptrPtrs[0];
-        rowLimit = n / world_size + 0.5; // ceiling function
+        remainderRows =  n % world_size;
+        rowLimit = n / world_size - 0.5; // ceiling function for keeping all processes full. only last one have larger
 
         switch(inputType) {
             case 0 : {
@@ -140,59 +141,93 @@ int main(int argc, char **argv) {
         }
         // double time1 = MPI_Wtime()
         std::cout << "Rank:" << my_rank << " Matrix: " << matrix_names[inputType]  << endl;
+        MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&rowLimit, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&inputType, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+        //MPI_Scatter(matrixRowptr, rowLimit+1, MPI_INT, void* buffer_recv, rowLimit+1, MPI_INT, 0, MPI_COMM_WORLD);
 
             int lowerLimit, upperLimit, pieceSize, elementCount, offset;
-            for(int t=1; t<world_size; t++){
+            for(int t=1; t<world_size; t++) {
                 //std::cout << "Rank:" << my_rank << " will send to: " << t  << endl;
-                lowerLimit = rowLimit*(t);
-                upperLimit = min( lowerLimit + rowLimit , n );
-                pieceSize= upperLimit - lowerLimit;
-                // send it to child^th process
-                MPI_Send(&n, 1, MPI_INT, t, 0, MPI_COMM_WORLD);
-                MPI_Send(&rowLimit, 1, MPI_INT, t, 0, MPI_COMM_WORLD);
+                offset = matrixRowptr[t*rowLimit];
 
-                MPI_Send(&inputType, 1, MPI_INT, t, 0, MPI_COMM_WORLD);
-                MPI_Send(&pieceSize, 1, MPI_INT, t, 0, MPI_COMM_WORLD);
+                if(t==world_size-1) {
+                    elementCount = matrixRowptr[n] - matrixRowptr[t*rowLimit];
+                    MPI_Send(matrixRowptr + t*rowLimit, rowLimit + remainderRows + 1, MPI_INT, t, 0, MPI_COMM_WORLD);
+                }
+                else{
+                    elementCount = matrixRowptr[t*rowLimit + rowLimit ] - matrixRowptr[t*rowLimit];
+                    MPI_Send(matrixRowptr + t*rowLimit, rowLimit + 1, MPI_INT, t, 0, MPI_COMM_WORLD);
+                }
 
-                elementCount = matrixRowptr[upperLimit] - matrixRowptr[lowerLimit] ;
-                MPI_Send(matrixRowptr + lowerLimit, pieceSize+1, MPI_INT, t, 0, MPI_COMM_WORLD);
-                offset = (matrixRowptr[lowerLimit]);
-
-                MPI_Send(&elementCount, 1, MPI_INT, t, 0, MPI_COMM_WORLD);
-
-                MPI_Send(matrixColind+ offset, elementCount, MPI_INT, t, 0, MPI_COMM_WORLD);
-                MPI_Send(matrixOffDiagonal+ offset, elementCount, MPI_DOUBLE, t, 0, MPI_COMM_WORLD);
-                switch(inputType) {
+                MPI_Send(matrixColind + offset, elementCount, MPI_INT, t, 0, MPI_COMM_WORLD);
+                MPI_Send(matrixOffDiagonal + offset, elementCount, MPI_DOUBLE, t, 0, MPI_COMM_WORLD);
+                std::cout << "Rank:" << my_rank << " has sent to: " << t  << endl;
+            }
+        switch (inputType) {
+            case 0 : {
+                MPI_Scatter(graph0, rowLimit * 914898 / sizeof(char), MPI_CHAR, graph0, rowLimit * 914898 / sizeof(char), MPI_CHAR, 0, MPI_COMM_WORLD);
+                break;
+            }
+            case 1 : {
+                MPI_Scatter(graph1, rowLimit * 923136 / sizeof(char), MPI_CHAR, graph1, rowLimit * 923136 / sizeof(char), MPI_CHAR, 0, MPI_COMM_WORLD);
+                break;
+            }
+            case 2 : {
+                MPI_Scatter(graph2, rowLimit * 952203 / sizeof(char), MPI_CHAR, graph2, rowLimit * 952203 / sizeof(char), MPI_CHAR, 0, MPI_COMM_WORLD);
+                break;
+            }
+            case 3 : {
+                MPI_Scatter(graph3, rowLimit * 503625 / sizeof(char), MPI_CHAR, graph3, rowLimit * 503625 / sizeof(char), MPI_CHAR, 0, MPI_COMM_WORLD);
+                break;
+            }
+            case 4 : {
+                MPI_Scatter(graph4, rowLimit * 1391349 / sizeof(char), MPI_CHAR, graph4, rowLimit * 1391349 / sizeof(char), MPI_CHAR, 0, MPI_COMM_WORLD);
+                break;
+            }
+            case 5 : {
+                MPI_Scatter(graph5, rowLimit * 943695 / sizeof(char), MPI_CHAR, graph5, rowLimit * 943695 / sizeof(char), MPI_CHAR, 0, MPI_COMM_WORLD);
+                break;
+            }
+        }
+        std::cout << "Rank:" << my_rank << " scatter ok. Now starts last part send" << endl;
+                switch (inputType) {
                     case 0 : {
-                        MPI_Send(graph0+ lowerLimit, pieceSize * 914898/sizeof(char), MPI_CHAR, t, 0, MPI_COMM_WORLD);
+                        MPI_Send(graph0 + (world_size - 1) * rowLimit + rowLimit,
+                                 remainderRows * 914898 / sizeof(char), MPI_CHAR,
+                                 world_size - 1, 0, MPI_COMM_WORLD);
                         break;
                     }
                     case 1 : {
-                        MPI_Send(graph1+ lowerLimit, pieceSize * 923136/sizeof(char), MPI_CHAR, t, 0, MPI_COMM_WORLD);
+                        MPI_Send(graph1 + (world_size - 1) * rowLimit + rowLimit, remainderRows * 923136 / sizeof(char),
+                                 MPI_CHAR, world_size - 1, 0, MPI_COMM_WORLD);
                         break;
                     }
                     case 2 : {
-                        MPI_Send(graph2+ lowerLimit, pieceSize * 952203/sizeof(char), MPI_CHAR, t, 0, MPI_COMM_WORLD);
+                        MPI_Send(graph2 + (world_size - 1) * rowLimit + rowLimit, remainderRows * 952203 / sizeof(char),
+                                 MPI_CHAR, world_size - 1, 0, MPI_COMM_WORLD);
                         break;
                     }
                     case 3 : {
-                        MPI_Send(graph3+ lowerLimit, pieceSize * 503625/sizeof(char), MPI_CHAR, t, 0, MPI_COMM_WORLD);
+                        MPI_Send(graph3 + (world_size - 1) * rowLimit + rowLimit, remainderRows * 503625 / sizeof(char),
+                                 MPI_CHAR, world_size - 1, 0, MPI_COMM_WORLD);
                         break;
                     }
                     case 4 : {
-                        MPI_Send(graph4+ lowerLimit, pieceSize * 1391349/sizeof(char), MPI_CHAR, t, 0, MPI_COMM_WORLD);
+                        MPI_Send(graph4 + (world_size - 1) * rowLimit + rowLimit, remainderRows * 1391349 / sizeof(char),
+                                 MPI_CHAR, world_size - 1, 0, MPI_COMM_WORLD);
                         break;
                     }
                     case 5 : {
-                        MPI_Send(graph5+ lowerLimit, pieceSize * 943695/sizeof(char), MPI_CHAR, t, 0, MPI_COMM_WORLD);
+                        MPI_Send(graph5 + (world_size - 1) * rowLimit + rowLimit, remainderRows * 943695 / sizeof(char),
+                                 MPI_CHAR, world_size - 1, 0, MPI_COMM_WORLD);
                         break;
-                     }
                     }
-                    //std::cout << "Rank:" << my_rank << " has sent to: " << t  << endl;
                 }
             //std::cout  << "Rank: " << my_rank << " sent all data" << endl;
             int elmCountPerRow, rowBegin = 0;
-            int confCount=0, colInd, rowEnd = rowLimit;
+            int confCount=0, colInd, rowEnd= rowLimit;
             time1=MPI_Wtime();
             //std::cout  << "Rank: " << my_rank << " starts computing... " << endl;
             // include remaining rows
@@ -205,60 +240,37 @@ int main(int argc, char **argv) {
                             case 0 : {
                                    graph0[i].set(colInd);
                                     confCount++;
-
                                 break;
                             }
                             case 1 : {
                                     graph1[i].set(colInd);
                                     confCount++;
-
                                 break;
                             }
                             case 2 : {
                                     graph2[i].set(colInd);
                                     confCount++;
-
                                 break;
                             }
                             case 3 : {
                                    graph3[i].set(colInd);
                                     confCount++;
-
                                 break;
                             }
                             case 4 : {
                                     graph4[i].set(colInd);
                                     confCount++;
-
                                 break;
                             }
                             case 5 : {
                                     graph5[i].set(colInd);
                                     confCount++;
-
                                 break;
                             }
                         }
                     }
                 }
             }
-            /*
-            vector<pair<int,int>> pieceVector;
-            for(int t=1; t<world_size; t++){
-                vector<pair<int,int>> pieceVector_temp;
-                MPI_Recv(&nwSize, 1, MPI_INT, t, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                pieceVector_temp.resize(nwSize);
-                MPI_Recv((void*)  pieceVector_temp.data(), sizeof(pair<int,int>) * nwSize, MPI_BYTE, t, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                std::copy(pieceVector_temp.begin(), pieceVector_temp.begin()+nwSize , back_inserter(pieceVector));
-
-                if(t==1) continue;
-                cout << "Rank 0 received computed vectors from: " << t << endl;
-                double t1 = MPI_Wtime();
-                removeDuplicateEdges(pieceVector, pieceVector.size());
-                double t2 = MPI_Wtime();
-                printf( "Elapsed time for joint vectors cleansing: %f\n", t2 - t1 );
-            }
-            */
             time2=MPI_Wtime();
            std::cout  << "Rank: " << my_rank << " computed # Conflicts: "  << confCount << " Time: " << time2-time1 << endl;
         switch(inputType) {
@@ -294,62 +306,109 @@ int main(int argc, char **argv) {
     }
     else {
 
-        int inputType, pieceSize, elementCount;
+        int inputType, elementCount;
         int *piece_rowptr, *piece_colind;
         double *piece_offdiags;
         // ! index piece_rowptr with pieceSize
         // ! index piece_colind,piece_offdiags with elementCount
-        MPI_Recv(&n, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
-        MPI_Recv(&rowLimit, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+        MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&rowLimit, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&inputType, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        remainderRows = n % world_size;
 
-
-        MPI_Recv(&inputType, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
-        MPI_Recv(&pieceSize, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
-
-        piece_rowptr = new int[pieceSize+1];
-        MPI_Recv(piece_rowptr, pieceSize+1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
-
-        MPI_Recv(&elementCount, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+        if(my_rank == world_size-1){
+            piece_rowptr = new int[rowLimit+remainderRows+1];
+            MPI_Recv(piece_rowptr, rowLimit+remainderRows+1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+            elementCount = piece_rowptr[rowLimit+remainderRows] - piece_rowptr[0];
+        }
+        else{
+            piece_rowptr = new int[rowLimit+1];
+            MPI_Recv(piece_rowptr, rowLimit+1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+            elementCount = piece_rowptr[rowLimit] - piece_rowptr[0];
+        }
         piece_colind = new int[elementCount];
         piece_offdiags = new double[elementCount];
         MPI_Recv(piece_colind, elementCount, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
         MPI_Recv(piece_offdiags, elementCount, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+
         switch(inputType) {
             case 0 : {
-                graph0 = new bitset<914898>[pieceSize];
-                MPI_Recv(graph0, pieceSize * 914898/sizeof(char), MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+                if(my_rank!=world_size-1) graph0 = new bitset<914898>[rowLimit];
+                else graph0 = new bitset<914898>[rowLimit+ remainderRows];
+                MPI_Scatter(graph0, rowLimit * 943695 / sizeof(char), MPI_CHAR, graph0, rowLimit * 943695 / sizeof(char), MPI_CHAR, 0, MPI_COMM_WORLD);
                 break;
             }
             case 1 : {
-                graph1 = new bitset<923136>[pieceSize];
-                MPI_Recv(graph1, pieceSize * 923136/sizeof(char), MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+                if(my_rank!=world_size-1) graph1 = new bitset<923136>[rowLimit];
+                else graph1 = new bitset<923136>[rowLimit+ remainderRows];
+                MPI_Scatter(graph1, rowLimit * 923136 / sizeof(char), MPI_CHAR, graph1, rowLimit * 923136 / sizeof(char), MPI_CHAR, 0, MPI_COMM_WORLD);
                 break;
             }
             case 2 : {
-                graph2 = new bitset<952203>[pieceSize];
-                MPI_Recv(graph2, pieceSize * 952203/sizeof(char), MPI_CHAR, 0, 0, MPI_COMM_WORLD,MPI_STATUSES_IGNORE);
+                if(my_rank!=world_size-1) graph2 = new bitset<952203>[rowLimit];
+                else graph2 = new bitset<952203>[rowLimit+ remainderRows];
+                MPI_Scatter(graph2, rowLimit * 952203 / sizeof(char), MPI_CHAR, graph2, rowLimit * 952203 / sizeof(char), MPI_CHAR, 0, MPI_COMM_WORLD);
                 break;
             }
             case 3 : {
-                graph3 = new bitset<503625>[pieceSize];
-                MPI_Recv(graph3, pieceSize * 503625/sizeof(char), MPI_CHAR, 0, 0, MPI_COMM_WORLD,MPI_STATUSES_IGNORE);
+                if(my_rank!=world_size-1) graph3 = new bitset<503625>[rowLimit];
+                else graph3 = new bitset<503625>[rowLimit+ remainderRows];
+                MPI_Scatter(graph3, rowLimit * 503625 / sizeof(char), MPI_CHAR, graph3, rowLimit * 503625 / sizeof(char), MPI_CHAR, 0, MPI_COMM_WORLD);
                 break;
             }
             case 4 : {
-                graph4 = new bitset<1391349>[pieceSize];
-                MPI_Recv(graph4, pieceSize * 1391349/sizeof(char), MPI_CHAR, 0, 0, MPI_COMM_WORLD,MPI_STATUSES_IGNORE);
+                if(my_rank!=world_size-1) graph4 = new bitset<1391349>[rowLimit];
+                else graph4 = new bitset<1391349>[rowLimit+ remainderRows];
+                MPI_Scatter(graph4, rowLimit * 1391349 / sizeof(char), MPI_CHAR, graph4, rowLimit * 1391349 / sizeof(char), MPI_CHAR, 0, MPI_COMM_WORLD);
                 break;
             }
             case 5 : {
-                graph5 = new bitset<943695>[pieceSize];
-                MPI_Recv(graph5, pieceSize * 943695/sizeof(char), MPI_CHAR, 0, 0, MPI_COMM_WORLD,MPI_STATUSES_IGNORE);
+                if(my_rank!=world_size-1) graph5 = new bitset<943695>[rowLimit];
+                else graph5 = new bitset<943695>[rowLimit+ remainderRows];
+                MPI_Scatter(graph5, rowLimit * 943695 / sizeof(char), MPI_CHAR, graph5, rowLimit * 943695 / sizeof(char), MPI_CHAR, 0, MPI_COMM_WORLD);
                 break;
+            }
+        }
+        if(my_rank==world_size-1 && remainderRows) {
+            switch (inputType) {
+                case 0 : {
+                    MPI_Recv(graph0 + rowLimit,
+                             remainderRows * 914898 / sizeof(char), MPI_CHAR,
+                             0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+                    break;
+                }
+                case 1 : {
+                    MPI_Recv(graph1 + rowLimit, remainderRows * 923136 / sizeof(char),
+                             MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+                    break;
+                }
+                case 2 : {
+                    MPI_Recv(graph2 + rowLimit, remainderRows * 952203 / sizeof(char),
+                             MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+                    break;
+                }
+                case 3 : {
+                    MPI_Recv(graph3 + rowLimit, remainderRows * 503625 / sizeof(char),
+                             MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+                    break;
+                }
+                case 4 : {
+                    MPI_Recv(graph4 + rowLimit, remainderRows * 1391349 / sizeof(char),
+                             MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+                    break;
+                }
+                case 5 : {
+                    MPI_Recv(graph5 + rowLimit, remainderRows * 943695 / sizeof(char),
+                             MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+                    break;
+                }
             }
         }
         //std::cout  << "Rank: " << my_rank << " received all data with piece-size: " << pieceSize << endl;
 
         int elmCountPerRow, rowBegin = my_rank*rowLimit;
-        int confCount=0, colInd, rowEnd = pieceSize;
+        int confCount=0, colInd, rowEnd;
+        rowEnd = (my_rank==world_size-1 && remainderRows) ? rowLimit+remainderRows : rowLimit;
         // include remaining rows
         //std::cout  << "Rank: " << my_rank << " starts computing... " << endl;
         time1= MPI_Wtime();
