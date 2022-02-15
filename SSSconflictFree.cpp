@@ -22,6 +22,10 @@ void init(){
     rowptrPtrs.push_back(rowptr);
 }
 
+bool sizeCheck(int i){
+    return (rowptrSize[0]==matrixSize[i]+1);
+}
+
 int readSSSFormat(int z) {
     double tempVal;
     vector<double> tempVec;
@@ -110,14 +114,17 @@ int main(int argc, char **argv) {
             return -1;
         }
         readSSSFormat(atoi(argv[1]));
-
-        n = matrixSize[atoi(argv[1])];
         int inputType = atoi(argv[1]);
+        if( rowptrSize[0]!=matrixSize[inputType]+1) {
+            cout << "size check failed. quitting..." << endl;
+            return -1;
+        }
+        n = matrixSize[inputType];
         double *matrixOffDiagonal = valuesPtrs[0];
         int *matrixColind = colindPtrs[0];
         int *matrixRowptr= rowptrPtrs[0];
+        rowLimit = n / world_size + 0.5; // ceiling function for keeping all processes full. only last one have larger
         remainderRows =  n % world_size;
-        rowLimit = n / world_size - 0.5; // ceiling function for keeping all processes full. only last one have larger
 
         switch(inputType) {
             case 0 : {
@@ -142,7 +149,6 @@ int main(int argc, char **argv) {
         // double time1 = MPI_Wtime()
         std::cout << "Rank:" << my_rank << " Matrix: " << matrix_names[inputType]  << endl;
         MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Bcast(&rowLimit, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Bcast(&inputType, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
         //MPI_Scatter(matrixRowptr, rowLimit+1, MPI_INT, void* buffer_recv, rowLimit+1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -157,7 +163,7 @@ int main(int argc, char **argv) {
                     MPI_Send(matrixRowptr + t*rowLimit, rowLimit + remainderRows + 1, MPI_INT, t, 0, MPI_COMM_WORLD);
                 }
                 else{
-                    elementCount = matrixRowptr[t*rowLimit + rowLimit ] - matrixRowptr[t*rowLimit];
+                    elementCount = matrixRowptr[t*rowLimit + rowLimit] - matrixRowptr[t*rowLimit];
                     MPI_Send(matrixRowptr + t*rowLimit, rowLimit + 1, MPI_INT, t, 0, MPI_COMM_WORLD);
                 }
 
@@ -165,9 +171,10 @@ int main(int argc, char **argv) {
                 MPI_Send(matrixOffDiagonal + offset, elementCount, MPI_DOUBLE, t, 0, MPI_COMM_WORLD);
                 std::cout << "Rank:" << my_rank << " has sent to: " << t  << endl;
             }
+        bitset<914898> *temp = new bitset<914898>[rowLimit];
         switch (inputType) {
             case 0 : {
-                MPI_Scatter(graph0, rowLimit * 914898 / sizeof(char), MPI_CHAR, graph0, rowLimit * 914898 / sizeof(char), MPI_CHAR, 0, MPI_COMM_WORLD);
+                MPI_Scatter(graph0, rowLimit * 914898 / sizeof(char), MPI_CHAR, temp, rowLimit * 914898 / sizeof(char), MPI_CHAR, 0, MPI_COMM_WORLD);
                 break;
             }
             case 1 : {
@@ -312,8 +319,8 @@ int main(int argc, char **argv) {
         // ! index piece_rowptr with pieceSize
         // ! index piece_colind,piece_offdiags with elementCount
         MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Bcast(&rowLimit, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Bcast(&inputType, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        rowLimit = n / world_size + 0.5;
         remainderRows = n % world_size;
 
         if(my_rank == world_size-1){
@@ -330,6 +337,7 @@ int main(int argc, char **argv) {
         piece_offdiags = new double[elementCount];
         MPI_Recv(piece_colind, elementCount, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
         MPI_Recv(piece_offdiags, elementCount, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+        std::cout << "Rank:" << my_rank << " received until scatter " << endl;
 
         switch(inputType) {
             case 0 : {
