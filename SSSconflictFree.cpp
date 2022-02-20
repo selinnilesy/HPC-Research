@@ -307,6 +307,56 @@ int main(int argc, char **argv) {
             std::cout << "Rank:" << my_rank << " has received computed conflict map from rank: " << t  << endl;
         }
 
+        // compute conflict column indexes here
+        vector<vector<vector<int>>> conflictNeighbours;
+        // communication for each row will increase parallel overhead.
+        // therefore, compute row's conflicts here, all at once.
+        string trickyVar;
+        int indexCount;
+        for(int t=1; t<world_size; t++){
+            vector<vector<int>> processorConfs;
+            if (t==world_size-1) pieceSize= n - rowLimit*(t);
+            else pieceSize= rowLimit;
+            for(int i=0; i<pieceSize; i++) {
+                indexCount=0;
+                vector<int> rowConfs;
+                switch (inputType) {
+                    case 0 : {
+                        trickyVar = (string) graph0_double[t - 1][i].to_string();
+                        break;
+                    }
+                    case 1 : {
+                        trickyVar = (string) graph1_double[t - 1][i].to_string();
+                        break;
+                    }
+                    case 2 : {
+                        trickyVar = (string) graph2_double[t - 1][i].to_string();
+                        break;
+                    }
+                    case 3 : {
+                        trickyVar = (string) graph3_double[t - 1][i].to_string();
+                        break;
+                    }
+                    case 4 : {
+                        trickyVar = (string) graph4_double[t - 1][i].to_string();
+                        break;
+                    }
+                    case 5 : {
+                        trickyVar = (string) graph5_double[t - 1][i].to_string();
+                        break;
+                    }
+                }
+                // fetch conflict columns below
+                while(trickyVar.size()) {
+                    if (trickyVar.back()=='1') rowConfs.push_back(n-1-indexCount);
+                    trickyVar.pop_back();
+                    indexCount++;
+                }
+                processorConfs.push_back(rowConfs);
+            }
+            conflictNeighbours.push_back(processorConfs);
+            std::cout << "Rank:" << my_rank << " has computed conflicts of processor rank: " << t  << endl;
+        }
 
     }
     else {
@@ -404,6 +454,8 @@ int main(int argc, char **argv) {
         }
         time2= MPI_Wtime();
         std::cout  << "Rank: " << my_rank << " computed # Conflicts: "  << confCount << " Time: " << time2-time1 << endl;
+
+
         switch(inputType) {
             case 0 : {
                 MPI_Send(graph0, pieceSize * (914904/8), MPI_CHAR, 0, 0, MPI_COMM_WORLD);
@@ -441,27 +493,27 @@ int main(int argc, char **argv) {
 
     switch(inputType) {
         case 0 : {
-            delete [] graph0;
+            if(graph0) delete [] graph0;
             break;
         }
         case 1 : {
-            delete [] graph1;
+            if(graph1) delete [] graph1;
             break;
         }
         case 2 : {
-            delete [] graph2;
+            if(graph2) delete [] graph2;
             break;
         }
         case 3 : {
-            delete [] graph3;
+            if(graph3) delete [] graph3;
             break;
         }
         case 4 : {
-            delete [] graph4;
+            if(graph4) delete [] graph4;
             break;
         }
         case 5 : {
-            delete [] graph5;
+            if(graph5) delete [] graph5;
             break;
         }
     }
