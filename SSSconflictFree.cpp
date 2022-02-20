@@ -118,28 +118,11 @@ int main(int argc, char **argv) {
         int *matrixRowptr= rowptrPtrs[0];
         rowLimit = n / world_size + 0.5; // ceiling function
 
-        switch(inputType) {
-            case 0 : {
-                graph0 = new bitset<914904>[914904]; break;
-            }
-            case 1 : {
-                graph1 = new bitset<923136>[923136]; break;
-            }
-            case 2 : {
-                graph2 = new bitset<952208>[952208]; break;
-            }
-            case 3 : {
-                graph3 = new bitset<503632>[503632]; break;
-            }
-            case 4 : {
-                graph4 = new bitset<1391352>[1391352]; break;
-            }
-            case 5 : {
-                graph5 = new bitset<943696>[943696]; break;
-            }
-        }
         // double time1 = MPI_Wtime()
         std::cout << "Rank:" << my_rank << " Matrix: " << matrix_names[inputType]  << endl;
+
+        delete [] dvaluesPtrs[0];
+
         MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Bcast(&inputType, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
@@ -163,40 +146,42 @@ int main(int argc, char **argv) {
                 //std::cout << "Rank:" << my_rank << " sent 3rd send." << endl;
                 MPI_Send(matrixOffDiagonal+ offset, elementCount, MPI_DOUBLE, t, 0, MPI_COMM_WORLD);
                 //std::cout << "Rank:" << my_rank << " sent 4th send." << endl;
-
-                switch(inputType) {
-                    case 0 : {
-                        MPI_Send(graph0+ lowerLimit, pieceSize * (914904/8), MPI_CHAR, t, 0, MPI_COMM_WORLD);
-                        break;
-                    }
-                    case 1 : {
-                        MPI_Send(graph1+ lowerLimit, pieceSize * (923136/8), MPI_CHAR, t, 0, MPI_COMM_WORLD);
-                        break;
-                    }
-                    case 2 : {
-                        MPI_Send(graph2+ lowerLimit, pieceSize * (952208/8), MPI_CHAR, t, 0, MPI_COMM_WORLD);
-                        break;
-                    }
-                    case 3 : {
-                        MPI_Send(graph3+ lowerLimit, pieceSize * (503632/8), MPI_CHAR, t, 0, MPI_COMM_WORLD);
-                        break;
-                    }
-                    case 4 : {
-                        MPI_Send(graph4+ lowerLimit, pieceSize * (1391352/8), MPI_CHAR, t, 0, MPI_COMM_WORLD);
-                        break;
-                    }
-                    case 5 : {
-                        MPI_Send(graph5+ lowerLimit, pieceSize * (943696/8), MPI_CHAR, t, 0, MPI_COMM_WORLD);
-                        break;
-                     }
-                    }
-                    //std::cout << "Rank:" << my_rank << " has sent to: " << t  << endl;
+                //std::cout << "Rank:" << my_rank << " has sent to: " << t  << endl;
                 }
+            delete [] matrixOffDiagonal;
+
+        std::cout  << "Rank: " << my_rank << " starts computing... " << endl;
+        switch(inputType) {
+            case 0 : {
+                graph0 = new bitset<914904>[rowLimit];
+                break;
+            }
+            case 1 : {
+                graph1 = new bitset<923136>[rowLimit];
+                break;
+            }
+            case 2 : {
+                graph2 = new bitset<952208>[rowLimit];
+                break;
+            }
+            case 3 : {
+                graph3 = new bitset<503632>[rowLimit];
+                break;
+            }
+            case 4 : {
+                graph4 = new bitset<1391352>[rowLimit];
+                break;
+            }
+            case 5 : {
+                graph5 = new bitset<943696>[rowLimit];
+                break;
+            }
+        }
+
             //std::cout  << "Rank: " << my_rank << " sent all data" << endl;
             int elmCountPerRow, rowBegin = 0;
             int confCount=0, colInd, rowEnd = rowLimit;
             time1=MPI_Wtime();
-            //std::cout  << "Rank: " << my_rank << " starts computing... " << endl;
             // include remaining rows
             for (int i = 0; i < rowEnd; i++) {
                 elmCountPerRow = matrixRowptr[i + 1] - matrixRowptr[i];
@@ -207,7 +192,6 @@ int main(int argc, char **argv) {
                             case 0 : {
                                    graph0[i].set(colInd);
                                     confCount++;
-
                                 break;
                             }
                             case 1 : {
@@ -244,28 +228,85 @@ int main(int argc, char **argv) {
                     }
                 }
             }
-            /*
-            vector<pair<int,int>> pieceVector;
-            for(int t=1; t<world_size; t++){
-                vector<pair<int,int>> pieceVector_temp;
-                MPI_Recv(&nwSize, 1, MPI_INT, t, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                pieceVector_temp.resize(nwSize);
-                MPI_Recv((void*)  pieceVector_temp.data(), sizeof(pair<int,int>) * nwSize, MPI_BYTE, t, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                std::copy(pieceVector_temp.begin(), pieceVector_temp.begin()+nwSize , back_inserter(pieceVector));
+        time2=MPI_Wtime();
+        std::cout  << "Rank: " << my_rank << " computed # Conflicts: "  << confCount << " Time: " << time2-time1 << endl;
 
-                if(t==1) continue;
-                cout << "Rank 0 received computed vectors from: " << t << endl;
-                double t1 = MPI_Wtime();
-                removeDuplicateEdges(pieceVector, pieceVector.size());
-                double t2 = MPI_Wtime();
-                printf( "Elapsed time for joint vectors cleansing: %f\n", t2 - t1 );
+        delete [] graph0;
+        delete [] matrixColind;
+        delete [] matrixRowptr;
+
+        bitset<914904>** graph0_double;
+        bitset<923136>** graph1_double;
+        bitset<952208>** graph2_double;
+        bitset<503632>** graph3_double;
+        bitset<1391352>** graph4_double;
+        bitset<943696>** graph5_double;
+        switch(inputType) {
+            case 0 : {
+                graph0_double= new bitset<914904>*[world_size-1];
+                break;
             }
-            */
-            time2=MPI_Wtime();
-           std::cout  << "Rank: " << my_rank << " computed # Conflicts: "  << confCount << " Time: " << time2-time1 << endl;
-            delete [] matrixOffDiagonal;
-            delete [] matrixColind;
-            delete [] matrixRowptr;
+            case 1 : {
+                graph1_double= new bitset<923136>*[world_size-1];
+                break;
+            }
+            case 2 : {
+                graph2_double= new bitset<952208>*[world_size-1];
+                break;
+            }
+            case 3 : {
+                graph3_double= new bitset<503632>*[world_size-1];
+                break;
+            }
+            case 4 : {
+                graph4_double= new bitset<1391352>*[world_size-1];
+                break;
+            }
+            case 5 : {
+                graph5_double= new bitset<943696>*[world_size-1];
+                break;
+            }
+        }
+
+        // receive computed conflict map.
+        for(int t=1; t<world_size; t++){
+            if (t==world_size-1) pieceSize= n - lowerLimit;
+            else pieceSize= rowLimit;
+            switch(inputType) {
+                case 0 : {
+                    graph0_double[t-1] = new bitset<914904>[pieceSize];
+                    MPI_Recv(graph0_double[t-1], pieceSize * (914904/8), MPI_CHAR, t, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+                    break;
+                }
+                case 1 : {
+                    graph1_double[t-1] = new bitset<923136>[pieceSize];
+                    MPI_Recv(graph1_double[t-1], pieceSize * (923136/8), MPI_CHAR, t, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+                    break;
+                }
+                case 2 : {
+                    graph2_double[t-1] = new bitset<952208>[pieceSize];
+                    MPI_Recv(graph2_double[t-1], pieceSize * (952208/8), MPI_CHAR, t, 0, MPI_COMM_WORLD,MPI_STATUSES_IGNORE);
+                    break;
+                }
+                case 3 : {
+                    graph3_double[t-1] = new bitset<503632>[pieceSize];
+                    MPI_Recv(graph3_double[t-1], pieceSize * (503632/8), MPI_CHAR, t, 0, MPI_COMM_WORLD,MPI_STATUSES_IGNORE);
+                    break;
+                }
+                case 4 : {
+                    graph4_double[t-1] = new bitset<1391352>[pieceSize];
+                    MPI_Recv(graph4_double[t-1], pieceSize * (1391352/8), MPI_CHAR, t, 0, MPI_COMM_WORLD,MPI_STATUSES_IGNORE);
+                    break;
+                }
+                case 5 : {
+                    graph5_double[t-1] = new bitset<943696>[pieceSize];
+                    MPI_Recv(graph5_double[t-1], pieceSize * (943696/8), MPI_CHAR, t, 0, MPI_COMM_WORLD,MPI_STATUSES_IGNORE);
+                    break;
+                }
+            }
+            std::cout << "Rank:" << my_rank << " has received computed conflict map from rank: " << t  << endl;
+        }
+
 
     }
     else {
@@ -291,32 +332,26 @@ int main(int argc, char **argv) {
         switch(inputType) {
             case 0 : {
                 graph0 = new bitset<914904>[pieceSize];
-                MPI_Recv(graph0, pieceSize * (914904/8), MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
                 break;
             }
             case 1 : {
                 graph1 = new bitset<923136>[pieceSize];
-                MPI_Recv(graph1, pieceSize * (923136/8), MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
                 break;
             }
             case 2 : {
                 graph2 = new bitset<952208>[pieceSize];
-                MPI_Recv(graph2, pieceSize * (952208/8), MPI_CHAR, 0, 0, MPI_COMM_WORLD,MPI_STATUSES_IGNORE);
                 break;
             }
             case 3 : {
                 graph3 = new bitset<503632>[pieceSize];
-                MPI_Recv(graph3, pieceSize * (503632/8), MPI_CHAR, 0, 0, MPI_COMM_WORLD,MPI_STATUSES_IGNORE);
                 break;
             }
             case 4 : {
                 graph4 = new bitset<1391352>[pieceSize];
-                MPI_Recv(graph4, pieceSize * (1391352/8), MPI_CHAR, 0, 0, MPI_COMM_WORLD,MPI_STATUSES_IGNORE);
                 break;
             }
             case 5 : {
                 graph5 = new bitset<943696>[pieceSize];
-                MPI_Recv(graph5, pieceSize * (943696/8), MPI_CHAR, 0, 0, MPI_COMM_WORLD,MPI_STATUSES_IGNORE);
                 break;
             }
         }
@@ -369,10 +404,40 @@ int main(int argc, char **argv) {
         }
         time2= MPI_Wtime();
         std::cout  << "Rank: " << my_rank << " computed # Conflicts: "  << confCount << " Time: " << time2-time1 << endl;
+        switch(inputType) {
+            case 0 : {
+                MPI_Send(graph0, pieceSize * (914904/8), MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+                break;
+            }
+            case 1 : {
+                MPI_Send(graph1, pieceSize * (923136/8), MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+                break;
+            }
+            case 2 : {
+                MPI_Send(graph2, pieceSize * (952208/8), MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+                break;
+            }
+            case 3 : {
+                MPI_Send(graph3, pieceSize * (503632/8), MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+                break;
+            }
+            case 4 : {
+                MPI_Send(graph4, pieceSize * (1391352/8), MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+                break;
+            }
+            case 5 : {
+                MPI_Send(graph5, pieceSize * (943696/8), MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+                break;
+            }
+        }
+        //std::cout << "Rank:" << my_rank << " has sent to: " << t  << endl;
+
         delete [] piece_rowptr;
         delete [] piece_colind;
         delete [] piece_offdiags;
     }
+
+    // any ranked process down below :
 
     switch(inputType) {
         case 0 : {
