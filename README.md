@@ -133,6 +133,73 @@ Rank: 62 computed # Conflicts: 277805 Time: 0.0149661 <br />
 Rank: 0 computed # Conflicts: 0 Time: 0.00101852 <br />
 Rank: 63 computed # Conflicts: 325776 Time: 0.0203026 <br />
  <br />
+ Rank:0 Matrix: ldoor <br />
+Rank: 1 computed # Conflicts: 278267 Time: 0.0162825 <br />
+Rank: 2 computed # Conflicts: 61650 Time: 0.0083611 <br /> 
+Rank: 3 computed # Conflicts: 221347 Time: 0.0112803 <br /> 
+Rank: 4 computed # Conflicts: 310097 Time: 0.0181466 <br /> 
+Rank: 5 computed # Conflicts: 1308 Time: 0.00160714 <br /> 
+Rank: 6 computed # Conflicts: 241681 Time: 0.0192552 <br /> 
+Rank: 7 computed # Conflicts: 76841 Time: 0.00733426 <br /> 
+Rank: 8 computed # Conflicts: 327665 Time: 0.0193305 <br /> 
+Rank: 9 computed # Conflicts: 302816 Time: 0.0207843 <br /> 
+Rank: 10 computed # Conflicts: 327174 Time: 0.0205791 <br /> 
+Rank: 11 computed # Conflicts: 274353 Time: 0.015191 <br /> 
+Rank: 12 computed # Conflicts: 350694 Time: 0.0205834 <br /> 
+Rank: 13 computed # Conflicts: 356549 Time: 0.0244887 <br /> 
+Rank: 14 computed # Conflicts: 371730 Time: 0.023269 <br /> 
+Rank: 15 computed # Conflicts: 378985 Time: 0.0182197 <br /> 
+Rank: 16 computed # Conflicts: 260178 Time: 0.0159284 <br /> 
+Rank: 17 computed # Conflicts: 232374 Time: 0.015786 <br /> 
+Rank: 18 computed # Conflicts: 141957 Time: 0.0102693 <br /> 
+Rank: 19 computed # Conflicts: 200331 Time: 0.0105599 <br /> 
+Rank: 20 computed # Conflicts: 299066 Time: 0.0147362 <br /> 
+Rank: 21 computed # Conflicts: 282179 Time: 0.0168556 <br /> 
+Rank: 22 computed # Conflicts: 212727 Time: 0.0146427 <br /> 
+Rank: 23 computed # Conflicts: 56065 Time: 0.00505969 <br /> 
+Rank: 24 computed # Conflicts: 256501 Time: 0.0156229 <br /> 
+Rank: 25 computed # Conflicts: 101482 Time: 0.00893544 <br /> 
+Rank: 26 computed # Conflicts: 289242 Time: 0.0177639 <br /> 
+Rank: 27 computed # Conflicts: 291157 Time: 0.0163315 <br /> 
+Rank: 28 computed # Conflicts: 331680 Time: 0.0171419 <br /> 
+Rank: 29 computed # Conflicts: 308715 Time: 0.0217511 <br /> 
+Rank: 30 computed # Conflicts: 286719 Time: 0.019846 <br /> 
+Rank: 31 computed # Conflicts: 322361 Time: 0.0169852 <br /> 
+Rank: 32 computed # Conflicts: 326382 Time: 0.0201915 <br /> 
+Rank: 33 computed # Conflicts: 309579 Time: 0.0196137 <br /> 
+Rank: 34 computed # Conflicts: 286955 Time: 0.0235119 <br /> 
+Rank: 35 computed # Conflicts: 0 Time: 0.00133754 <br /> 
+Rank: 36 computed # Conflicts: 221853 Time: 0.0135956 <br /> 
+Rank: 37 computed # Conflicts: 306501 Time: 0.0182382 <br /> 
+Rank: 38 computed # Conflicts: 302183 Time: 0.0220802 <br /> 
+Rank: 39 computed # Conflicts: 316670 Time: 0.0160288 <br /> 
+Rank: 40 computed # Conflicts: 325300 Time: 0.0167775 <br /> 
+Rank: 41 computed # Conflicts: 342725 Time: 0.0219049 <br /> 
+Rank: 42 computed # Conflicts: 336472 Time: 0.0217609 <br /> 
+Rank: 43 computed # Conflicts: 351965 Time: 0.0316018 <br /> 
+Rank: 44 computed # Conflicts: 319172 Time: 0.0181468 <br /> 
+Rank: 45 computed # Conflicts: 316251 Time: 0.0198297 <br /> 
+Rank: 46 computed # Conflicts: 326778 Time: 0.0204825 <br /> 
+Rank: 47 computed # Conflicts: 74099 Time: 0.006409 <br /> 
+Rank: 48 computed # Conflicts: 257621 Time: 0.0154617 <br /> 
+Rank: 49 computed # Conflicts: 77406 Time: 0.00677646 <br /> 
+Rank: 50 computed # Conflicts: 356177 Time: 0.0248233 <br /> 
+Rank: 51 computed # Conflicts: 333018 Time: 0.0176102 <br /> 
+Rank: 52 computed # Conflicts: 346777 Time: 0.0209684 <br /> 
+Rank: 53 computed # Conflicts: 342688 Time: 0.018489 <br /> 
+Rank: 54 computed # Conflicts: 366387 Time: 0.0194395 <br /> 
+Rank: 55 computed # Conflicts: 376017 Time: 0.0213975 <br /> 
+Rank: 56 computed # Conflicts: 386336 Time: 0.0189138 <br /> 
+Rank: 57 computed # Conflicts: 367713 Time: 0.0240395 <br /> 
+Rank: 58 computed # Conflicts: 385829 Time: 0.0198508 <br /> 
+Rank: 59 computed # Conflicts: 402620 Time: 0.0239189 <br /> 
+Rank: 60 computed # Conflicts: 391863 Time: 0.0255392 <br /> 
+Rank: 61 computed # Conflicts: 389337 Time: 0.025248 <br /> 
+Rank: 62 computed # Conflicts: 394618 Time: 0.020856 <br /> 
+Rank: 0 computed # Conflicts: 0 Time: 0.00138542 <br />
+Rank: 63 computed # Conflicts: 421250 Time: 0.0227821 <br />
+<br />
+<br />
 Mock on Root only, split Matrix into 4 :   <br />
 Rank: 0 Matrix: boneS10 rowLimit: 228724 <br />
 Row piece 0 end --------------------------------------------------------  # Conflicts: 0 <br />
