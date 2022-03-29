@@ -455,3 +455,4 @@ subroutine rcm ( root, adj_num, adj_row, adj, mask, perm, iccsze, node_num )
 
   return
 end
+
