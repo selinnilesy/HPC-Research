@@ -1,6 +1,11 @@
-# cmake_minimum_required(VERSION <specify CMake version here>)
 project(Yunan_Implementation)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
-add_executable(Yunan_Implementation main.cpp)
+set(HEADERS header.h)
+set(SOURCE
+        SSSconflictFree.cpp
+        readSSS.cpp
+        CSR_encoder.cpp
+        )
+add_executable(all SSSconflictFree.cpp readSSS.cpp CSR_encoder.cpp)

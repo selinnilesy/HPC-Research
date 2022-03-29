@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="Yunan_Implementation"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="clang"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/Users/selin/Desktop/HPC-Research"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -f &quot;/Users/selin/Desktop/HPC-Research/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -f &quot;/Users/selin/Desktop/HPC-Research/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/Users/selin/Desktop/HPC-Research/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/Users/selin/Desktop/HPC-Research/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/Users/selin/Desktop/HPC-Research"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -f &quot;/Users/selin/Desktop/HPC-Research/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -f &quot;/Users/selin/Desktop/HPC-Research/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/Users/selin/Desktop/HPC-Research/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/Users/selin/Desktop/HPC-Research/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/Users/selin/Desktop/HPC-Research"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -f &quot;/Users/selin/Desktop/HPC-Research/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -f &quot;/Users/selin/Desktop/HPC-Research/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/Users/selin/Desktop/HPC-Research/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/Users/selin/Desktop/HPC-Research/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="all">
+				<Option output="/Users/selin/Desktop/HPC-Research/all" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/selin/Desktop/HPC-Research"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="clang"/>
+				<Compiler/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -f &quot;/Users/selin/Desktop/HPC-Research/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -f &quot;/Users/selin/Desktop/HPC-Research/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/Users/selin/Desktop/HPC-Research/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/Users/selin/Desktop/HPC-Research/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="all/fast">
+				<Option output="/Users/selin/Desktop/HPC-Research/all" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/selin/Desktop/HPC-Research"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="clang"/>
+				<Compiler/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -f &quot;/Users/selin/Desktop/HPC-Research/Makefile&quot;  VERBOSE=1 all/fast"/>
+					<CompileFile command="/usr/bin/make -f &quot;/Users/selin/Desktop/HPC-Research/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/Users/selin/Desktop/HPC-Research/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/Users/selin/Desktop/HPC-Research/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/Users/selin/Desktop/HPC-Research/CSR_encoder.cpp">
+			<Option target="all"/>
+		</Unit>
+		<Unit filename="/Users/selin/Desktop/HPC-Research/SSSconflictFree.cpp">
+			<Option target="all"/>
+		</Unit>
+		<Unit filename="/Users/selin/Desktop/HPC-Research/readSSS.cpp">
+			<Option target="all"/>
+		</Unit>
+		<Unit filename="/Users/selin/Desktop/HPC-Research/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>
