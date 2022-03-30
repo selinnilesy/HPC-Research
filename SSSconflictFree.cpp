@@ -20,14 +20,14 @@ void init(){
     dvaluesPtrs.push_back(dvalues);
     colindPtrs.push_back(colind);
     rowptrPtrs.push_back(rowptr);
-
-
-extern "C" {
-    extern void  __i4_swap( int &i, int &j );
-    extern void  __reverse ( int &n, int &a );
-    extern void __degree( int root, int adj_num, int* adj_row, int* adj, int mask, int* deg, int &iccsze, int* ls, int &node_num );
-    extern void __rcm( int root, int adj_num, int* adj_row, int* adj, int mask, int* perm, int &iccsze, int &node_num );
 }
+
+/*extern "C" {
+    extern void i4_swap_ ( int *i, int *j );
+    extern void  reverse_ ( int *n, int *a );
+    extern void degree_  ( int root, int adj_num, int* adj_row, int* adj, int mask, int* deg, int *iccsze, int* ls, int *node_num );
+    extern void rcm_  ( int root, int adj_num, int* adj_row, int* adj, int mask, int* perm, int *iccsze, int *node_num );
+}*/
 
 int readSSSFormat(int z) {
     double tempVal;
@@ -151,10 +151,12 @@ int main(int argc, char **argv) {
             time1=MPI_Wtime();
             //std::cout  << "Rank: " << my_rank << " starts computing... " << endl;
             // include remaining rows
-            
-	    int* adj_row, *adj, *perm;
-            int iccsze, nodenum;
-            __rcm( 1, 5, adj_row, adj, 0, perm, iccsze,  nodenum );
+
+            int *perm = new int[matrixSize[inputType]] ;
+            genrcm( matrixSize[inputType], matrixRowptr, matrixColind, nonzerosSize[inputType], perm )
+
+            std::cout  << "Rank: " << my_rank << " returns rcm: " << perm[0]  << endl;
+
             for (int i = 0; i < rowEnd; i++) {
                 elmCountPerRow = matrixRowptr[i + 1] - matrixRowptr[i];
                 for (int j = 0; j < elmCountPerRow; j++) {
