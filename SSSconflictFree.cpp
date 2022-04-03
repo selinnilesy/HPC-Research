@@ -9,12 +9,17 @@
 #include "geeks.cpp"
 
 using namespace std;
+#define MATRIX_COUNT 6
 
 int p;
 vector<int> x;
 vector<int> y;
 vector<int> elm_row; // use this to find out row_ptr values
-#define MATRIX_COUNT 6
+int *coord_row, *coord_col;
+double *coord_val;
+
+
+
 void init(){
     double *values, *dvalues;
     int *colind, *rowptr;
@@ -30,6 +35,10 @@ void init(){
     extern void degree_  ( int root, int adj_num, int* adj_row, int* adj, int mask, int* deg, int *iccsze, int* ls, int *node_num );
     extern void rcm_  ( int root, int adj_num, int* adj_row, int* adj, int mask, int* perm, int *iccsze, int *node_num );
 }*/
+
+extern "C" {
+    extern void coocsr_(int nrow, int nnz, double* a, int* ir,int* jc, double* ao, int* jao, int* iao);
+}
 
 int readSSSFormat(int z) {
     double tempVal;
@@ -52,6 +61,19 @@ int readSSSFormat(int z) {
                 myfile.close();
                 continue;
             }
+            else if(dir_entry.path().stem() == "coordinate-row") {
+                int tempValInt;
+                vector<int> tempVecInt;
+                while (myfile >> tempValInt) {
+                    tempVecInt.push_back(tempValInt);
+                }
+                coord_row = new int[tempVecInt.size()];
+                for(int i=0; i<tempVecInt.size(); i++) coord_row[i]=tempVecInt[i];
+
+                cout << dir_entry.path() << " has been read." << endl;
+                myfile.close();
+                continue;
+            }
             else if(dir_entry.path().stem() == "col") {
                 int tempValInt;
                 vector<int> tempVecInt;
@@ -66,6 +88,20 @@ int readSSSFormat(int z) {
                 myfile.close();
                 continue;
             }
+            else if(dir_entry.path().stem() == "coordinate-col") {
+                int tempValInt;
+                vector<int> tempVecInt;
+                while (myfile >> tempValInt) {
+                    tempVecInt.push_back(tempValInt);
+                }
+                coord_col = new int[tempVecInt.size()];
+                for(int i=0; i<tempVecInt.size(); i++) coord_col[i]=tempVecInt[i];
+
+                cout << dir_entry.path() << " has been read." << endl;
+                myfile.close();
+                continue;
+            }
+            // else, start reading doubles.
             while (myfile >> tempVal) {
                 tempVec.push_back(tempVal);
             }
@@ -82,8 +118,13 @@ int readSSSFormat(int z) {
                 for(int i=0; i<tempVec.size(); i++) temp[i]=tempVec[i];
                 valuesSize.push_back(tempVec.size());
             }
+            else if(dir_entry.path().stem() == "coordinate-val"){
+                coord_val = new double[tempVec.size()];
+                for(int i=0; i<tempVec.size(); i++) coord_val[i]=tempVec[i];
+            }
             else cout << "unexpected file name: " << dir_entry.path() << endl;
             cout << dir_entry.path() << " has been read." << endl;
+
             tempVec.clear();
             myfile.close();
         }
@@ -112,35 +153,49 @@ int main(int argc, char **argv) {
             return -1;
         }
         readSSSFormat(atoi(argv[1]));
+
         n = matrixSize[atoi(argv[1])];
         int inputType = atoi(argv[1]);
+
         double *matrixOffDiagonal = valuesPtrs[0];
         int *matrixColind = colindPtrs[0];
         int *matrixRowptr= rowptrPtrs[0];
+
+        int *banded_coordRow = coord_row;
+        int *banded_coordCol = coord_col;
+        double *banded_coordval = coord_val;
         rowLimit = n / world_size + 0.5; // ceiling function
 
-        std::cout  << "Rank: " << my_rank << " starts computing RCM... " << endl;
+        std::cout  << "Rank: " << my_rank << " starts computing coocsr... " << endl;
+        int *banded_csrRow = new int[matrixSize[inputType]+1];
+        int *banded_csrCol = new int[nonzerosSize[inputType]];
+        double *banded_csrval = new double[nonzerosSize[inputType]];
+        coocsr_(matrixSize[inputType],  nonzerosSize[inputType], banded_coordval, banded_coordRow, banded_coordCol, banded_csrval, banded_csrCol, banded_csrRow);
 
-        int *perm = new int[matrixSize[inputType]];
-        memset(perm, 0, sizeof(int) * matrixSize[inputType]);
+        //int *perm = new int[matrixSize[inputType]];
+        //memset(perm, 0, sizeof(int) * matrixSize[inputType]);
         //test02( );
-        std::cout  << "nodenum: " << matrixSize[inputType] << " adjnum: " <<nonzerosSize[inputType]  << endl << flush;
+        //std::cout  << "nodenum: " << matrixSize[inputType] << " adjnum: " <<nonzerosSize[inputType]  << endl << flush;
 
         // geeks for geeks code :
         //ReorderingSSM m(matrixSize[inputType], matrixOffDiagonal, matrixRowptr, matrixColind);
         //vector<int> r = m.ReverseCuthillMckee();
         //cout << "Permutation order of objects: " << r << endl << flush;
 
-        genrcm( matrixSize[inputType], nonzerosSize[inputType], matrixRowptr, matrixColind, perm );
+        //genrcm( matrixSize[inputType], nonzerosSize[inputType], matrixRowptr, matrixColind, perm );
 
         // fortran code :
         //rcm ( 1, nonzerosSize[inputType], matrixRowptr, matrixColind, mask, perm, &iccsze, matrixSize[inputType] );
-        ofstream outFile;
+        /*
+         *
+         * WRITE PERMUTATION OUTPUT
+         ofstream outFile;
         outFile.open ("/home/selin/HPC-Research/" +matrix_names[inputType] + "-perm.txt", ios::out | ios::trunc);
         for(int o=0; o<matrixSize[inputType]; o++) {
             outFile << perm[o] << " ";
        }
         outFile.close();
+        */
 
         // double time1 = MPI_Wtime()
         std::cout << "Rank:" << my_rank << " Matrix: " << matrix_names[inputType]  << endl;
