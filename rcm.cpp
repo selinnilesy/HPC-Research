@@ -1,5 +1,14 @@
-# include "rcm.hpp"
+#include <string>
+# include <cstdlib>
+# include <iostream>
+# include <iomanip>
+# include <fstream>
+# include <cmath>
+# include <ctime>
+# include <cstring>
+using namespace std;
 
+# include "rcm.hpp"
 //****************************************************************************80
 
 int adj_bandwidth ( int node_num, int adj_num, int adj_row[], int adj[] )
@@ -851,7 +860,7 @@ void adj_show ( int node_num, int adj_num, int adj_row[], int adj[] )
     cout << "  Lower bandwidth = " << band_lo << "\n";
     cout << "  Lower envelope contains " << nonzero_num << " nonzeros.\n";
 
-    delete [] band;
+    if(band){ delete [] band; cout << "deleting once -t here" << endl << flush;}
 
     return;
 }
@@ -1059,8 +1068,13 @@ void genrcm ( int node_num, int adj_num, int adj_row[], int adj[], int perm[] )
     int num;
     int root;
 
+    cout << "NODE NUM " << node_num << endl<< flush;
+    level_row = nullptr;
     level_row = new int[node_num+1];
-    mask = new int[node_num];
+    mask = nullptr;
+    mask =  new int[node_num];
+    cout << "alloc test: levelrow " << level_row << endl<< flush;
+    cout << "alloc test: mask " << mask << endl<< flush;
 
     for ( i = 0; i < node_num; i++ )
     {
@@ -1083,27 +1097,51 @@ void genrcm ( int node_num, int adj_num, int adj_row[], int adj[], int perm[] )
 //
             root_find ( &root, adj_num, adj_row, adj, mask, &level_num,
                         level_row, perm+num-1, node_num );
+            cout << "after rootfind alloc test: levelrow " << level_row << endl<< flush;
+            cout << "after rootfind  alloc test: mask " << mask << endl<< flush;
+
 //
 //  RCM orders the component using ROOT as the starting node.
 //
             rcm ( root, adj_num, adj_row, adj, mask, perm+num-1, &iccsze,
                   node_num );
-
+            cout << "rcm  ok with iccsize: " << iccsze << endl<< flush;
+            cout << "after rcm alloc test: levelrow " << level_row << endl<< flush;
+            cout << "after rcm  alloc test: mask " << mask << endl<< flush;
             num = num + iccsze;
+
+            //if(level_row) {cout << "after rootfind levelrow deletion" << endl<< flush; delete [] level_row;}
+            //cout << "1st one ok" << endl << flush;
+
+            //if(mask){ cout << "after rootfind mask deletion" << endl<< flush; delete [] mask;}
+            //cout << "2nd one ok" << endl<< flush;
 //
 //  We can stop once every node is in one of the connected components.
 //
             if ( node_num < num )
             {
-                delete [] level_row;
-                delete [] mask;
+                cout << "node_num < num" << endl<< flush;
+                /*if(level_row){
+                    cout << "deleting  level_row " <<  endl<< flush;
+                    free(level_row);
+                }*/
+
+                if(level_row) {cout << "entering 1st if..." << endl<< flush; delete [] level_row;}
+                cout << "1st if ok" << endl << flush;
+
+                /*if(mask){
+                    cout << "deleting  mask " << endl<< flush;
+                    free(mask);
+                }*/
+                if(mask){ cout << "entering 2nd if..." << endl<< flush; delete [] mask;}
+                cout << "2nd if ok" << endl<< flush;
                 return;
             }
         }
     }
 
-    delete [] level_row;
-    delete [] mask;
+    if(level_row) delete [] level_row;
+    if(mask) delete [] mask;
 
     return;
 }
@@ -3271,7 +3309,8 @@ void rcm ( int root, int adj_num, int adj_row[], int adj[], int mask[],
 //
     if ( *iccsze == 1 )
     {
-        delete [] deg;
+        if(deg) delete [] deg;
+        cout << "deleting once - a here" << endl << flush;
         return;
     }
 //
@@ -3358,7 +3397,15 @@ void rcm ( int root, int adj_num, int adj_row[], int adj[], int mask[],
 //
 //  Free memory.
 //
-    delete [] deg;
+    cout << "printing in-function permutaion" << endl << flush;
+    for(int o=0; o<node_num; o++) {
+        cout << " " << perm[o] << " ";
+    }
+
+    if(deg){
+        delete [] deg;
+        cout << "deleting once -x here" << endl << flush;
+    }
 
     return;
 }
@@ -4017,7 +4064,10 @@ int *triangulation_neighbor_triangles ( int triangle_order, int triangle_num,
         icol = icol + 2;
     }
 
-    delete [] col;
+    if(col) {
+        delete [] col;
+        cout << "deleting once - y here" << endl << flush;
+    }
 
     return triangle_neighbor;
 }
@@ -4450,7 +4500,10 @@ int *triangulation_order3_adj_set ( int node_num, int triangle_num,
         i4vec_sort_heap_a ( k2+1-k1, adj+k1-1 );
     }
 
-    delete [] adj_copy;
+    if(adj_copy){
+        delete [] adj_copy;
+        cout << "deleting once -z here" << endl << flush;
+    }
 
     return adj;
 }
@@ -5310,7 +5363,7 @@ int *triangulation_order6_adj_set ( int node_num, int triangle_num,
         i4vec_sort_heap_a ( k2+1-k1, adj+k1-1 );
     }
 
-    delete [] adj_copy;
+    if(adj_copy) delete  [] adj_copy;
 
     return adj;
 }

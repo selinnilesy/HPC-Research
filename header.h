@@ -24,6 +24,7 @@ namespace fs = std::experimental::filesystem;
 vector<string> matrix_names = {"boneS10", "Emilia_923", "ldoor", "af_5_k101", "Serena", "audikw_1"};
 // ORDER: boneS10, Emilia_923, ldoor, af_5_k101, Serena, audikw_1
 vector<int> matrixSize{914898, 923136, 952203 , 503625, 1391349, 943695};
+vector<int> nonzerosSize{40878708, 40373538 , 42493817 , 17550675, 64131971, 77651847};
 
 // matrix SSS storage vectors
 vector<double*> valuesPtrs, dvaluesPtrs;

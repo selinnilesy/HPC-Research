@@ -1,12 +1,6 @@
-#include <string>
-# include <cstdlib>
-# include <iostream>
-# include <iomanip>
-# include <fstream>
-# include <cmath>
-# include <ctime>
-# include <cstring>
-using namespace std;
+#ifndef RCM_HPP
+#define RCM_HPP
+
 
 int adj_bandwidth ( int node_num, int adj_num, int adj_row[], int adj[] );
 bool adj_contains_ij ( int node_num, int adj_num, int adj_row[], int adj[],
@@ -85,3 +79,4 @@ void triangulation_order6_example2 ( int node_num, int triangle_num,
                                      double node_xy[], int triangle_node[], int triangle_neighbor[] );
 void triangulation_order6_example2_size ( int *node_num, int *triangle_num,
                                           int *hole_num );
+#endif

@@ -5,6 +5,8 @@
 #include <iostream>
 #include  "header.h"
 #include <mpi.h>
+#include "rcmtest.cpp"
+#include "geeks.cpp"
 
 using namespace std;
 
@@ -74,7 +76,7 @@ int readSSSFormat(int z) {
                 for(int i=0; i<tempVec.size(); i++) temp[i]=tempVec[i];
                 dvaluesSize.push_back(tempVec.size());
             }
-            else if(dir_entry.path().stem() == "nond_values"){
+            else if(dir_entry.path().stem() == "values"){
                 valuesPtrs.push_back(new double[tempVec.size()]);
                 double *temp = valuesPtrs[0];
                 for(int i=0; i<tempVec.size(); i++) temp[i]=tempVec[i];
@@ -110,13 +112,35 @@ int main(int argc, char **argv) {
             return -1;
         }
         readSSSFormat(atoi(argv[1]));
-
         n = matrixSize[atoi(argv[1])];
         int inputType = atoi(argv[1]);
         double *matrixOffDiagonal = valuesPtrs[0];
         int *matrixColind = colindPtrs[0];
         int *matrixRowptr= rowptrPtrs[0];
         rowLimit = n / world_size + 0.5; // ceiling function
+
+        std::cout  << "Rank: " << my_rank << " starts computing RCM... " << endl;
+
+        int *perm = new int[matrixSize[inputType]];
+        memset(perm, 0, sizeof(int) * matrixSize[inputType]);
+        //test02( );
+        std::cout  << "nodenum: " << matrixSize[inputType] << " adjnum: " <<nonzerosSize[inputType]  << endl << flush;
+
+        // geeks for geeks code :
+        //ReorderingSSM m(matrixSize[inputType], matrixOffDiagonal, matrixRowptr, matrixColind);
+        //vector<int> r = m.ReverseCuthillMckee();
+        //cout << "Permutation order of objects: " << r << endl << flush;
+
+        genrcm( matrixSize[inputType], nonzerosSize[inputType], matrixRowptr, matrixColind, perm );
+
+        // fortran code :
+        //rcm ( 1, nonzerosSize[inputType], matrixRowptr, matrixColind, mask, perm, &iccsze, matrixSize[inputType] );
+        ofstream outFile;
+        outFile.open ("/home/selin/HPC-Research/" +matrix_names[inputType] + "-perm.txt", ios::out | ios::trunc);
+        for(int o=0; o<matrixSize[inputType]; o++) {
+            outFile << perm[o] << " ";
+       }
+        outFile.close();
 
         // double time1 = MPI_Wtime()
         std::cout << "Rank:" << my_rank << " Matrix: " << matrix_names[inputType]  << endl;
@@ -133,29 +157,23 @@ int main(int argc, char **argv) {
 
                 MPI_Send(&inputType, 1, MPI_INT, t, 0, MPI_COMM_WORLD);
                 MPI_Send(&pieceSize, 1, MPI_INT, t, 0, MPI_COMM_WORLD);
-
                 elementCount = matrixRowptr[upperLimit] - matrixRowptr[lowerLimit] ;
                 MPI_Send(matrixRowptr + lowerLimit, pieceSize+1, MPI_INT, t, 0, MPI_COMM_WORLD);
+
                 offset = (matrixRowptr[lowerLimit]);
 
                 MPI_Send(&elementCount, 1, MPI_INT, t, 0, MPI_COMM_WORLD);
 
                 MPI_Send(matrixColind+ offset, elementCount, MPI_INT, t, 0, MPI_COMM_WORLD);
-                MPI_Send(matrixOffDiagonal+ offset, elementCount, MPI_DOUBLE, t, 0, MPI_COMM_WORLD);
 
-                    //std::cout << "Rank:" << my_rank << " has sent to: " << t  << endl;
-                }
+                MPI_Send(matrixOffDiagonal+ offset, elementCount, MPI_DOUBLE, t, 0, MPI_COMM_WORLD);
+             }
             //std::cout  << "Rank: " << my_rank << " sent all data" << endl;
             int elmCountPerRow, rowBegin = 0;
             int confCount=0, colInd, rowEnd = rowLimit;
             time1=MPI_Wtime();
-            //std::cout  << "Rank: " << my_rank << " starts computing... " << endl;
-            // include remaining rows
 
-            int *perm = new int[matrixSize[inputType]] ;
-            genrcm( matrixSize[inputType], matrixRowptr, matrixColind, nonzerosSize[inputType], perm )
 
-            std::cout  << "Rank: " << my_rank << " returns rcm: " << perm[0]  << endl;
 
             for (int i = 0; i < rowEnd; i++) {
                 elmCountPerRow = matrixRowptr[i + 1] - matrixRowptr[i];
@@ -185,9 +203,9 @@ int main(int argc, char **argv) {
            std::cout  << "Rank: " << my_rank << " computed # Conflicts: "  << confCount << " Time: " << time2-time1 << endl;
 
 
-            delete [] matrixOffDiagonal;
-            delete [] matrixColind;
-            delete [] matrixRowptr;
+            if(matrixOffDiagonal) delete [] matrixOffDiagonal;
+            if(matrixColind) delete [] matrixColind;
+            if(matrixRowptr) delete [] matrixRowptr;
 
     }
     else {
