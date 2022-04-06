@@ -15,8 +15,8 @@ int p;
 vector<int> x;
 vector<int> y;
 vector<int> elm_row; // use this to find out row_ptr values
-int *coord_row, *coord_col;
-double *coord_val;
+int *csr_row, *csr_col;
+double *csr_val;
 
 
 
@@ -37,13 +37,14 @@ void init(){
 }*/
 
 extern "C" {
-    extern void coocsr_(int *nrow, int *nnz, double* a, int* ir,int* jc, double* ao, int* jao, int* iao);
+    //extern void coocsr_(int *nrow, int *nnz, double* a, int* ir,int* jc, double* ao, int* jao, int* iao);
+    extern void csrsss_(int *nrow, int *nnz, double* a, int *ja, int *ia, bool* sorted, double *diag, double* al, int *jal, int *ial, double* au);
 }
 
 int readSSSFormat(int z) {
     double tempVal;
     vector<double> tempVec;
-        const fs::path matrixFolder{"/home/selin/CSR-Data/" + matrix_names[z]};
+        const fs::path matrixFolder{"/home/selin/CSR-Data/" + matrix_names[z] +"/banded"};
         for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
             std::fstream myfile(dir_entry.path(), std::ios_base::in);
             if(dir_entry.path().stem() == "rowptr") {
@@ -61,14 +62,14 @@ int readSSSFormat(int z) {
                 myfile.close();
                 continue;
             }
-            else if(dir_entry.path().stem() == "coordinate-row") {
+            else if(dir_entry.path().stem() == "CSRout_row") {
                 int tempValInt;
                 vector<int> tempVecInt;
                 while (myfile >> tempValInt) {
                     tempVecInt.push_back(tempValInt);
                 }
-                coord_row = new int[tempVecInt.size()];
-                for(int i=0; i<tempVecInt.size(); i++) coord_row[i]=tempVecInt[i];
+                csr_row = new int[tempVecInt.size()];
+                for(int i=0; i<tempVecInt.size(); i++) csr_row[i]=tempVecInt[i];
 
                 cout << dir_entry.path() << " has been read." << endl;
                 myfile.close();
@@ -88,14 +89,14 @@ int readSSSFormat(int z) {
                 myfile.close();
                 continue;
             }
-            else if(dir_entry.path().stem() == "coordinate-col") {
+            else if(dir_entry.path().stem() == "CSRout_col") {
                 int tempValInt;
                 vector<int> tempVecInt;
                 while (myfile >> tempValInt) {
                     tempVecInt.push_back(tempValInt);
                 }
-                coord_col = new int[tempVecInt.size()];
-                for(int i=0; i<tempVecInt.size(); i++) coord_col[i]=tempVecInt[i];
+                csr_col = new int[tempVecInt.size()];
+                for(int i=0; i<tempVecInt.size(); i++) csr_col[i]=tempVecInt[i];
 
                 cout << dir_entry.path() << " has been read." << endl;
                 myfile.close();
@@ -118,9 +119,9 @@ int readSSSFormat(int z) {
                 for(int i=0; i<tempVec.size(); i++) temp[i]=tempVec[i];
                 valuesSize.push_back(tempVec.size());
             }
-            else if(dir_entry.path().stem() == "coordinate-val"){
-                coord_val = new double[tempVec.size()];
-                for(int i=0; i<tempVec.size(); i++) coord_val[i]=tempVec[i];
+            else if(dir_entry.path().stem() == "CSRout_val"){
+                csr_val = new double[tempVec.size()];
+                for(int i=0; i<tempVec.size(); i++) csr_val[i]=tempVec[i];
             }
             else cout << "unexpected file name: " << dir_entry.path() << endl;
             cout << dir_entry.path() << " has been read." << endl;
@@ -144,49 +145,51 @@ int main(int argc, char **argv){
     n = matrixSize[atoi(argv[1])];
     int inputType = atoi(argv[1]);
 
-    double *matrixOffDiagonal = valuesPtrs[0];
-    int *matrixColind = colindPtrs[0];
-    int *matrixRowptr= rowptrPtrs[0];
 
-    delete [] matrixOffDiagonal;
-    delete [] matrixColind;
-    delete [] matrixRowptr;
-
-    int *banded_coordRow = coord_row;
-    int *banded_coordCol = coord_col;
-    double *banded_coordval = coord_val;
-
-    std::cout  <<  " starts computing coocsr... " << endl;
-    int *banded_csrRow = new int[matrixSize[inputType]+1];
-    int *banded_csrCol = new int[nonzerosSize[inputType]];
-    double *banded_csrval = new double[nonzerosSize[inputType]];
+    std::cout  <<  " starts computing csrsss... " << endl;
 
     int nnz = nonzerosSize[inputType];
     int nrow=matrixSize[inputType];
 
-    coocsr_(&nrow,  &nnz, banded_coordval, banded_coordRow, banded_coordCol, banded_csrval, banded_csrCol, banded_csrRow);
-    std::cout  <<  " FINISHED computing coocsr... " << banded_csrval[10] << " " << banded_csrCol[10] << " " << banded_csrRow[10] << endl;
+    double *diag = new double[matrixSize[inputType]];
+    int *rowptr = new int[matrixSize[inputType]+1];
+    // strict lower part
+    int *colinds_lower = new int[(nonzerosSize[inputType] - matrixSize[inputType])/2];
+    double *vals_lower = new double[(nonzerosSize[inputType] - matrixSize[inputType])/2];
+    double *vals_upper = new double[(nonzerosSize[inputType] - matrixSize[inputType])/2];
 
-    ofstream myfile1, myfile2, myfile3;
-    myfile1.open (matrix_names[inputType] + "-CSRout_row.txt", ios::out | ios::trunc);
-    myfile2.open (matrix_names[inputType] + "-CSRout_col.txt", ios::out | ios::trunc);
-    myfile3.open (matrix_names[inputType] + "-CSRout_val.txt", ios::out | ios::trunc);
+    bool sorted = 0;
 
-    cout << "Writing to " << "-CSRout_row.txt"  << endl;
-    for (int i=0; i<matrixSize[inputType]+1; i++) {
-        myfile1 << banded_csrRow[i] << '\t';
+    csrsss_(&nrow,&nnz, csr_val, csr_col, csr_row, &sorted, diag, vals_lower, colinds_lower, rowptr, vals_upper);
+    std::cout  <<  " finished computing csrsss... " << diag[10] << " " << vals_lower[10] << " " << colinds_lower[10]<< " " << rowptr[10] << endl;
+
+    ofstream myfile1, myfile2, myfile3,myfile4;
+    myfile1.open (matrix_names[inputType] + "-SSSout_rowptr.txt", ios::out | ios::trunc);
+    myfile2.open (matrix_names[inputType] + "-SSSout_colind.txt", ios::out | ios::trunc);
+    myfile3.open (matrix_names[inputType] + "-SSSout_vals.txt", ios::out | ios::trunc);
+    myfile4.open (matrix_names[inputType] + "-SSSout_diag.txt", ios::out | ios::trunc);
+
+    cout << "Writing to " << "-SSSout_rowptr.txt"  << endl;
+    for (int i=0; i<nrow+1; i++) {
+        myfile1 << rowptr[i] << '\t';
     }
-    cout << "Writing to " << "-CSRout_col.txt"  << endl;
-    for (int i=0; i<nonzerosSize[inputType]; i++) {
-        myfile2 << banded_csrCol[i] << '\t';
+    cout << "Writing to " << "-SSSout_colind.txt"  << endl;
+    for (int i=0; i<(nnz-nrow)/2; i++) {
+        myfile2 << colinds_lower[i] << '\t';
     }
-    cout << "Writing to " << "-CSRout_val.txt"  << endl;
-    for (int i=0; i<nonzerosSize[inputType]; i++){
-        myfile3 << banded_csrval[i] << '\t';
+    cout << "Writing to " << "-SSSout_vals.txt"  << endl;
+    for (int i=0; i<(nnz-nrow)/2; i++){
+        myfile3 << vals_lower[i] << '\t';
+    }
+    cout << "Writing to " << "-SSSout_diag.txt"  << endl;
+    for (int i=0; i<nrow; i++){
+        myfile3 << diag[i] << '\t';
     }
     myfile1.close();
     myfile2.close();
     myfile3.close();
+    myfile4.close();
+
 }
 
 /*
