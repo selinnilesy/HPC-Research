@@ -7,7 +7,7 @@ CSR_encoder.o: CSR_encoder.cpp header.h
 	g++ -Wall -g -c CSR_encoder.cpp header.h
 
 SSSconflictFree: SSSconflictFree.cpp
-	g++ SSSconflictFree.cpp -o SSSconflictFree -I/home/selin/xianyi-OpenBLAS-0b678b1/ -L/home/selin/xianyi-OpenBLAS-0b678b1/ -Wl,-rpath,/home/selin/xianyi-OpenBLAS-0b678b1/ -lopenblas  -std=c++17
+	g++ SSSconflictFree.cpp -o SSSconflictFree -I/home/selin/HPC-Research/xianyi-OpenBLAS-0b678b1/include/ -L/home/selin/HPC-Research/xianyi-OpenBLAS-0b678b1/lib -Wl,-rpath,/home/selin/HPC-Research/xianyi-OpenBLAS-0b678b1/lib -lopenblas -std=c++17
 
 clean:
 	 rm CSR_encoder.o
