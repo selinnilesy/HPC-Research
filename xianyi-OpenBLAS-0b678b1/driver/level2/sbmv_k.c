@@ -75,6 +75,7 @@ int CNAME(BLASLONG n, BLASLONG k, FLOAT alpha,
 	   alpha * X[i],
 	   a + k - length, 1, Y + i - length, 1, NULL, 0);
     Y[i] += alpha * DOTU_K(length, a + k - length, 1, X + i - length, 1);
+    //printf("in sbmv_k.c: changed to minus\n");
 #else
     length  = k;
     if (n - i - 1 < k) length = n - i - 1;
@@ -91,7 +92,7 @@ int CNAME(BLASLONG n, BLASLONG k, FLOAT alpha,
   if (incy != 1) {
     COPY_K(n, Y, 1, y, incy);
   }
-
+  printf("in sbmv_k.c\n");
   return 0;
 }
 

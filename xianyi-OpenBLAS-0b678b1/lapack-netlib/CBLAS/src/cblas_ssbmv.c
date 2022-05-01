@@ -56,7 +56,7 @@ void cblas_ssbmv(const CBLAS_LAYOUT layout, const CBLAS_UPLO Uplo,
       &F77_incX, &beta, Y, &F77_incY);
    }else if (layout == CblasRowMajor)
    {
-      printf("Row major.\n");
+
       RowMajorStrg = 1;
       if (Uplo == CblasUpper) UL = 'L';
       else if (Uplo == CblasLower) UL = 'U';
@@ -76,5 +76,6 @@ void cblas_ssbmv(const CBLAS_LAYOUT layout, const CBLAS_UPLO Uplo,
    else cblas_xerbla(1, "cblas_ssbmv", "Illegal layout setting, %d\n", layout);
    CBLAS_CallFromC = 0;
    RowMajorStrg = 0;
+   printf("cblas_ssbmv.c.\n");
    return;
 }

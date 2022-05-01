@@ -5,6 +5,7 @@
 
 using namespace std;
 
+
 int main()
 {
     int i=0;
@@ -31,7 +32,10 @@ int main()
             }
         }
     }
+    matrix[1][2] = 1.0;
     matrix[0][1] = 1.0;
+    matrix[2][3] = 1.0;
+    matrix[3][4] = 1.0;
     matrix[4][3] = 1.0;
 
     for(int i=0; i<5; i++){
@@ -62,8 +66,8 @@ int main()
     for(int i=0; i<5; i++) Y[i] = 0.0;
     float alpha = 1;
     float beta = 0;
-    int size = 5;
-    int k = 2;
+    int size= 5;
+    int k = 1;
     int lda = k+1;
     int incx = 1;
     int incy = 1;
@@ -75,7 +79,7 @@ int main()
         for(int i=j ; i<=min(size, j+k); i++){
             int ind_x = i-1;
             int ind_y = j-1;
-            A[(m+i-1)*size + ind_y] = matrix2[ind_x][ind_y];
+            A[(m+i-1)*size + ind_y] = matrix[ind_x][ind_y];
         }
     }
     cout << "Formed A: " << endl;
@@ -89,11 +93,11 @@ int main()
     cout << "Call cblas_ssbmv. " << endl ;
     // CblasRowMajor = 101
     // CblasLower = 122
-    //cblas_ssbmv (CblasRowMajor, CblasLower, size, k, alpha, A, lda, X, incx, beta, Y, incy);
+    cblas_ssbmv(CblasColMajor, CblasLower, size, k, alpha, A, lda, X, incx, beta, Y, incy);
 
 
     // MY C++ IMPLEMENTATION FOR SSBMV.F
-
+    /*
     int temp1, temp2, l;
     for(int j=1; j<=size; j++){
         temp1 = X[j-1];
@@ -110,6 +114,7 @@ int main()
         //cout << "3rd body - add " <<temp2 << endl;
         Y[j-1] = Y[j-1] + temp2;
     }
+     */
 
 
     cout << "Output: " << endl;
