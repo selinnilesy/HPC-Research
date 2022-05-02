@@ -304,7 +304,7 @@
                   L = 1 - J
                   DO 90 I = J + 1,MIN(N,J+K)
                       Y(I) = Y(I) + TEMP1*A(L+I,J)
-                      TEMP2 = TEMP2 + A(L+I,J)*X(I)
+                      TEMP2 = TEMP2 - A(L+I,J)*X(I)
    90             CONTINUE
                   Y(J) = Y(J) + ALPHA*TEMP2
   100         CONTINUE

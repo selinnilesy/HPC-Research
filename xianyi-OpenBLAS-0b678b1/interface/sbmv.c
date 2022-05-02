@@ -204,6 +204,7 @@ void CNAME(enum CBLAS_ORDER order,
 #endif
 
   (sbmv[uplo])(n, k, alpha, a, lda, x, incx, y, incy, buffer);
+  printf("called sbmv in sbmv.c\n");
 
 #ifdef SMPTEST
   } else {

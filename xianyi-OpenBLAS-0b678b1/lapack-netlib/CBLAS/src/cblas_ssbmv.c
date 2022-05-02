@@ -15,7 +15,6 @@ void cblas_ssbmv(const CBLAS_LAYOUT layout, const CBLAS_UPLO Uplo,
 {
    printf("Here.\n");
    fflush(stdin);
-   zort
    char UL;
 #ifdef F77_CHAR
    F77_CHAR F77_UL;
@@ -40,6 +39,7 @@ void cblas_ssbmv(const CBLAS_LAYOUT layout, const CBLAS_UPLO Uplo,
    if (layout == CblasColMajor)
    {
 
+      printf("run CblasColMajor cblas_ssbmv.c.\n");
       if (Uplo == CblasUpper) UL = 'U';
       else if (Uplo == CblasLower) UL = 'L';
       else
@@ -76,6 +76,6 @@ void cblas_ssbmv(const CBLAS_LAYOUT layout, const CBLAS_UPLO Uplo,
    else cblas_xerbla(1, "cblas_ssbmv", "Illegal layout setting, %d\n", layout);
    CBLAS_CallFromC = 0;
    RowMajorStrg = 0;
-   printf("cblas_ssbmv.c.\n");
+   printf("run cblas_ssbmv.c.\n");
    return;
 }
