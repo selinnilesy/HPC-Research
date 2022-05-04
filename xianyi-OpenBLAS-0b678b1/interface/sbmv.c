@@ -109,6 +109,8 @@ void NAME(char *UPLO, blasint *N, blasint *K, FLOAT  *ALPHA, FLOAT *a, blasint *
 
   if (uplo_arg  == 'U') uplo  = 0;
   if (uplo_arg  == 'L') uplo  = 1;
+  //uplo  = 1;
+  printf("GOT %c in sbmv.c\n", uplo_arg);
 
   info = 0;
 
@@ -202,9 +204,9 @@ void CNAME(enum CBLAS_ORDER order,
 
   if (nthreads == 1) {
 #endif
-
-  (sbmv[uplo])(n, k, alpha, a, lda, x, incx, y, incy, buffer);
   printf("called sbmv in sbmv.c\n");
+  (sbmv[uplo])(n, k, alpha, a, lda, x, incx, y, incy, buffer);
+
 
 #ifdef SMPTEST
   } else {
