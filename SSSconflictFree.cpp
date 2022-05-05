@@ -9,12 +9,12 @@ using namespace std;
 int main()
 {
     int i=0;
-    int size= 5;
+    int size= 10;
     float** matrix = new float*[size];
     float** matrix2 = new float*[5];
 
     // generate symmetric banded matrix
-    /*.
+
     for(int i=0; i<10; i++){
         matrix[i] = new float[10];
         for(int j=0; j<10; j++) {
@@ -43,8 +43,9 @@ int main()
     matrix[2][3] = 1.0;
     matrix[3][4] = 1.0;
     matrix[4][3] = 1.0;
-    */
 
+
+    /*
     for(int i=0; i<5; i++){
         matrix[i] = new float[5];
         for(int j=0; j<5; j++) {
@@ -59,6 +60,8 @@ int main()
         }
     }
     matrix[0][1] = matrix[4][3]  = 1.0;
+    */
+
 
     for(int i=0; i<5; i++){
         matrix2[i] = new float[5];
@@ -90,7 +93,7 @@ int main()
     for(int i=0; i<size; i++) Y[i] = 0.0;
     float alpha = 1;
     float beta = 0;
-    int k = 1;
+    int k = 2;
     int lda = k+1;
     int incx = 1;
     int incy = 1;
@@ -107,6 +110,7 @@ int main()
         }
     }
     // for upper storage of A with size=10
+
     /*
     A[0]=0;
     A[1]=0;
@@ -114,17 +118,48 @@ int main()
     A[size -1 + size]=1;
     A[2*size + size - 1]=1;
     A[2*size + size - 2]=1;
-    */
-    // for upper storage of A with size=5
+     */
 
+
+    // for upper storage of A with size=5 k=1
+    /*
     A[0]=0;
     A[2*size -1 ]=1;
+     */
+    // for lower storage of A with size=10 k=2
+    /*
+    A[0]=1;
+    A[1]=1;
+    A[size]=1;
+    A[3*size - 1 ]=0;
+    A[3*size - 2 ]=0;
+    A[2*size - 1 ]=0;
+    */
+    for(int i=0; i<size; i++) {
+        for(int j=0 ; j<lda; j++){
+            A[(lda)*i + j]= 1;
+        }
+    }
+    // col major - upper  10 x 3
+
+    A[0]=0;
+    A[1]=0;
+    A[lda]=0;
+     
+    // col major - lower  10 x 3
+    /*
+    A[size*lda-1]=0;
+    A[size*lda-2]=0;
+    A[(size-1)*lda-1]=0;
+     */
+
+
 
     cout << "Formed A: " << endl;
 
-    for(int i=0; i<lda; i++) {
-        for(int j=0 ; j<size; j++){
-            cout << A[(i)*size + j] << " " ;
+    for(int i=0; i<size; i++) {
+        for(int j=0 ; j<lda; j++){
+            cout << A[(lda)*i + j] << " " ;
         }
         cout <<  endl;
     }
@@ -132,9 +167,9 @@ int main()
     // CblasRowMajor = 101
     // CblasLower = 122
     //const CBLAS_UPLO Uplo = CblasLower;
-    // upper verince kernel lower'a giriyo. lower verince upper'a.
-    // CblasColMajor, CblasLower -> ( ! kernel'de upper) 10x10 1 bandwith icin calisiyor.
-    cblas_ssbmv(CblasRowMajor, CblasLower, size, k, alpha, A, lda, X, incx, beta, Y, incy);
+    // column major : upper verince kernel lower'a giriyor. lower verince upper'a.
+    // column major : CblasLower -> ( ! kernel'de upper) 10x10 1 bandwith icin calisiyor.
+    cblas_ssbmv(CblasColMajor, CblasUpper, size, k, alpha, A, lda, X, incx, beta, Y, incy);
 
     cout << "Output: " << endl;
     for(int j=0; j<size; j++) {

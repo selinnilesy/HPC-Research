@@ -82,7 +82,6 @@ int CNAME(BLASLONG n, BLASLONG k, FLOAT alpha,
 	   alpha * X[i],
 	   a + k - length, 1, Y + i - length, 1, NULL, 0);
 
-    //if(i==0) Y[i] += alpha * DOTU_K(length, a + k - length, 1, X + i - length, 1);
     Y[i] -= alpha * DOTU_K(length, a + k - length, 1, X + i - length, 1);
     printf("lower - in sbmv_k.c: dot y[%d] : %d\n", i,  DOTU_K(length, a + k - length, 1, X + i - length, 1));
 
