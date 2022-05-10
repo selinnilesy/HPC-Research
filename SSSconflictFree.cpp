@@ -1,198 +1,126 @@
-#include <cblas.h>
-#include <stdio.h>
+//
+// Created by Selin Yıldırım on 7.01.2022.
+//
+
 #include <iostream>
-#include <cmath>
+#include  "header.h"
+//#include <mpi.h>
+//#include "rcmtest.cpp"
+//#include "geeks.cpp"
 
 using namespace std;
+#define MATRIX_COUNT 6
 
+int p;
+vector<int> x;
+vector<int> y;
+vector<int> elm_row; // use this to find out row_ptr values
+int *coord_row, *coord_col;
+double *coord_val;
 
-int main()
-{
-    int i=0;
-    int size= 10;
-    float** matrix = new float*[size];
-    float** matrix2 = new float*[5];
-
-    // generate symmetric banded matrix
-
-    for(int i=0; i<10; i++){
-        matrix[i] = new float[10];
-        for(int j=0; j<10; j++) {
-            if(j < i-2 || j> i+2 ) matrix[i][j] = 0.0;
-            else if(i==j){
-                matrix[i][j] = 1.0;
-                if(i > 0 && j < 9){
-                    matrix[i][j-1] = 1.0;
-                    matrix[i][j+1] = 1.0;
-                }
-
-                if(i > 1 && j < 8){
-                    matrix[i][j-2] = 1.0;
-                    matrix[i][j+2] = 1.0;
-                }
-
-            }
-        }
-    }
-    matrix[0][1] = 1.0;
-    matrix[1][3] = 1.0;
-    matrix[0][2] = 1.0;
-    matrix[9][8] = 1.0;
-    matrix[8][6] = 1.0;
-    matrix[9][7] = 1.0;
-    matrix[2][3] = 1.0;
-    matrix[3][4] = 1.0;
-    matrix[4][3] = 1.0;
-
-
-    /*
-    for(int i=0; i<5; i++){
-        matrix[i] = new float[5];
-        for(int j=0; j<5; j++) {
-            if(j < i-1 || j> i+1 ) matrix[i][j] = 0.0;
-            else if(i==j){
-                matrix[i][j] = 1.0;
-                if(i > 0 && j < 4){
-                    matrix[i][j-1] = 1.0;
-                    matrix[i][j+1] = 1.0;
-                }
-            }
-        }
-    }
-    matrix[0][1] = matrix[4][3]  = 1.0;
-    */
-
-
-    for(int i=0; i<5; i++){
-        matrix2[i] = new float[5];
-        for(int j=0; j<5; j++) {
-            matrix2[i][j] = 1.0;
-        }
-    }
-    matrix2[0][3] = matrix2[0][4] = matrix2[1][4]  = matrix2[3][0] = matrix2[4][0] = matrix2[4][1] =0.0;
-
-    cout << "Matrix" << endl;
-    for(int i=0; i<size; i++){
-        for(int j=0; j<size; j++) {
-            cout << matrix[i][j] << " " ;
-        }
-        cout << endl;
-    }
-    cout << endl;
-    cout << "Matrix 2" << endl;
-    for(int i=0; i<5; i++){
-        for(int j=0; j<5; j++) {
-            cout << matrix2[i][j] << " " ;
-        }
-        cout << endl;
-    }
-
-    float* X = new float[size];
-    for(int i=0; i<size; i++) X[i] = 1.0;
-    float* Y = new float[size];
-    for(int i=0; i<size; i++) Y[i] = 0.0;
-    float alpha = 1;
-    float beta = 0;
-    int k = 2;
-    int lda = k+1;
-    int incx = 1;
-    int incy = 1;
-    float* A = new float[lda*size];
-
-    int m;
-    // for LOWER only
-    for(int j=1; j<=size; j++) {
-        m = 1 - j;
-        for(int i=j ; i<=min(size, j+k); i++){
-            int ind_x = i-1;
-            int ind_y = j-1;
-            A[(m+i-1)*size + ind_y] = matrix[ind_x][ind_y];
-        }
-    }
-    // for upper storage of A with size=10
-
-    /*
-    A[0]=0;
-    A[1]=0;
-    A[size]=0;
-    A[size -1 + size]=1;
-    A[2*size + size - 1]=1;
-    A[2*size + size - 2]=1;
-     */
-
-
-    // for upper storage of A with size=5 k=1
-    /*
-    A[0]=0;
-    A[2*size -1 ]=1;
-     */
-    // for lower storage of A with size=10 k=2
-    /*
-    A[0]=1;
-    A[1]=1;
-    A[size]=1;
-    A[3*size - 1 ]=0;
-    A[3*size - 2 ]=0;
-    A[2*size - 1 ]=0;
-    */
-    for(int i=0; i<size; i++) {
-        for(int j=0 ; j<lda; j++){
-            A[(lda)*i + j]= 1;
-        }
-    }
-    // col major - upper  10 x 3
-
-    A[0]=0;
-    A[1]=0;
-    A[lda]=0;
-     
-    // col major - lower  10 x 3
-    /*
-    A[size*lda-1]=0;
-    A[size*lda-2]=0;
-    A[(size-1)*lda-1]=0;
-     */
-
-
-
-    cout << "Formed A: " << endl;
-
-    for(int i=0; i<size; i++) {
-        for(int j=0 ; j<lda; j++){
-            cout << A[(lda)*i + j] << " " ;
-        }
-        cout <<  endl;
-    }
-    cout << "Call cblas_ssbmv. " << endl ;
-    // CblasRowMajor = 101
-    // CblasLower = 122
-    //const CBLAS_UPLO Uplo = CblasLower;
-    // column major : upper verince kernel lower'a giriyor. lower verince upper'a.
-    // column major : CblasLower -> ( ! kernel'de upper) 10x10 1 bandwith icin calisiyor.
-    cblas_ssbmv(CblasColMajor, CblasUpper, size, k, alpha, A, lda, X, incx, beta, Y, incy);
-
-    cout << "Output: " << endl;
-    for(int j=0; j<size; j++) {
-        cout << Y[j] << endl;
-    }
+void init(){
+    double *values, *dvalues;
+    int *colind, *rowptr;
+    valuesPtrs.push_back(values);
+    dvaluesPtrs.push_back(dvalues);
+    colindPtrs.push_back(colind);
+    rowptrPtrs.push_back(rowptr);
 }
 
-// MY C++ IMPLEMENTATION FOR SSBMV.F
-/*
-int temp1, temp2, l;
-for(int j=1; j<=size; j++){
-    temp1 = X[j-1];
-    temp2 = 0;
-    //cout << "Y[j-1] with j-1: " << j-1 << endl;
-    //cout << "1st body - add " << temp1*A[j-1] << endl;
-    Y[j-1] = Y[j-1] + temp1*A[j-1];
-    l = 1 - j;
-    for(int i=j+1 ; i<=min(size, j+k); i++) {
-        Y[i-1] = Y[i-1] + temp1 * A[(l+i -1) * size + j-1];
-        //cout << "2nd body - add Y[i-1] with i: " << i << " " << temp1 * A[(l+i -1) * size + j-1] << endl;
-        temp2 = temp2 - A[(l+i -1) * size + j-1] * X[i-1];
+int readSSSFormat(int z) {
+    double tempVal;
+    vector<double> tempVec;
+    const fs::path matrixFolder{"/home/selin/SSS-Data/" + matrix_names[z]};
+    for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
+        std::fstream myfile(dir_entry.path(), std::ios_base::in);
+        if(dir_entry.path().stem() == "rowptr") {
+            int tempValInt;
+            vector<int> tempVecInt;
+            while (myfile >> tempValInt) {
+                tempVecInt.push_back(tempValInt);
+            }
+            rowptrPtrs.push_back(new int[tempVecInt.size()]);
+            int *temp = rowptrPtrs[0];
+            for(int i=0; i<tempVecInt.size(); i++) temp[i]=tempVecInt[i];
+            rowptrSize.push_back(tempVecInt.size());
+
+            cout << dir_entry.path() << " has been read." << endl;
+            myfile.close();
+            continue;
+        }
+        else if(dir_entry.path().stem() == "colind") {
+            int tempValInt;
+            vector<int> tempVecInt;
+            while (myfile >> tempValInt) {
+                tempVecInt.push_back(tempValInt);
+            }
+            colindPtrs.push_back(new int[tempVecInt.size()]);
+            int *temp = colindPtrs[0];
+            for(int i=0; i<tempVecInt.size(); i++) temp[i]=tempVecInt[i];
+            colindSize.push_back(tempVecInt.size());
+            cout << dir_entry.path() << " has been read." << endl;
+            myfile.close();
+            continue;
+        }
+        // else, start reading doubles.
+        while (myfile >> tempVal) {
+            tempVec.push_back(tempVal);
+        }
+
+        if(dir_entry.path().stem() == "diag"){
+            dvaluesPtrs.push_back(new double[tempVec.size()]);
+            double *temp = dvaluesPtrs[0];
+            for(int i=0; i<tempVec.size(); i++) temp[i]=tempVec[i];
+            dvaluesSize.push_back(tempVec.size());
+        }
+        else if(dir_entry.path().stem() == "vals"){
+            valuesPtrs.push_back(new double[tempVec.size()]);
+            double *temp = valuesPtrs[0];
+            for(int i=0; i<tempVec.size(); i++) temp[i]=tempVec[i];
+            valuesSize.push_back(tempVec.size());
+        }
+        else cout << "unexpected file name: " << dir_entry.path() << endl;
+        cout << dir_entry.path() << " has been read." << endl;
+
+        tempVec.clear();
+        myfile.close();
     }
-    //cout << "3rd body - add " <<temp2 << endl;
-    Y[j-1] = Y[j-1] + temp2;
+    return 0;
 }
- */
+int main(int argc, char **argv){
+    int n, rowLimit;
+    cout << "i call readSSSFormat. " << endl;
+    //init();
+    if(!argv[1]){
+        cout << "please provide input matrix index (int): boneS10, Emilia_923, ldoor, af_5_k101, Serena, audikw_1" << endl;
+        return -1;
+    }
+    readSSSFormat(atoi(argv[1]));
+
+    n = matrixSize[atoi(argv[1])];
+    int inputType = atoi(argv[1]);
+
+    double *matrixOffDiagonal = valuesPtrs[0];
+    int *matrixColind = colindPtrs[0];
+    int *matrixRowptr= rowptrPtrs[0];
+
+    int elmCountPerRow, colInd, rowBegin, val;
+
+    for (int i = 0; i < rowptrSize[0] - 1; i++) {
+        // row ptrs start from 1 !!!
+        rowBegin = matrixRowptr[i] - 1;
+        elmCountPerRow = matrixRowptr[i + 1] - (matrixRowptr[i] ;
+        for (int j = 0; j < elmCountPerRow; j++) {
+            // i = row indexi
+            // colind = column indexi
+            // val = degeri
+            colInd = matrixColind[rowBegin + j];
+            val = matrixOffDiagonal[rowBegin + j];
+
+        }
+    }
+
+    delete [] matrixOffDiagonal;
+    delete [] matrixColind;
+    delete [] matrixRowptr;
+}
