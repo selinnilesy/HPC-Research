@@ -34,6 +34,16 @@ void init(){
 int readSSSFormat(int z) {
     double tempVal;
     vector<double> tempVec;
+
+    fstream myfile("/home/selin/CSR-Data/" + matrix_names[z] + "/banded/CSRout_col.txt", std::ios_base::in);
+    int x;
+    for(int i=0; i<73; i++){
+        myfile >> x;
+        cout << x << '\t' ;
+    }
+    myfile.close();
+
+
     const fs::path matrixFolder{"/home/selin/SSS-Data/" + matrix_names[z]};
     for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
         std::fstream myfile(dir_entry.path(), std::ios_base::in);
@@ -92,54 +102,53 @@ int readSSSFormat(int z) {
     return 0;
 }
 int writeCooFormat(int z) {
-    const fs::path matrixFolder{"/home/selin/Split-Data/" + matrix_names[z]};
-    auto const& dir_entry = fs::directory_iterator{matrixFolder};
+    string dirpath="/home/selin/Split-Data/" + matrix_names[z];
     // row index
-    std::ostream myfile(dir_entry.path() + "inner/coordinate-row.txt", std::ios_base::out);
-    for(int i=0; i<row_inner.size() i++) myfile << row_inner[i] << '\t' ;
+    ofstream myfile(dirpath + "/inner/coordinate-row.txt", std::fstream::out);
+    for(int i=0; i<row_inner.size(); i++) myfile << row_inner[i] << '\t' ;
     cout << "inner/coordinate-row.txt" << " has been written." << endl;
     myfile.close();
     // col index
-    std::ostream myfile(dir_entry.path() + "inner/coordinate-col.txt", std::ios_base::out);
-    for(int i=0; i<col_inner.size() i++) myfile << col_inner[i] << '\t' ;
-    cout << "inner/coordinate-col.txt" << " has been read." << endl;
+    myfile.open(dirpath + "/inner/coordinate-col.txt", std::fstream::out);
+    for(int i=0; i<col_inner.size() ;i++) myfile << col_inner[i] << '\t' ;
+    cout << "inner/coordinate-col.txt" << " has been written." << endl;
     myfile.close();
     // vals
-    std::ostream myfile(dir_entry.path() + "inner/coordinate-val.txt", std::ios_base::out);
-    for(int i=0; i<vals_inner.size() i++) myfile << vals_inner[i] << '\t' ;
-    cout << "inner/coordinate-val.txt" << " has been read." << endl;
+    myfile.open(dirpath + "/inner/coordinate-val.txt", std::fstream::out);
+    for(int i=0; i<vals_inner.size(); i++) myfile << vals_inner[i] << '\t' ;
+    cout << "inner/coordinate-val.txt" << " has been written." << endl;
     myfile.close();
     // -----------
     // row index
-    std::ostream myfile(dir_entry.path() + "middle/coordinate-row.txt", std::ios_base::out);
-    for(int i=0; i<row_middle.size() i++) myfile << row_inner[i] << '\t' ;
-    cout << "middle/coordinate-row.txt" << " has been read." << endl;
+    myfile.open(dirpath + "/middle/coordinate-row.txt", std::fstream::out);
+    for(int i=0; i<row_middle.size() ;i++) myfile << row_inner[i] << '\t' ;
+    cout << "middle/coordinate-row.txt" << " has been written." << endl;
     myfile.close();
     // col index
-    std::ostream myfile(dir_entry.path() + "middle/coordinate-col.txt", std::ios_base::out);
-    for(int i=0; i<col_middle.size() i++) myfile << col_middle[i] << '\t' ;
-    cout << "middle/coordinate-col.txt"<< " has been read." << endl;
+    myfile.open(dirpath + "/middle/coordinate-col.txt", std::fstream::out);
+    for(int i=0; i<col_middle.size(); i++) myfile << col_middle[i] << '\t' ;
+    cout << "middle/coordinate-col.txt"<< " has been written." << endl;
     myfile.close();
     // vals
-    std::ostream myfile(dir_entry.path() + "middle/coordinate-val.txt", std::ios_base::out);
-    for(int i=0; i<vals_middle.size() i++) myfile << vals_middle[i] << '\t' ;
-    cout << "middle/coordinate-val.txt" << " has been read." << endl;
+    myfile.open(dirpath + "/middle/coordinate-val.txt", std::fstream::out);
+    for(int i=0; i<vals_middle.size(); i++) myfile << vals_middle[i] << '\t' ;
+    cout << "middle/coordinate-val.txt" << " has been written." << endl;
     myfile.close();
     // -----------
     // row index
-    std::ostream myfile(dir_entry.path() + "outer/coordinate-row.txt", std::ios_base::out);
-    for(int i=0; i<row_outer.size() i++) myfile << row_outer[i] << '\t' ;
-    cout << "outer/coordinate-row.txt" << " has been read." << endl;
+    myfile.open(dirpath + "/outer/coordinate-row.txt", std::fstream::out);
+    for(int i=0; i<row_outer.size(); i++) myfile << row_outer[i] << '\t' ;
+    cout << "outer/coordinate-row.txt" << " has been written." << endl;
     myfile.close();
     // col index
-    std::ostream myfile(dir_entry.path() + "outer/coordinate-col.txt", std::ios_base::out);
-    for(int i=0; i<col_outer.size() i++) myfile << col_outer[i] << '\t' ;
-    cout << "outer/coordinate-col.txt" << " has been read." << endl;
+    myfile.open(dirpath + "/outer/coordinate-col.txt", std::fstream::out);
+    for(int i=0; i<col_outer.size(); i++) myfile << col_outer[i] << '\t' ;
+    cout << "outer/coordinate-col.txt" << " has been written." << endl;
     myfile.close();
     // vals
-    std::ostream myfile(dir_entry.path() + "outer/coordinate-val.txt", std::ios_base::out);
-    for(int i=0; i<vals_outer.size() i++) myfile << vals_outer[i] << '\t' ;
-    cout << "outer/coordinate-val.txt" << " has been read." << endl;
+    myfile.open(dirpath + "/outer/coordinate-val.txt", std::fstream::out);
+    for(int i=0; i<vals_outer.size(); i++) myfile << vals_outer[i] << '\t' ;
+    cout << "outer/coordinate-val.txt" << " has been written." << endl;
     myfile.close();
 
     return 0;
@@ -164,12 +173,14 @@ int main(int argc, char **argv){
     int elmCountPerRow, colInd, rowBegin;
     int innerBandwith, middleBandwith ,nnz_n_Ratio;
     innerBandwith = (nnz_n_Ratios[inputType]*bandwithProportions[inputType]/4);
+    middleBandwith = bandwithSize[inputType] - 2*innerBandwith;
+    cout << "innerBandwith: " << innerBandwith << endl;
     int maxJ=-1;
     double val;
 
     if(rowptrSize[0] != (matrixSize[inputType]+1)) {
         cout << "Corrupt rowptr. read size does not match original matrix rowptr size." << endl;
-        return;
+        return -1;
     }
 
     // two new SSS storage for inner and outer regions
@@ -180,7 +191,7 @@ int main(int argc, char **argv){
         // row ptrs start from 1 !!!
         rowBegin = matrixRowptr[i] - 1;
         elmCountPerRow = matrixRowptr[i + 1] - matrixRowptr[i];
-        maxJ=1;
+        //maxJ=-1;
         counter_inner=counter_middle=counter_outer = 0;
         for (int j = 0; j < elmCountPerRow; j++) {
             // i = row indexi
@@ -189,8 +200,8 @@ int main(int argc, char **argv){
             colInd = matrixColind[rowBegin + j];
             val = matrixOffDiagonal[rowBegin + j];
 
-            if(colInd > maxJ) maxJ=colInd;
-            else cout << "ON THE SAME ROW, COL INDEX HAS BEEN SMALLED. NOT IN ASCENDING ORDER: maxj, colInd " << maxJ <<" " << colInd << endl;
+            //if(colInd > maxJ) maxJ=colInd;
+           // else cout << "ON THE SAME ROW, COL INDEX HAS BEEN SMALLED. NOT IN ASCENDING ORDER: maxj, colInd " << maxJ <<" " << colInd << endl;
             // inner Dense Region
             if(colInd >= i - innerBandwith){
                 row_inner.push_back(i);
@@ -198,7 +209,7 @@ int main(int argc, char **argv){
                 vals_inner.push_back(val);
             }
             // middle Region
-            else if(j > innerBandwith){
+            else if(colInd >= i-innerBandwith-middleBandwith){
                 row_middle.push_back(i);
                 col_middle.push_back(colInd);
                 vals_middle.push_back(val);
