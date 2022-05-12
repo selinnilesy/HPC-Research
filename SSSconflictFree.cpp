@@ -10,6 +10,10 @@
 
 using namespace std;
 #define MATRIX_COUNT 6
+vector<int> col_inner, row_inner;
+vector<int> col_outer, row_outer;
+vector<int> col_middle, row_middle;
+vector<double> vals_inner, vals_outer, vals_middle;
 
 int p;
 vector<int> x;
@@ -87,6 +91,59 @@ int readSSSFormat(int z) {
     }
     return 0;
 }
+int writeCooFormat(int z) {
+    const fs::path matrixFolder{"/home/selin/Split-Data/" + matrix_names[z]};
+    auto const& dir_entry = fs::directory_iterator{matrixFolder};
+    // row index
+    std::ostream myfile(dir_entry.path() + "inner/coordinate-row.txt", std::ios_base::out);
+    for(int i=0; i<row_inner.size() i++) myfile << row_inner[i] << '\t' ;
+    cout << "inner/coordinate-row.txt" << " has been written." << endl;
+    myfile.close();
+    // col index
+    std::ostream myfile(dir_entry.path() + "inner/coordinate-col.txt", std::ios_base::out);
+    for(int i=0; i<col_inner.size() i++) myfile << col_inner[i] << '\t' ;
+    cout << "inner/coordinate-col.txt" << " has been read." << endl;
+    myfile.close();
+    // vals
+    std::ostream myfile(dir_entry.path() + "inner/coordinate-val.txt", std::ios_base::out);
+    for(int i=0; i<vals_inner.size() i++) myfile << vals_inner[i] << '\t' ;
+    cout << "inner/coordinate-val.txt" << " has been read." << endl;
+    myfile.close();
+    // -----------
+    // row index
+    std::ostream myfile(dir_entry.path() + "middle/coordinate-row.txt", std::ios_base::out);
+    for(int i=0; i<row_middle.size() i++) myfile << row_inner[i] << '\t' ;
+    cout << "middle/coordinate-row.txt" << " has been read." << endl;
+    myfile.close();
+    // col index
+    std::ostream myfile(dir_entry.path() + "middle/coordinate-col.txt", std::ios_base::out);
+    for(int i=0; i<col_middle.size() i++) myfile << col_middle[i] << '\t' ;
+    cout << "middle/coordinate-col.txt"<< " has been read." << endl;
+    myfile.close();
+    // vals
+    std::ostream myfile(dir_entry.path() + "middle/coordinate-val.txt", std::ios_base::out);
+    for(int i=0; i<vals_middle.size() i++) myfile << vals_middle[i] << '\t' ;
+    cout << "middle/coordinate-val.txt" << " has been read." << endl;
+    myfile.close();
+    // -----------
+    // row index
+    std::ostream myfile(dir_entry.path() + "outer/coordinate-row.txt", std::ios_base::out);
+    for(int i=0; i<row_outer.size() i++) myfile << row_outer[i] << '\t' ;
+    cout << "outer/coordinate-row.txt" << " has been read." << endl;
+    myfile.close();
+    // col index
+    std::ostream myfile(dir_entry.path() + "outer/coordinate-col.txt", std::ios_base::out);
+    for(int i=0; i<col_outer.size() i++) myfile << col_outer[i] << '\t' ;
+    cout << "outer/coordinate-col.txt" << " has been read." << endl;
+    myfile.close();
+    // vals
+    std::ostream myfile(dir_entry.path() + "outer/coordinate-val.txt", std::ios_base::out);
+    for(int i=0; i<vals_outer.size() i++) myfile << vals_outer[i] << '\t' ;
+    cout << "outer/coordinate-val.txt" << " has been read." << endl;
+    myfile.close();
+
+    return 0;
+}
 int main(int argc, char **argv){
     int n, rowLimit;
     cout << "i call readSSSFormat. " << endl;
@@ -107,23 +164,23 @@ int main(int argc, char **argv){
     int elmCountPerRow, colInd, rowBegin;
     int innerBandwith, middleBandwith ,nnz_n_Ratio;
     innerBandwith = (nnz_n_Ratios[inputType]*bandwithProportions[inputType]/4);
-    //int maxJ=-1;
+    int maxJ=-1;
     double val;
 
-    static_assert(rowptrSize[0] == matrixSize[inputType]+1);
+    if(rowptrSize[0] != (matrixSize[inputType]+1)) {
+        cout << "Corrupt rowptr. read size does not match original matrix rowptr size." << endl;
+        return;
+    }
 
     // two new SSS storage for inner and outer regions
-    vector<int> col_inner, row_inner;
-    vector<int> col_outer, row_outer;
-    vector<int> col_middle, row_middle;
-    vector<double> vals_inner, vals_outer, vals_middle;
+
     int counter_inner, counter_middle, counter_outer;
 
     for (int i = 0; i < rowptrSize[0] - 1; i++) {
         // row ptrs start from 1 !!!
         rowBegin = matrixRowptr[i] - 1;
         elmCountPerRow = matrixRowptr[i + 1] - matrixRowptr[i];
-        //maxJ=1;
+        maxJ=1;
         counter_inner=counter_middle=counter_outer = 0;
         for (int j = 0; j < elmCountPerRow; j++) {
             // i = row indexi
@@ -132,7 +189,7 @@ int main(int argc, char **argv){
             colInd = matrixColind[rowBegin + j];
             val = matrixOffDiagonal[rowBegin + j];
 
-            //if(colInd > maxJ) maxJ=colInd;
+            if(colInd > maxJ) maxJ=colInd;
             else cout << "ON THE SAME ROW, COL INDEX HAS BEEN SMALLED. NOT IN ASCENDING ORDER: maxj, colInd " << maxJ <<" " << colInd << endl;
             // inner Dense Region
             if(colInd >= i - innerBandwith){
@@ -154,6 +211,9 @@ int main(int argc, char **argv){
             }
         }
     }
+    cout << "read SSS format and grouped 3way bandwith" << endl;
+    writeCooFormat(inputType);
+
 
 
     delete [] matrixOffDiagonal;
