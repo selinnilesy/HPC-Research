@@ -104,31 +104,26 @@ int main(int argc, char **argv){
     int *matrixColind = colindPtrs[0];
     int *matrixRowptr= rowptrPtrs[0];
 
-    int elmCountPerRow, colInd, rowBegin, val;
+    int elmCountPerRow, colInd, rowBegin;
     int innerBandwith, middleBandwith ,nnz_n_Ratio;
     innerBandwith = (nnz_n_Ratios[inputType]*bandwithProportions[inputType]/4);
-    int maxJ=-1;
+    //int maxJ=-1;
+    double val;
 
     static_assert(rowptrSize[0] == matrixSize[inputType]+1);
 
     // two new SSS storage for inner and outer regions
-    vector<int> colind_inner, rowptr_inner;
-    vector<int> colind_outer, rowptr_outer;
-    vector<int> colind_middle, rowptr_middle;
+    vector<int> col_inner, row_inner;
+    vector<int> col_outer, row_outer;
+    vector<int> col_middle, row_middle;
     vector<double> vals_inner, vals_outer, vals_middle;
     int counter_inner, counter_middle, counter_outer;
-    // initialize row ptr vectors
-    for (int i = 0; i < rowptrSize[0] ; i++) {
-        rowptr_inner.push_back(0);
-        rowptr_middle.push_back(0);
-        rowptr_outer.push_back(0);
-    }
 
     for (int i = 0; i < rowptrSize[0] - 1; i++) {
         // row ptrs start from 1 !!!
         rowBegin = matrixRowptr[i] - 1;
-        elmCountPerRow = matrixRowptr[i + 1] - (matrixRowptr[i] ;
-        maxJ=1;
+        elmCountPerRow = matrixRowptr[i + 1] - matrixRowptr[i];
+        //maxJ=1;
         counter_inner=counter_middle=counter_outer = 0;
         for (int j = 0; j < elmCountPerRow; j++) {
             // i = row indexi
@@ -137,34 +132,25 @@ int main(int argc, char **argv){
             colInd = matrixColind[rowBegin + j];
             val = matrixOffDiagonal[rowBegin + j];
 
-            if(colInd > maxJ) maxJ=colInd;
+            //if(colInd > maxJ) maxJ=colInd;
             else cout << "ON THE SAME ROW, COL INDEX HAS BEEN SMALLED. NOT IN ASCENDING ORDER: maxj, colInd " << maxJ <<" " << colInd << endl;
             // inner Dense Region
             if(colInd >= i - innerBandwith){
-                for (int k = i+1; k < rowptrSize[0] ; k++) {
-                    rowptr_inner[i+1]++;
-                }
-                colind_inner[rowptr_inner[i] + counter_inner] = colInd;
-                vals_inner[rowptr_inner[i] + counter_inner] = val;
-                counter_inner++;
+                row_inner.push_back(i);
+                col_inner.push_back(colInd);
+                vals_inner.push_back(val);
             }
             // middle Region
             else if(j > innerBandwith){
-                for (int k = i+1; k < rowptrSize[0] ; k++) {
-                    rowptr_middle[i+1]++;
-                }
-                colind_middle[rowptr_middle[i] + counter_middle] = colInd;
-                vals_middle[rowptr_middle[i] + counter_middle] = val;
-                counter_middle++;
+                row_middle.push_back(i);
+                col_middle.push_back(colInd);
+                vals_middle.push_back(val);
             }
             // outer Dense Region
             else{
-                for (int k = i+1; k < rowptrSize[0] ; k++) {
-                    rowptr_outer[i+1]++;
-                }
-                colind_outer[rowptr_outer[i] + counter_outer] = colInd;
-                vals_outer[rowptr_outer[i] + counter_outer] = val;
-                counter_outer++;
+                row_outer.push_back(i);
+                col_outer.push_back(colInd);
+                vals_outer.push_back(val);
             }
         }
     }
