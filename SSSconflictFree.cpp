@@ -67,6 +67,8 @@ int readSSSFormat(int z) {
                 while (myfile >> tempValInt) {
                     tempVecInt.push_back(tempValInt);
                 }
+                if(tempVecInt.size() != nonzerosSize[z]) cout << "Row count not equal." << endl;
+
                 coord_row = new int[tempVecInt.size()];
                 for(int i=0; i<tempVecInt.size(); i++) coord_row[i]=tempVecInt[i];
 
@@ -94,6 +96,7 @@ int readSSSFormat(int z) {
                 while (myfile >> tempValInt) {
                     tempVecInt.push_back(tempValInt);
                 }
+                if(tempVecInt.size() != nonzerosSize[z]) cout << "Col count not equal." << endl;
                 coord_col = new int[tempVecInt.size()];
                 for(int i=0; i<tempVecInt.size(); i++) coord_col[i]=tempVecInt[i];
 
@@ -121,6 +124,7 @@ int readSSSFormat(int z) {
             else if(dir_entry.path().stem() == "coordinate-val"){
                 coord_val = new double[tempVec.size()];
                 for(int i=0; i<tempVec.size(); i++) coord_val[i]=tempVec[i];
+                if(tempVec.size() != nonzerosSize[z]) cout << "Vals count not equal." << endl;
             }
             else cout << "unexpected file name: " << dir_entry.path() << endl;
             cout << dir_entry.path() << " has been read." << endl;
@@ -156,7 +160,6 @@ int main(int argc, char **argv){
     int *banded_coordCol = coord_col;
     double *banded_coordval = coord_val;
 
-    std::cout  <<  " starts computing coocsr... " << endl;
     int *banded_csrRow = new int[matrixSize[inputType]+1];
     int *banded_csrCol = new int[nonzerosSize[inputType]];
     double *banded_csrval = new double[nonzerosSize[inputType]];
@@ -164,6 +167,7 @@ int main(int argc, char **argv){
     int nnz = nonzerosSize[inputType];
     int nrow=matrixSize[inputType];
 
+    std::cout  <<  " starts computing coocsr... " << endl;
     coocsr_(&nrow,  &nnz, banded_coordval, banded_coordRow, banded_coordCol, banded_csrval, banded_csrCol, banded_csrRow);
     std::cout  <<  " FINISHED computing coocsr... " << banded_csrval[10] << " " << banded_csrCol[10] << " " << banded_csrRow[10] << endl;
 
