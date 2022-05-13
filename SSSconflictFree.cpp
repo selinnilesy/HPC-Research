@@ -122,7 +122,7 @@ int writeCooFormat(int z) {
     // -----------
     // row index
     myfile.open(dirpath + "/middle/coordinate-row.txt", std::fstream::out);
-    for(int i=0; i<row_middle.size() ;i++) myfile << row_inner[i] << '\t' ;
+    for(int i=0; i<row_middle.size() ;i++) myfile << row_middle[i] << '\t' ;
     cout << "middle/coordinate-row.txt" << " has been written." << endl;
     myfile.close();
     // col index
