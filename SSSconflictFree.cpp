@@ -35,6 +35,7 @@ int readSSSFormat(int z) {
     double tempVal;
     vector<double> tempVec;
 
+    /*
     fstream myfile("/home/selin/CSR-Data/" + matrix_names[z] + "/banded/CSRout_col.txt", std::ios_base::in);
     int x;
     for(int i=0; i<73; i++){
@@ -42,7 +43,7 @@ int readSSSFormat(int z) {
         cout << x << '\t' ;
     }
     myfile.close();
-
+     */
 
     const fs::path matrixFolder{"/home/selin/SSS-Data/" + matrix_names[z]};
     for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
@@ -191,33 +192,33 @@ int main(int argc, char **argv){
         // row ptrs start from 1 !!!
         rowBegin = matrixRowptr[i] - 1;
         elmCountPerRow = matrixRowptr[i + 1] - matrixRowptr[i];
-        //maxJ=-1;
+        maxJ=-1;
         counter_inner=counter_middle=counter_outer = 0;
         for (int j = 0; j < elmCountPerRow; j++) {
             // i = row indexi
             // colind = column indexi
             // val = degeri
-            colInd = matrixColind[rowBegin + j];
+            colInd = matrixColind[rowBegin + j] - 1 ;
             val = matrixOffDiagonal[rowBegin + j];
 
-            //if(colInd > maxJ) maxJ=colInd;
-           // else cout << "ON THE SAME ROW, COL INDEX HAS BEEN SMALLED. NOT IN ASCENDING ORDER: maxj, colInd " << maxJ <<" " << colInd << endl;
+            if(colInd > maxJ) maxJ=colInd;
+            else cout << "ON THE SAME ROW, COL INDEX HAS BEEN SMALLED. NOT IN ASCENDING ORDER: maxj, colInd " << maxJ <<" " << colInd << endl;
             // inner Dense Region
             if(colInd >= i - innerBandwith){
-                row_inner.push_back(i);
-                col_inner.push_back(colInd);
+                row_inner.push_back(i+1);
+                col_inner.push_back(colInd+1);
                 vals_inner.push_back(val);
             }
             // middle Region
             else if(colInd >= i-innerBandwith-middleBandwith){
-                row_middle.push_back(i);
-                col_middle.push_back(colInd);
+                row_middle.push_back(i+1);
+                col_middle.push_back(colInd+1);
                 vals_middle.push_back(val);
             }
             // outer Dense Region
             else{
-                row_outer.push_back(i);
-                col_outer.push_back(colInd);
+                row_outer.push_back(i+1);
+                col_outer.push_back(colInd+1);
                 vals_outer.push_back(val);
             }
         }
