@@ -136,6 +136,34 @@ int readSSSFormat(int z) {
 }
 
 int main(int argc, char **argv){
+
+    /*
+    cout << "previous boneS10-CSRout_vals:" <<  endl << endl;
+    fstream myfile("/home/selin/CSR-Data/" + matrix_names[atoi(argv[1])] + "/banded/CSRout_val.txt", std::ios_base::in);
+    double x;
+    for(int i=0; i<50; i++){
+        myfile >> x;
+        cout << x << '\t' ;
+    }
+    myfile.close();
+    cout << "boneS10-CSRout_vals:" <<  endl << endl;
+    myfile.open("/home/selin/HPC-Research/boneS10-CSRout_val.txt", std::ios_base::in);
+    for(int i=0; i<50; i++){
+        myfile >> x;
+        cout << x << '\t' ;
+    }
+    myfile.close();
+
+    cout << "Coordinate vals:" << endl << endl;
+    myfile.open("/home/selin/CSR-Data/boneS10/coordinate-val.txt", std::ios_base::in);
+    for(int i=0; i<50; i++){
+        myfile >> x;
+        cout << x << '\t' ;
+    }
+    myfile.close();
+    return 0 ;
+     */
+
     int n, rowLimit;
     cout << "i call readSSSFormat. " << endl;
     //init();
