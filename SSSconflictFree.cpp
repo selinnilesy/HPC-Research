@@ -1,8 +1,10 @@
 #include <cblas.h>
 #include <stdio.h>
 #include <iostream>
+#include <string.h>
 #include <string>
 #include <cmath>
+#include "header.h"
 
 using namespace std;
 vector<int> colVec;
@@ -16,10 +18,10 @@ int readCooFormat(int z, double ratio) {
     int intVal;
     const fs::path matrixFolder{"/home/selin/Split-Data/" + matrix_names[z]};
     for(auto const& dir_entry: fs::directory_iterator{matrixFolder}) {
-        if (dir_entry.path().stem == "inner") {
-            string rowFileName = c + "/coordinate-" + ratio + "-row.txt";
-            string colFileName = dir_entry.path() + "/coordinate-" + ratio + "-col.txt";
-            string valFileName = dir_entry.path() + "/coordinate-" + ratio + "-val.txt";
+        if (dir_entry.path().stem() == "inner") {
+            string rowFileName = dir_entry.path().string() + "/coordinate-" + to_string(ratio) + "-row.txt";
+            string colFileName = dir_entry.path().string()+ "/coordinate-" + to_string(ratio) + "-col.txt";
+            string valFileName = dir_entry.path().string() + "/coordinate-" + to_string(ratio) + "-val.txt";
 
             std::fstream myfile(rowFileName, std::ios_base::in);
             // else, start reading doubles.
@@ -27,24 +29,24 @@ int readCooFormat(int z, double ratio) {
                 rowVec.push_back(intVal);
             }
             myfile.close();
-            cout << rowFileName << " has been read." << endl;
+            cout << rowFileName << " has been read with size: " << rowVec.size() << endl;
 
             myfile.open(colFileName, std::ios_base::in);
             while (myfile >> intVal) {
                 colVec.push_back(intVal);
             }
             myfile.close();
-            cout << colFileName << " has been read." << endl;
+            cout << colFileName << " has been read with size: " << colVec.size() << endl;
 
             myfile.open(valFileName, std::ios_base::in);
             while (myfile >> doubleVal) {
                 valVec.push_back(doubleVal);
             }
             myfile.close();
-            cout << valFileName << " has been read." << endl;
+            cout << valFileName << " has been read with size: " << valVec.size() << endl;
         }
         else {
-            cout << "not you wanted: " << dir_entry.path().stem ;
+            cout << "not you wanted: " << dir_entry.path().stem() ;
         }
     }
     return 0;
@@ -96,33 +98,46 @@ int main(int argc, char **argv)
     for( i=0; i<size; i++) {
         A[i]  = new float[lda];
     }
-    memset(A, 0, lda*size*sizeof(float));
+
+    for( i=0; i<size; i++) {
+        for( j=0; j<lda; j++) {
+            A[i][j]  = 0.0;
+        }
+    }
+    //memset(A, 0, k*k);
 
 
+    cout << "A initialized to 0." <<  endl;
     int row, col, val, counter=0;
     // i keeps track of whole element count.
+    // upper bound is not n, but instead n-1 !
     for( i=0; i<rowVec.size(); i++) {
         row = rowVec[i] - 1;
         col = colVec[i] - 1;
         val = valVec[i];
+        //cout << "row: " << row << " col: " << col <<  " val: " << val << endl;
         if(counter==innerBandwith) counter=0;
 
         if(row < innerBandwith){
             // insert first element
-            A[row-2][innerBandwith-1 - i] =  val;
-            for(int k=0; k<row-2; k++){
+            A[row-1][((int)innerBandwith)-1 - i] =  val;
+            //cout << "inserted: " << val << endl;
+            for(int k=0; k<row-1; k++){
                 val = valVec[i + (k+1)];
-                A[row-2][innerBandwith-1 - i + (k+1)] =  val;
+                A[row-1][((int)innerBandwith)-1 - i + (k+1)] =  val;
             }
             i+=k;
         }
         // soldan saga doldurmaya baslayabilirsin artik.
         else{
-            A[row-2][counter] =  val;
+            //cout << "finished first part" << " " ;
+            A[row-1][counter] =  val;
             counter++;
         }
-        cout <<  endl;
+       // cout << i << " ";
     }
+    cout << "algo finished." << endl;
+
     ofstream myfile;
     string output =  "/home/selin/HPC-Research/banded-A.txt";
     myfile.open(output, ios::out | ios::trunc);
