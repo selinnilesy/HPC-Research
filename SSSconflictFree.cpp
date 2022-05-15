@@ -73,8 +73,8 @@ int main(int argc, char **argv)
     int inputType = atoi(argv[1]);
     double inputRatio = atof(argv[2]);
     cout << "input ratio: " << inputRatio << endl;
-    //readCooFormat(inputType, inputRatio);
-    //readDiag(inputType);
+    readCooFormat(inputType, inputRatio);
+    readDiag(inputType);
     /*
      * [1 0 0 0 0  0 0 0    ]
      * [8 1 0 0 0  0 0 0    ]
