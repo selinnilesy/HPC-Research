@@ -160,7 +160,10 @@ int main(int argc, char **argv){
 
     bool sorted = 0;
 
+<<<<<<< HEAD
     cout << "starts computing csrsss_..." << endl;
+=======
+>>>>>>> a0a6d3782c668868a2237d30d4ffc4a1605f1bef
     csrsss_(&nrow,&nnz, csr_val, csr_col, csr_row, &sorted, diag, vals_lower, colinds_lower, rowptr, vals_upper);
     std::cout  <<  " finished computing csrsss... " << diag[10] << " " << vals_lower[10] << " " << colinds_lower[10]<< " " << rowptr[10] << endl;
 
