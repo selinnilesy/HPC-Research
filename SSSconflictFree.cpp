@@ -8,6 +8,7 @@ using namespace std;
 vector<int> colVec;
 vector<int> rowVec;
 vector<double> valVec;
+vector<double> diagVec;
 
 int readCooFormat(int z, double ratio) {
     cout <<  " start reading coo files..." << endl;
@@ -42,48 +43,24 @@ int readCooFormat(int z, double ratio) {
             myfile.close();
             cout << valFileName << " has been read." << endl;
         }
-    }
-    else {
-        cout << "not you wanted: " << dir_entry.path().stem ;
+        else {
+            cout << "not you wanted: " << dir_entry.path().stem ;
+        }
     }
     return 0;
 }
-int readCooFormat(int z, double ratio) {
+int readDiag(int z, double ratio) {
     cout <<  " start reading diag file..." << endl;
     double doubleVal;
-    const fs::path matrixFolder{"/home/selin/SSS-Data/" + matrix_names[z]};
-    for(auto const& dir_entry: fs::directory_iterator{matrixFolder}) {
-        if (dir_entry.path().stem == "inner") {
-            string rowFileName = c + "/coordinate-" + ratio + "-row.txt";
-            string colFileName = dir_entry.path() + "/coordinate-" + ratio + "-col.txt";
-            string valFileName = dir_entry.path() + "/coordinate-" + ratio + "-val.txt";
+    string diagFile = "/home/selin/SSS-Data/" + matrix_names[z] + "/diag.txt" ;
 
-            std::fstream myfile(rowFileName, std::ios_base::in);
-            // else, start reading doubles.
-            while (myfile >> intVal) {
-                rowVec.push_back(intVal);
-            }
-            myfile.close();
-            cout << rowFileName << " has been read." << endl;
-
-            myfile.open(colFileName, std::ios_base::in);
-            while (myfile >> intVal) {
-                colVec.push_back(intVal);
-            }
-            myfile.close();
-            cout << colFileName << " has been read." << endl;
-
-            myfile.open(valFileName, std::ios_base::in);
-            while (myfile >> doubleVal) {
-                valVec.push_back(doubleVal);
-            }
-            myfile.close();
-            cout << valFileName << " has been read." << endl;
-        }
+    std::fstream myfile(diagFile, std::ios_base::in);
+    // else, start reading doubles.
+    while (myfile >> doubleVal) {
+        diagVec.push_back(doubleVal);
     }
-    else {
-        cout << "not you wanted: " << dir_entry.path().stem ;
-    }
+    myfile.close();
+    cout << diagFile << " has been read." << endl;
     return 0;
 }
 
