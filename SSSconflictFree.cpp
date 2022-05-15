@@ -214,7 +214,7 @@ int main(int argc, char **argv)
     cout << "algo finished." << endl;
 
     ofstream myfile;
-    string output =  "/home/selin/HPC-Research/banded-A.txt";
+    string output =  "/home/selin/Split-Data/"+ matrix_names[inputType]+ "/banded-A.txt";
     myfile.open(output, ios::out | ios::trunc);
 
 
