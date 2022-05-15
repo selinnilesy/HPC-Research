@@ -180,7 +180,7 @@ int main(int argc, char **argv){
 
     int elmCountPerRow, colInd, rowBegin;
     double innerBandwith, middleBandwith;
-    innerBandwith = nnz_n_Ratios[inputType]*bandwithProportions[inputType] * inputRatio;
+    innerBandwith = (int) (nnz_n_Ratios[inputType]*bandwithProportions[inputType] * inputRatio);
     middleBandwith = bandwithSize[inputType] - 2*innerBandwith;
     cout << "inner bandwith: " << innerBandwith << endl;
     cout << "middle bandwith: " << middleBandwith << endl;
