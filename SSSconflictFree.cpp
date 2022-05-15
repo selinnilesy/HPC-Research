@@ -84,7 +84,7 @@ int main(int argc, char **argv)
      * [0 3 5 3 4  1 0 0   ]
      * [0 0 3 5 9  9 1 0   ]
      * [0 0 0 3 5  8 2 1   ]
-     * */
+     *
 
     rowVec.push_back(2);
     rowVec.push_back(3);
@@ -142,7 +142,7 @@ int main(int argc, char **argv)
 
     valVec.push_back(8);
     valVec.push_back(2);
-
+ */
 
 
     if(rowVec.size() != valVec.size()){
@@ -152,17 +152,17 @@ int main(int argc, char **argv)
 
 
     double innerBandwith, middleBandwith;
-    //innerBandwith = nnz_n_Ratios[inputType]*bandwithProportions[inputType] * inputRatio;
-    //middleBandwith = bandwithSize[inputType] - 2*innerBandwith;
-    innerBandwith=4;
-    middleBandwith=0;
+    innerBandwith = nnz_n_Ratios[inputType]*bandwithProportions[inputType] * inputRatio;
+    middleBandwith = bandwithSize[inputType] - 2*innerBandwith;
+    //innerBandwith=4;
+    //middleBandwith=0;
     cout << "inner bandwith: " << innerBandwith << endl;
     cout << "middle bandwith: " << middleBandwith << endl;
     //cout << "total bandwith: " << bandwithSize[inputType] << endl;
 
     int i,j;
-    //int size= n;
-    int size=8;
+    int size= n;
+    //int size=8;
     // this is except diagonal.
     int k = innerBandwith;
     int lda = k+1;
@@ -188,17 +188,17 @@ int main(int argc, char **argv)
         row = rowVec[i] - 1;
         //col = colVec[i] - 1;
         val = valVec[i];
-        cout << "row: " << row << " col: " << col <<  " val: " << val << endl;
+        //cout << "row: " << row << " col: " << col <<  " val: " << val << endl;
         if(counter==innerBandwith) counter=0;
 
         if(row <= innerBandwith){
             // insert first element
             A[row-1][((int)innerBandwith) - row] =  val;
-            cout << "inserted: " << val << endl;
+            //cout << "inserted: " << val << endl;
             for(x=0; x<row-1; x++){
                 val = valVec[i + (x+1)];
                 A[row-1][((int)innerBandwith) - row + (x+1)] =  val;
-                cout << "before bw wrote " << val <<endl;
+                //cout << "before bw wrote " << val <<endl;
             }
             i+=x;
         }
@@ -206,7 +206,7 @@ int main(int argc, char **argv)
         else{
             //cout << "finished first part" << " " ;
             A[row-1][counter] =  val;
-            cout << "wrote " << val <<endl;
+            //cout << "wrote " << val <<endl;
             counter++;
         }
        // cout << i << " ";
@@ -221,9 +221,9 @@ int main(int argc, char **argv)
     cout << "Formed A: " << endl;
     for( i=0; i<size; i++) {
         for( j=0 ; j<lda; j++){
-            cout << A[i][j] << " " ;
+            myfile << A[i][j] << " " ;
         }
-        cout <<  endl;
+        myfile <<  endl;
         myfile <<  endl;
     }
 
