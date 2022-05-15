@@ -3,6 +3,7 @@
 //
 
 #include <iostream>
+#include <string>
 #include  "header.h"
 //#include <mpi.h>
 //#include "rcmtest.cpp"
@@ -102,52 +103,52 @@ int readSSSFormat(int z) {
     }
     return 0;
 }
-int writeCooFormat(int z) {
+int writeCooFormat(int z, double inputRatio) {
     string dirpath="/home/selin/Split-Data/" + matrix_names[z];
     // row index
-    ofstream myfile(dirpath + "/inner/coordinate-row.txt", std::fstream::out);
+    ofstream myfile(dirpath + "/inner/coordinate-"+ to_string(inputRatio)+ "-row.txt", std::fstream::out);
     for(int i=0; i<row_inner.size(); i++) myfile << row_inner[i] << '\t' ;
     cout << "inner/coordinate-row.txt" << " has been written." << endl;
     myfile.close();
     // col index
-    myfile.open(dirpath + "/inner/coordinate-col.txt", std::fstream::out);
+    myfile.open(dirpath + "/inner/coordinate-"+ to_string(inputRatio) + "-col.txt", std::fstream::out);
     for(int i=0; i<col_inner.size() ;i++) myfile << col_inner[i] << '\t' ;
     cout << "inner/coordinate-col.txt" << " has been written." << endl;
     myfile.close();
     // vals
-    myfile.open(dirpath + "/inner/coordinate-val.txt", std::fstream::out);
+    myfile.open(dirpath + "/inner/coordinate-"+ to_string(inputRatio) + "-val.txt", std::fstream::out);
     for(int i=0; i<vals_inner.size(); i++) myfile << vals_inner[i] << '\t' ;
     cout << "inner/coordinate-val.txt" << " has been written." << endl;
     myfile.close();
     // -----------
     // row index
-    myfile.open(dirpath + "/middle/coordinate-row.txt", std::fstream::out);
+    myfile.open(dirpath + "/middle/coordinate-"+ to_string(inputRatio) + "-row.txt", std::fstream::out);
     for(int i=0; i<row_middle.size() ;i++) myfile << row_middle[i] << '\t' ;
     cout << "middle/coordinate-row.txt" << " has been written." << endl;
     myfile.close();
     // col index
-    myfile.open(dirpath + "/middle/coordinate-col.txt", std::fstream::out);
+    myfile.open(dirpath + "/middle/coordinate-"+ to_string(inputRatio) + "-col.txt", std::fstream::out);
     for(int i=0; i<col_middle.size(); i++) myfile << col_middle[i] << '\t' ;
     cout << "middle/coordinate-col.txt"<< " has been written." << endl;
     myfile.close();
     // vals
-    myfile.open(dirpath + "/middle/coordinate-val.txt", std::fstream::out);
+    myfile.open(dirpath + "/middle/coordinate-"+ to_string(inputRatio) + "-val.txt", std::fstream::out);
     for(int i=0; i<vals_middle.size(); i++) myfile << vals_middle[i] << '\t' ;
     cout << "middle/coordinate-val.txt" << " has been written." << endl;
     myfile.close();
     // -----------
     // row index
-    myfile.open(dirpath + "/outer/coordinate-row.txt", std::fstream::out);
+    myfile.open(dirpath + "/outer/coordinate-"+ to_string(inputRatio) + "-row.txt", std::fstream::out);
     for(int i=0; i<row_outer.size(); i++) myfile << row_outer[i] << '\t' ;
     cout << "outer/coordinate-row.txt" << " has been written." << endl;
     myfile.close();
     // col index
-    myfile.open(dirpath + "/outer/coordinate-col.txt", std::fstream::out);
+    myfile.open(dirpath + "/outer/coordinate-"+ to_string(inputRatio) + "-col.txt", std::fstream::out);
     for(int i=0; i<col_outer.size(); i++) myfile << col_outer[i] << '\t' ;
     cout << "outer/coordinate-col.txt" << " has been written." << endl;
     myfile.close();
     // vals
-    myfile.open(dirpath + "/outer/coordinate-val.txt", std::fstream::out);
+    myfile.open(dirpath + "/outer/coordinate-"+ to_string(inputRatio) + "val.txt", std::fstream::out);
     for(int i=0; i<vals_outer.size(); i++) myfile << vals_outer[i] << '\t' ;
     cout << "outer/coordinate-val.txt" << " has been written." << endl;
     myfile.close();
@@ -162,20 +163,28 @@ int main(int argc, char **argv){
         cout << "please provide input matrix index (int): boneS10, Emilia_923, ldoor, af_5_k101, Serena, audikw_1" << endl;
         return -1;
     }
+    if(!argv[2]){
+        cout << "please provide a ratio for bandwiths" << endl;
+        return -1;
+    }
     readSSSFormat(atoi(argv[1]));
 
     n = matrixSize[atoi(argv[1])];
     int inputType = atoi(argv[1]);
+    double inputRatio = atof(argv[2]);
+    cout << "input ratio: " << inputRatio << endl;
 
     double *matrixOffDiagonal = valuesPtrs[0];
     int *matrixColind = colindPtrs[0];
     int *matrixRowptr= rowptrPtrs[0];
 
     int elmCountPerRow, colInd, rowBegin;
-    int innerBandwith, middleBandwith ,nnz_n_Ratio;
-    innerBandwith = (nnz_n_Ratios[inputType]*bandwithProportions[inputType]/4);
+    double innerBandwith, middleBandwith;
+    innerBandwith = nnz_n_Ratios[inputType]*bandwithProportions[inputType] * inputRatio;
     middleBandwith = bandwithSize[inputType] - 2*innerBandwith;
-    cout << "innerBandwith: " << innerBandwith << endl;
+    cout << "inner bandwith: " << innerBandwith << endl;
+    cout << "middle bandwith: " << middleBandwith << endl;
+    cout << "total bandwith: " << bandwithSize[inputType] << endl;
     int maxJ=-1;
     double val;
 
@@ -224,7 +233,7 @@ int main(int argc, char **argv){
         }
     }
     cout << "read SSS format and grouped 3way bandwith" << endl;
-    writeCooFormat(inputType);
+    writeCooFormat(inputType, inputRatio);
 
 
 
