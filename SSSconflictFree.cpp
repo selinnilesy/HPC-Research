@@ -1,91 +1,60 @@
 #include <cblas.h>
 #include <stdio.h>
 #include <iostream>
+#include <string>
 #include <cmath>
 
 using namespace std;
+vector<int> colVec;
+vector<int> rowVec;
+vector<double> valVec;
 
+int readCooFormat(int z, double ratio) {
+    cout <<  " start reading coo files..." << endl;
+    double doubleVal;
+    int intVal;
+    const fs::path matrixFolder{"/home/selin/Split-Data/" + matrix_names[z]};
+    for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
+        string rowFileName = dir_entry.path() + "/coordinate-" + ratio + "-row.txt";
+        string colFileName = dir_entry.path() + "/coordinate-" + ratio + "-col.txt";
+        string valFileName = dir_entry.path() + "/coordinate-" + ratio + "-val.txt";
 
-int main()
+        std::fstream myfile(rowFileName, std::ios_base::in);
+        // else, start reading doubles.
+        while (myfile >> intVal) {
+            rowVec.push_back(intVal);
+        }
+        myfile.close();
+        cout << rowFileName << " has been read." << endl;
+
+        myfile.open(colFileName, std::ios_base::in);
+        while (myfile >> intVal) {
+            colVec.push_back(intVal);
+        }
+        myfile.close();
+        cout << colFileName << " has been read." << endl;
+
+        myfile.open(valFileName, std::ios_base::in);
+        while (myfile >> doubleVal) {
+            valVec.push_back(doubleVal);
+        }
+        myfile.close();
+        cout << valFileName << " has been read." << endl;
+    }
+    return 0;
+}
+
+int main(int argc, char **argv)
 {
+
+    int n = matrixSize[atoi(argv[1])];
+    int inputType = atoi(argv[1]);
+    double inputRatio = atof(argv[2]);
+    cout << "input ratio: " << inputRatio << endl;
+    readCooFormat(inputType, inputRatio);
+
     int i=0;
     int size= 10;
-    float** matrix = new float*[size];
-    float** matrix2 = new float*[5];
-
-    // generate symmetric banded matrix
-
-    for(int i=0; i<10; i++){
-        matrix[i] = new float[10];
-        for(int j=0; j<10; j++) {
-            if(j < i-2 || j> i+2 ) matrix[i][j] = 0.0;
-            else if(i==j){
-                matrix[i][j] = 1.0;
-                if(i > 0 && j < 9){
-                    matrix[i][j-1] = 1.0;
-                    matrix[i][j+1] = 1.0;
-                }
-
-                if(i > 1 && j < 8){
-                    matrix[i][j-2] = 1.0;
-                    matrix[i][j+2] = 1.0;
-                }
-
-            }
-        }
-    }
-    matrix[0][1] = 1.0;
-    matrix[1][3] = 1.0;
-    matrix[0][2] = 1.0;
-    matrix[9][8] = 1.0;
-    matrix[8][6] = 1.0;
-    matrix[9][7] = 1.0;
-    matrix[2][3] = 1.0;
-    matrix[3][4] = 1.0;
-    matrix[4][3] = 1.0;
-
-
-    /*
-    for(int i=0; i<5; i++){
-        matrix[i] = new float[5];
-        for(int j=0; j<5; j++) {
-            if(j < i-1 || j> i+1 ) matrix[i][j] = 0.0;
-            else if(i==j){
-                matrix[i][j] = 1.0;
-                if(i > 0 && j < 4){
-                    matrix[i][j-1] = 1.0;
-                    matrix[i][j+1] = 1.0;
-                }
-            }
-        }
-    }
-    matrix[0][1] = matrix[4][3]  = 1.0;
-    */
-
-
-    for(int i=0; i<5; i++){
-        matrix2[i] = new float[5];
-        for(int j=0; j<5; j++) {
-            matrix2[i][j] = 1.0;
-        }
-    }
-    matrix2[0][3] = matrix2[0][4] = matrix2[1][4]  = matrix2[3][0] = matrix2[4][0] = matrix2[4][1] =0.0;
-
-    cout << "Matrix" << endl;
-    for(int i=0; i<size; i++){
-        for(int j=0; j<size; j++) {
-            cout << matrix[i][j] << " " ;
-        }
-        cout << endl;
-    }
-    cout << endl;
-    cout << "Matrix 2" << endl;
-    for(int i=0; i<5; i++){
-        for(int j=0; j<5; j++) {
-            cout << matrix2[i][j] << " " ;
-        }
-        cout << endl;
-    }
 
     float* X = new float[size];
     for(int i=0; i<size; i++) X[i] = 1.0;
@@ -164,9 +133,8 @@ int main()
         cout <<  endl;
     }
     cout << "Call cblas_ssbmv. " << endl ;
-    // CblasRowMajor = 101
-    // CblasLower = 122
-    //const CBLAS_UPLO Uplo = CblasLower;
+
+
     // column major : upper verince kernel lower'a giriyor. lower verince upper'a.
     // column major : CblasLower -> ( ! kernel'de upper) 10x10 1 bandwith icin calisiyor.
     cblas_ssbmv(CblasColMajor, CblasUpper, size, k, alpha, A, lda, X, incx, beta, Y, incy);
@@ -176,23 +144,3 @@ int main()
         cout << Y[j] << endl;
     }
 }
-
-// MY C++ IMPLEMENTATION FOR SSBMV.F
-/*
-int temp1, temp2, l;
-for(int j=1; j<=size; j++){
-    temp1 = X[j-1];
-    temp2 = 0;
-    //cout << "Y[j-1] with j-1: " << j-1 << endl;
-    //cout << "1st body - add " << temp1*A[j-1] << endl;
-    Y[j-1] = Y[j-1] + temp1*A[j-1];
-    l = 1 - j;
-    for(int i=j+1 ; i<=min(size, j+k); i++) {
-        Y[i-1] = Y[i-1] + temp1 * A[(l+i -1) * size + j-1];
-        //cout << "2nd body - add Y[i-1] with i: " << i << " " << temp1 * A[(l+i -1) * size + j-1] << endl;
-        temp2 = temp2 - A[(l+i -1) * size + j-1] * X[i-1];
-    }
-    //cout << "3rd body - add " <<temp2 << endl;
-    Y[j-1] = Y[j-1] + temp2;
-}
- */
