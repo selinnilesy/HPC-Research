@@ -75,21 +75,49 @@ int main(int argc, char **argv)
     cout << "input ratio: " << inputRatio << endl;
     readCooFormat(inputType, inputRatio);
     readDiag(inputType);
+    /*
+     * [1 0 0 0 0    ]
+     * [8 1 0 0 0    ]
+     * [9 5 1 0 0    ]
+     * [0 7 6 1 0    ]
+     * [0 0 4 3 1    ]
 
-    if(rowVec.size() != colVec.size()){
-        cout << "not equal row and col (NNZ) !!! " << endl;
+    rowVec.push_back(2);
+    rowVec.push_back(3);
+    rowVec.push_back(3);
+    rowVec.push_back(4);
+    rowVec.push_back(4);
+    rowVec.push_back(5);
+    rowVec.push_back(5);
+
+    valVec.push_back(8);
+    valVec.push_back(9);
+    valVec.push_back(5);
+    valVec.push_back(7);
+    valVec.push_back(6);
+    valVec.push_back(4);
+    valVec.push_back(3);
+     */
+
+
+    if(rowVec.size() != valVec.size()){
+        cout << "not equal row and valVec (NNZ) !!! " << endl;
         return -1;
     }
+
 
     double innerBandwith, middleBandwith;
     innerBandwith = nnz_n_Ratios[inputType]*bandwithProportions[inputType] * inputRatio;
     middleBandwith = bandwithSize[inputType] - 2*innerBandwith;
+    //innerBandwith=2;
+    //middleBandwith=0;
     cout << "inner bandwith: " << innerBandwith << endl;
     cout << "middle bandwith: " << middleBandwith << endl;
-    cout << "total bandwith: " << bandwithSize[inputType] << endl;
+    //cout << "total bandwith: " << bandwithSize[inputType] << endl;
 
     int i,j;
     int size= n;
+    //int size=5;
     // this is except diagonal.
     int k = innerBandwith;
     int lda = k+1;
@@ -106,32 +134,33 @@ int main(int argc, char **argv)
     }
     //memset(A, 0, k*k);
 
-
     cout << "A initialized to 0." <<  endl;
-    int row, col, val, counter=0;
+    int row, col, val, counter=0, x;
     // i keeps track of whole element count.
     // upper bound is not n, but instead n-1 !
     for( i=0; i<rowVec.size(); i++) {
         row = rowVec[i] - 1;
-        col = colVec[i] - 1;
+        //col = colVec[i] - 1;
         val = valVec[i];
         //cout << "row: " << row << " col: " << col <<  " val: " << val << endl;
         if(counter==innerBandwith) counter=0;
 
-        if(row < innerBandwith){
+        if(row <= innerBandwith){
             // insert first element
             A[row-1][((int)innerBandwith)-1 - i] =  val;
             //cout << "inserted: " << val << endl;
-            for(int k=0; k<row-1; k++){
-                val = valVec[i + (k+1)];
-                A[row-1][((int)innerBandwith)-1 - i + (k+1)] =  val;
+            for(x=0; x<row-1; x++){
+                val = valVec[i + (x+1)];
+                A[row-1][((int)innerBandwith)-1 - i + (x+1)] =  val;
+                //cout << "before bw wrote " << val <<endl;
             }
-            i+=k;
+            i+=x;
         }
         // soldan saga doldurmaya baslayabilirsin artik.
         else{
             //cout << "finished first part" << " " ;
             A[row-1][counter] =  val;
+            //cout << "wrote " << val <<endl;
             counter++;
         }
        // cout << i << " ";
