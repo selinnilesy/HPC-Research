@@ -14,32 +14,37 @@ int readCooFormat(int z, double ratio) {
     double doubleVal;
     int intVal;
     const fs::path matrixFolder{"/home/selin/Split-Data/" + matrix_names[z]};
-    for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
-        string rowFileName = dir_entry.path() + "/coordinate-" + ratio + "-row.txt";
-        string colFileName = dir_entry.path() + "/coordinate-" + ratio + "-col.txt";
-        string valFileName = dir_entry.path() + "/coordinate-" + ratio + "-val.txt";
+    for(auto const& dir_entry: fs::directory_iterator{matrixFolder}) {
+        if (dir_entry.path().stem == "inner") {
+            string rowFileName = c + "/coordinate-" + ratio + "-row.txt";
+            string colFileName = dir_entry.path() + "/coordinate-" + ratio + "-col.txt";
+            string valFileName = dir_entry.path() + "/coordinate-" + ratio + "-val.txt";
 
-        std::fstream myfile(rowFileName, std::ios_base::in);
-        // else, start reading doubles.
-        while (myfile >> intVal) {
-            rowVec.push_back(intVal);
-        }
-        myfile.close();
-        cout << rowFileName << " has been read." << endl;
+            std::fstream myfile(rowFileName, std::ios_base::in);
+            // else, start reading doubles.
+            while (myfile >> intVal) {
+                rowVec.push_back(intVal);
+            }
+            myfile.close();
+            cout << rowFileName << " has been read." << endl;
 
-        myfile.open(colFileName, std::ios_base::in);
-        while (myfile >> intVal) {
-            colVec.push_back(intVal);
-        }
-        myfile.close();
-        cout << colFileName << " has been read." << endl;
+            myfile.open(colFileName, std::ios_base::in);
+            while (myfile >> intVal) {
+                colVec.push_back(intVal);
+            }
+            myfile.close();
+            cout << colFileName << " has been read." << endl;
 
-        myfile.open(valFileName, std::ios_base::in);
-        while (myfile >> doubleVal) {
-            valVec.push_back(doubleVal);
+            myfile.open(valFileName, std::ios_base::in);
+            while (myfile >> doubleVal) {
+                valVec.push_back(doubleVal);
+            }
+            myfile.close();
+            cout << valFileName << " has been read." << endl;
         }
-        myfile.close();
-        cout << valFileName << " has been read." << endl;
+    }
+    else {
+        cout << "not you wanted: " << dir_entry.path().stem ;
     }
     return 0;
 }
