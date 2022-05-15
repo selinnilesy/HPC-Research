@@ -49,7 +49,7 @@ int readCooFormat(int z, double ratio) {
     }
     return 0;
 }
-int readDiag(int z, double ratio) {
+int readDiag(int z) {
     cout <<  " start reading diag file..." << endl;
     double doubleVal;
     string diagFile = "/home/selin/SSS-Data/" + matrix_names[z] + "/diag.txt" ;
@@ -72,6 +72,12 @@ int main(int argc, char **argv)
     double inputRatio = atof(argv[2]);
     cout << "input ratio: " << inputRatio << endl;
     readCooFormat(inputType, inputRatio);
+    readDiag(inputType);
+
+    if(rowVec.size() != colVec.size()){
+        cout << "not equal row and col (NNZ) !!! " << endl;
+        return -1;
+    }
 
     double innerBandwith, middleBandwith;
     innerBandwith = nnz_n_Ratios[inputType]*bandwithProportions[inputType] * inputRatio;
@@ -80,20 +86,55 @@ int main(int argc, char **argv)
     cout << "middle bandwith: " << middleBandwith << endl;
     cout << "total bandwith: " << bandwithSize[inputType] << endl;
 
-    int i=0;
+    int i,j;
     int size= n;
+    // this is except diagonal.
     int k = innerBandwith;
     int lda = k+1;
 
-    float* A = new float[size * lda];
+    float** A = new float*[size];
+    for( i=0; i<size; i++) {
+        A[i]  = new float[lda];
+    }
+    memset(A, 0, lda*size*sizeof(float));
 
-    cout << "Formed A: " << endl;
 
-    for(int i=0; i<size; i++) {
-        for(int j=0 ; j<lda; j++){
-            cout << A[(lda)*i + j] << " " ;
+    int row, col, val, counter=0;
+    // i keeps track of whole element count.
+    for( i=0; i<rowVec.size(); i++) {
+        row = rowVec[i] - 1;
+        col = colVec[i] - 1;
+        val = valVec[i];
+        if(counter==innerBandwith) counter=0;
+
+        if(row < innerBandwith){
+            // insert first element
+            A[row-2][innerBandwith-1 - i] =  val;
+            for(int k=0; k<row-2; k++){
+                val = valVec[i + (k+1)];
+                A[row-2][innerBandwith-1 - i + (k+1)] =  val;
+            }
+            i+=k;
+        }
+        // soldan saga doldurmaya baslayabilirsin artik.
+        else{
+            A[row-2][counter] =  val;
+            counter++;
         }
         cout <<  endl;
+    }
+    ofstream myfile;
+    string output =  "/home/selin/HPC-Research/banded-A.txt";
+    myfile.open(output, ios::out | ios::trunc);
+
+
+    cout << "Formed A: " << endl;
+    for( i=0; i<size; i++) {
+        for( j=0 ; j<lda; j++){
+            myfile << A[i][j] << " " ;
+        }
+        myfile <<  endl;
+        myfile <<  endl;
     }
 
     /* needed data for openblas ssbmv
@@ -107,14 +148,14 @@ int main(int argc, char **argv)
    int incy = 1;
     */
 
-    cout << "Call cblas_ssbmv. " << endl ;
+    //cout << "Call cblas_ssbmv. " << endl ;
 
     // column major : upper verince kernel lower'a giriyor. lower verince upper'a.
     // column major : CblasLower -> ( ! kernel'de upper) 10x10 1 bandwith icin calisiyor.
-    cblas_ssbmv(CblasColMajor, CblasUpper, size, k, alpha, A, lda, X, incx, beta, Y, incy);
+    //cblas_ssbmv(CblasColMajor, CblasUpper, size, k, alpha, A, lda, X, incx, beta, Y, incy);
 
-    cout << "Output: " << endl;
-    for(int j=0; j<size; j++) {
-        cout << Y[j] << endl;
-    }
+    //cout << "Output: " << endl;
+    //for(int j=0; j<size; j++) {
+    //    cout << Y[j] << endl;
+    //}
 }
