@@ -240,7 +240,7 @@ int main(int argc, char **argv)
 
    for( i=0; i<inner_rowVec.size(); i++) {
        row = inner_rowVec[i] - 1;
-       col = inner_colVec[i] - 1;
+       col = inner_colVec[i];
        val = inner_valVec[i];
        //cout << "row: " << row << " col: " << col <<  " val: " << val << endl;
        //if(counter==innerBandwith) counter=0;
@@ -256,7 +256,7 @@ int main(int argc, char **argv)
                // do not assume all entries in the row(sub-diags) are filled.
                if( inner_rowVec[i + (x+1)]-1 != row) break;
                val = inner_valVec[i + (x+1)];
-               diff =  (inner_colVec[i + (x+1)] - 1) - neededCol;
+               diff =  (inner_colVec[i + (x+1)]) - neededCol;
                A[row][((int)innerBandwith) - row + (diff)] =  val;
                //cout << "before bw wrote " << val <<endl;
            }
