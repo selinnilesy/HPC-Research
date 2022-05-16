@@ -152,7 +152,7 @@ int main(int argc, char **argv)
 
 
     double innerBandwith, middleBandwith;
-    innerBandwith = nnz_n_Ratios[inputType]*bandwithProportions[inputType] * inputRatio;
+    innerBandwith = (int) (nnz_n_Ratios[inputType]*bandwithProportions[inputType] * inputRatio);
     middleBandwith = bandwithSize[inputType] - 2*innerBandwith;
     //innerBandwith=4;
     //middleBandwith=0;
@@ -214,7 +214,7 @@ int main(int argc, char **argv)
     cout << "algo finished." << endl;
 
     ofstream myfile;
-    string output =  "/home/selin/Split-Data/"+ matrix_names[inputType]+ "/banded-A.txt";
+    string output =  "/home/selin/Split-Data/"+ matrix_names[inputType]+ "/banded-A" + to_string(inputRatio)+ ".txt";
     myfile.open(output, ios::out | ios::trunc);
 
 
