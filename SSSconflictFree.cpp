@@ -186,21 +186,19 @@ int main(int argc, char **argv)
             A[i][j]  = 0.0;
         }
     }
-
-    float** A_middle = new float*[size];
-    for( i=0; i<size; i++) {
-        A_middle[i]  = new float[lda];
+    /*
+    float** A_middle = new float*[size-innerBandwith-1];
+    for( i=0; i<size-innerBandwith-1; i++) {
+        A_middle[i]  = new float[middleBandwith-innerBandwith];
     }
 
-    for( i=0; i<size; i++) {
-        for( j=0; j<lda; j++) {
+    for( i=0; i<size-innerBandwith-1; i++) {
+        for( j=0; j<middleBandwith-innerBandwith; j++) {
             A_middle[i][j]  = 0.0;
         }
     }
-    //memset(A, 0, k*k);
-
-
-    cout << "A initialized to 0." <<  endl;
+     */
+    cout << "A and A-middle initialized to 0.0" <<  endl;
     int row, col, val, counter=0, x;
     // i keeps track of whole element count.
     // upper bound is not n, but instead n-1 !
@@ -232,7 +230,14 @@ int main(int argc, char **argv)
         }
        // cout << i << " ";
     }
-    cout << "start generating banded for middle" <<  endl;
+    cout << "writing also diag onto inner-A..." << endl;
+    for(i=0; i<inner_diagVec.size(); i++){
+        A[i][(int) innerBandwith] = inner_diagVec[i];
+    }
+
+
+    /*
+    cout << "start generating banded for middle-A" <<  endl;
     x=counter=0;
     for( i=0; i<middle_rowVec.size(); i++) {
         row = middle_rowVec[i] - innerBandwith - 1;
@@ -243,11 +248,11 @@ int main(int argc, char **argv)
 
         if(row+innerBandwith <= middleBandwith){
             // insert first element
-            A[row-1][((int)middleBandwith) - row] =  val;
+            A[row][((int)middleBandwith) - row] =  val;
             //cout << "inserted: " << val << endl;
             for(x=0; x<row-1; x++){
                 val = middle_valVec[i + (x+1)];
-                A[row-1][((int)middleBandwith) - row + (x+1)] =  val;
+                A[row][((int)middleBandwith) - row + (x+1)] =  val;
                 //cout << "before bw wrote " << val <<endl;
             }
             i+=x;
@@ -255,18 +260,15 @@ int main(int argc, char **argv)
             // soldan saga doldurmaya baslayabilirsin artik.
         else{
             //cout << "finished first part" << " " ;
-            A[row-1][counter] =  val;
+            A[row][counter] =  val;
             //cout << "wrote " << val <<endl;
             counter++;
         }
         // cout << i << " ";
     }
-    cout << "algo finished." << endl;
+     */
+    cout << "algos finished." << endl;
 
-    for(i=0; i<inner_diagVec.size(); i++){
-        A[i][(int) innerBandwith] = inner_diagVec[i];
-    }
-    cout << "written diag onto A." << endl;
 
     ofstream myfile;
     string output =  "/home/selin/Split-Data/"+ matrix_names[inputType]+ "/inner-banded-A" + to_string(inputRatio)+ ".txt";
