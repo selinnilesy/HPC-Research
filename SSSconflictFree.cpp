@@ -7,10 +7,15 @@
 #include "header.h"
 
 using namespace std;
-vector<int> colVec;
-vector<int> rowVec;
-vector<double> valVec;
-vector<double> diagVec;
+vector<int> inner_colVec;
+vector<int> inner_rowVec;
+vector<double> inner_valVec;
+vector<double> inner_diagVec;
+
+vector<int> middle_colVec;
+vector<int> middle_rowVec;
+vector<double> middle_valVec;
+vector<double> middle_diagVec;
 
 int readCooFormat(int z, double ratio) {
     cout <<  " start reading coo files..." << endl;
@@ -26,24 +31,24 @@ int readCooFormat(int z, double ratio) {
             std::fstream myfile(rowFileName, std::ios_base::in);
             // else, start reading doubles.
             while (myfile >> intVal) {
-                rowVec.push_back(intVal);
+                inner_rowVec.push_back(intVal);
             }
             myfile.close();
-            cout << rowFileName << " has been read with size: " << rowVec.size() << endl;
+            cout << rowFileName << " has been read with size: " << inner_rowVec.size() << endl;
 
             myfile.open(colFileName, std::ios_base::in);
             while (myfile >> intVal) {
-                colVec.push_back(intVal);
+                inner_colVec.push_back(intVal);
             }
             myfile.close();
-            cout << colFileName << " has been read with size: " << colVec.size() << endl;
+            cout << colFileName << " has been read with size: " << inner_colVec.size() << endl;
 
             myfile.open(valFileName, std::ios_base::in);
             while (myfile >> doubleVal) {
-                valVec.push_back(doubleVal);
+                inner_valVec.push_back(doubleVal);
             }
             myfile.close();
-            cout << valFileName << " has been read with size: " << valVec.size() << endl;
+            cout << valFileName << " has been read with size: " << inner_valVec.size() << endl;
         }
         else {
             cout << "not you wanted: " << dir_entry.path().stem() ;
@@ -59,7 +64,7 @@ int readDiag(int z) {
     std::fstream myfile(diagFile, std::ios_base::in);
     // else, start reading doubles.
     while (myfile >> doubleVal) {
-        diagVec.push_back(doubleVal);
+        inner_diagVec.push_back(doubleVal);
     }
     myfile.close();
     cout << diagFile << " has been read." << endl;
@@ -145,11 +150,11 @@ int main(int argc, char **argv)
  */
 
 
-    if(rowVec.size() != valVec.size()){
+    if(inner_rowVec.size() != inner_valVec.size()){
         cout << "not equal size - rowVec and valVec (NNZ) !!! " << endl;
         return -1;
     }
-    if(n != diagVec.size()){
+    if(n != inner_diagVec.size()){
         cout << "not equal size - diagVec (n) !!! " << endl;
         return -1;
     }
@@ -181,6 +186,17 @@ int main(int argc, char **argv)
             A[i][j]  = 0.0;
         }
     }
+
+    float** A_middle = new float*[size];
+    for( i=0; i<size; i++) {
+        A_middle[i]  = new float[lda];
+    }
+
+    for( i=0; i<size; i++) {
+        for( j=0; j<lda; j++) {
+            A_middle[i][j]  = 0.0;
+        }
+    }
     //memset(A, 0, k*k);
 
 
@@ -188,20 +204,21 @@ int main(int argc, char **argv)
     int row, col, val, counter=0, x;
     // i keeps track of whole element count.
     // upper bound is not n, but instead n-1 !
-    for( i=0; i<rowVec.size(); i++) {
-        row = rowVec[i] - 1;
+    cout << "start generating banded for inner" <<  endl;
+    for( i=0; i<inner_rowVec.size(); i++) {
+        row = inner_rowVec[i] - 1;
         //col = colVec[i] - 1;
-        val = valVec[i];
+        val = inner_valVec[i];
         //cout << "row: " << row << " col: " << col <<  " val: " << val << endl;
         if(counter==innerBandwith) counter=0;
 
         if(row <= innerBandwith){
             // insert first element
-            A[row-1][((int)innerBandwith) - row] =  val;
+            A[row][((int)innerBandwith) - row] =  val;
             //cout << "inserted: " << val << endl;
             for(x=0; x<row-1; x++){
-                val = valVec[i + (x+1)];
-                A[row-1][((int)innerBandwith) - row + (x+1)] =  val;
+                val = inner_valVec[i + (x+1)];
+                A[row][((int)innerBandwith) - row + (x+1)] =  val;
                 //cout << "before bw wrote " << val <<endl;
             }
             i+=x;
@@ -209,16 +226,45 @@ int main(int argc, char **argv)
         // soldan saga doldurmaya baslayabilirsin artik.
         else{
             //cout << "finished first part" << " " ;
-            A[row-1][counter] =  val;
+            A[row][counter] =  val;
             //cout << "wrote " << val <<endl;
             counter++;
         }
        // cout << i << " ";
     }
+    cout << "start generating banded for middle" <<  endl;
+    x=counter=0;
+    for( i=0; i<middle_rowVec.size(); i++) {
+        row = middle_rowVec[i] - innerBandwith - 1;
+        //col = colVec[i] - 1;
+        val = middle_valVec[i];
+        //cout << "row: " << row << " col: " << col <<  " val: " << val << endl;
+        if(counter==middleBandwith) counter=0;
+
+        if(row+innerBandwith <= middleBandwith){
+            // insert first element
+            A[row-1][((int)middleBandwith) - row] =  val;
+            //cout << "inserted: " << val << endl;
+            for(x=0; x<row-1; x++){
+                val = middle_valVec[i + (x+1)];
+                A[row-1][((int)middleBandwith) - row + (x+1)] =  val;
+                //cout << "before bw wrote " << val <<endl;
+            }
+            i+=x;
+        }
+            // soldan saga doldurmaya baslayabilirsin artik.
+        else{
+            //cout << "finished first part" << " " ;
+            A[row-1][counter] =  val;
+            //cout << "wrote " << val <<endl;
+            counter++;
+        }
+        // cout << i << " ";
+    }
     cout << "algo finished." << endl;
 
-    for(i=0; i<diagVec.size(); i++){
-        A[i][(int) innerBandwith] = diagVec[i];
+    for(i=0; i<inner_diagVec.size(); i++){
+        A[i][(int) innerBandwith] = inner_diagVec[i];
     }
     cout << "written diag onto A." << endl;
 
