@@ -300,8 +300,6 @@ int main(int argc, char **argv)
     }
 
     cout << "algos finished." << endl;
-    return 0;
-
 
     ofstream myfile;
     string output =  "/home/selin/Split-Data/"+ matrix_names[inputType]+ "/middle-banded-A" + to_string(inputRatio)+ ".txt";
