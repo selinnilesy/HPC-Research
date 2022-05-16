@@ -162,7 +162,7 @@ int main(int argc, char **argv)
 
     double innerBandwith, middleBandwith;
     innerBandwith = (int) (nnz_n_Ratios[inputType]*bandwithProportions[inputType] * inputRatio);
-    middleBandwith = bandwithSize[inputType] - 2*innerBandwith;
+    middleBandwith = bandwithSize[inputType] - innerBandwith;
     //innerBandwith=4;
     //middleBandwith=0;
     cout << "inner bandwith: " << innerBandwith << endl;
