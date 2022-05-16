@@ -102,8 +102,8 @@ int main(int argc, char **argv)
     int inputType = atoi(argv[1]);
     double inputRatio = atof(argv[2]);
     cout << "input ratio: " << inputRatio << endl;
-    // inner read = 1 , middle read = 1 !!!
-    readCooFormat(inputType, inputRatio, 0);
+    // inner read = 1 , middle read = 0 !!!
+    readCooFormat(inputType, inputRatio, 1);
     readDiag(inputType);
     /*
      * [1 0 0 0 0  0 0 0    ]
@@ -201,7 +201,7 @@ int main(int argc, char **argv)
     int k = innerBandwith;
     int lda = k+1;
 
-    /*
+
    float** A = new float*[size];
    for( i=0; i<size; i++) {
        A[i]  = new float[lda];
@@ -212,10 +212,11 @@ int main(int argc, char **argv)
            A[i][j]  = 0.0;
        }
    }
-     */
 
-    int size_1 = size-innerBandwith-1;
-    int size_2=middleBandwith-innerBandwith;
+
+    /*
+   int size_1 = size-innerBandwith-1;
+   int size_2=middleBandwith-innerBandwith;
    float** A_middle = new float*[size_1];
    for( i=0; i<size-innerBandwith-1; i++) {
        A_middle[i]  = new float[size_2];
@@ -226,38 +227,47 @@ int main(int argc, char **argv)
            A_middle[i][j]  = 0.0;
        }
    }
+     */
 
 
     cout << "A and A-middle initialized to 0.0" <<  endl;
-    int row, col, counter=0, x;
+    int row, col, counter=0, x, diff, neededCol, newdiff;
     double val;
     // i keeps track of whole element count.
    // cout << "start generating banded for inner" <<  endl;
-    /*
+
    for( i=0; i<inner_rowVec.size(); i++) {
        row = inner_rowVec[i] - 1;
-       //col = colVec[i] - 1;
+       col = inner_colVec[i] - 1;
        val = inner_valVec[i];
        //cout << "row: " << row << " col: " << col <<  " val: " << val << endl;
-       if(counter==innerBandwith) counter=0;
+       //if(counter==innerBandwith) counter=0;
 
        if(row <= innerBandwith){
            // insert first element
-           A[row][((int)innerBandwith) - row] =  val;
+           neededCol = 1;
+           diff=col-neededCol;
+           // be careful about col diff here as well !!
+           A[row][((int)innerBandwith) - row + (diff)] =  val;
            //cout << "inserted: " << val << endl;
            for(x=0; x<row-1; x++){
+               // do not assume all entries in the row(sub-diags) are filled.
+               if( inner_rowVec[i + (x+1)]-1 != row) break;
                val = inner_valVec[i + (x+1)];
-               A[row][((int)innerBandwith) - row + (x+1)] =  val;
+               diff =  (inner_colVec[i + (x+1)] - 1) - neededCol;
+               A[row][((int)innerBandwith) - row + (diff)] =  val;
                //cout << "before bw wrote " << val <<endl;
            }
            i+=x;
        }
        // soldan saga doldurmaya baslayabilirsin artik.
        else{
+           neededCol = (row+1) - innerBandwith;
+           diff=col-neededCol;
            //cout << "finished first part" << " " ;
-           A[row][counter] =  val;
+           A[row][diff] =  val;
            //cout << "wrote " << val <<endl;
-           counter++;
+           //counter++;
        }
       // cout << i << " ";
    }
@@ -265,10 +275,9 @@ int main(int argc, char **argv)
    for(i=0; i<inner_diagVec.size(); i++){
        A[i][(int) innerBandwith] = inner_diagVec[i];
    }
-     */
 
 
-
+   /*
     cout << "start generating banded for middle-A" <<  endl;
     x=counter=0;
     for( i=0; i<middle_rowVec.size(); i++) {
@@ -293,23 +302,24 @@ int main(int argc, char **argv)
         else{
             //cout << "finished first part" << " " ;
             A_middle[row-1][counter] =  val;
-            cout << "wrote " << val <<endl;
+            //cout << "wrote " << val <<endl;
             counter++;
         }
         // cout << i << " ";
     }
+    */
 
     cout << "algos finished." << endl;
 
     ofstream myfile;
-    string output =  "/home/selin/Split-Data/"+ matrix_names[inputType]+ "/middle-banded-A" + to_string(inputRatio)+ ".txt";
+    string output =  "/home/selin/Split-Data/"+ matrix_names[inputType]+ "/inner-banded-A" + to_string(inputRatio)+ ".txt";
     myfile.open(output, ios::out | ios::trunc);
 
 
     cout << "Formed A: " << endl;
     for( i=0; i<size-innerBandwith-1; i++) {
         for( j=0 ; j<middleBandwith-innerBandwith; j++){
-            myfile << A_middle[i][j] << " " ;
+            myfile << A[i][j] << " " ;
         }
         myfile <<  endl;
         myfile <<  endl;
