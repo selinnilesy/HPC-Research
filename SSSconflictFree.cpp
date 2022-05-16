@@ -23,7 +23,7 @@ int readCooFormat(int z, double ratio) {
     int intVal;
     const fs::path matrixFolder{"/home/selin/Split-Data/" + matrix_names[z]};
     for(auto const& dir_entry: fs::directory_iterator{matrixFolder}) {
-        if (dir_entry.path().stem() == "inner") {
+        if (dir_entry.path().stem() == "middle") {
             string rowFileName = dir_entry.path().string() + "/coordinate-" + to_string(ratio) + "-row.txt";
             string colFileName = dir_entry.path().string()+ "/coordinate-" + to_string(ratio) + "-col.txt";
             string valFileName = dir_entry.path().string() + "/coordinate-" + to_string(ratio) + "-val.txt";
@@ -176,67 +176,74 @@ int main(int argc, char **argv)
     int k = innerBandwith;
     int lda = k+1;
 
-    float** A = new float*[size];
-    for( i=0; i<size; i++) {
-        A[i]  = new float[lda];
-    }
-
-    for( i=0; i<size; i++) {
-        for( j=0; j<lda; j++) {
-            A[i][j]  = 0.0;
-        }
-    }
     /*
-    float** A_middle = new float*[size-innerBandwith-1];
-    for( i=0; i<size-innerBandwith-1; i++) {
-        A_middle[i]  = new float[middleBandwith-innerBandwith];
-    }
+   float** A = new float*[size];
+   for( i=0; i<size; i++) {
+       A[i]  = new float[lda];
+   }
 
-    for( i=0; i<size-innerBandwith-1; i++) {
-        for( j=0; j<middleBandwith-innerBandwith; j++) {
-            A_middle[i][j]  = 0.0;
-        }
-    }
+   for( i=0; i<size; i++) {
+       for( j=0; j<lda; j++) {
+           A[i][j]  = 0.0;
+       }
+   }
      */
+
+    int size_1 = size-innerBandwith-1;
+    int size_2=middleBandwith-innerBandwith;
+   float** A_middle = new float*[size_1];
+   for( i=0; i<size-innerBandwith-1; i++) {
+       A_middle[i]  = new float[size_2];
+   }
+
+   for( i=0; i<size-innerBandwith-1; i++) {
+       for( j=0; j<middleBandwith-innerBandwith; j++) {
+           A_middle[i][j]  = 0.0;
+       }
+   }
+
+
     cout << "A and A-middle initialized to 0.0" <<  endl;
     int row, col, val, counter=0, x;
     // i keeps track of whole element count.
     // upper bound is not n, but instead n-1 !
-    cout << "start generating banded for inner" <<  endl;
-    for( i=0; i<inner_rowVec.size(); i++) {
-        row = inner_rowVec[i] - 1;
-        //col = colVec[i] - 1;
-        val = inner_valVec[i];
-        //cout << "row: " << row << " col: " << col <<  " val: " << val << endl;
-        if(counter==innerBandwith) counter=0;
-
-        if(row <= innerBandwith){
-            // insert first element
-            A[row][((int)innerBandwith) - row] =  val;
-            //cout << "inserted: " << val << endl;
-            for(x=0; x<row-1; x++){
-                val = inner_valVec[i + (x+1)];
-                A[row][((int)innerBandwith) - row + (x+1)] =  val;
-                //cout << "before bw wrote " << val <<endl;
-            }
-            i+=x;
-        }
-        // soldan saga doldurmaya baslayabilirsin artik.
-        else{
-            //cout << "finished first part" << " " ;
-            A[row][counter] =  val;
-            //cout << "wrote " << val <<endl;
-            counter++;
-        }
-       // cout << i << " ";
-    }
-    cout << "writing also diag onto inner-A..." << endl;
-    for(i=0; i<inner_diagVec.size(); i++){
-        A[i][(int) innerBandwith] = inner_diagVec[i];
-    }
-
-
+   // cout << "start generating banded for inner" <<  endl;
     /*
+   for( i=0; i<inner_rowVec.size(); i++) {
+       row = inner_rowVec[i] - 1;
+       //col = colVec[i] - 1;
+       val = inner_valVec[i];
+       //cout << "row: " << row << " col: " << col <<  " val: " << val << endl;
+       if(counter==innerBandwith) counter=0;
+
+       if(row <= innerBandwith){
+           // insert first element
+           A[row][((int)innerBandwith) - row] =  val;
+           //cout << "inserted: " << val << endl;
+           for(x=0; x<row-1; x++){
+               val = inner_valVec[i + (x+1)];
+               A[row][((int)innerBandwith) - row + (x+1)] =  val;
+               //cout << "before bw wrote " << val <<endl;
+           }
+           i+=x;
+       }
+       // soldan saga doldurmaya baslayabilirsin artik.
+       else{
+           //cout << "finished first part" << " " ;
+           A[row][counter] =  val;
+           //cout << "wrote " << val <<endl;
+           counter++;
+       }
+      // cout << i << " ";
+   }
+   cout << "writing also diag onto inner-A..." << endl;
+   for(i=0; i<inner_diagVec.size(); i++){
+       A[i][(int) innerBandwith] = inner_diagVec[i];
+   }
+     */
+
+
+
     cout << "start generating banded for middle-A" <<  endl;
     x=counter=0;
     for( i=0; i<middle_rowVec.size(); i++) {
@@ -244,15 +251,15 @@ int main(int argc, char **argv)
         //col = colVec[i] - 1;
         val = middle_valVec[i];
         //cout << "row: " << row << " col: " << col <<  " val: " << val << endl;
-        if(counter==middleBandwith) counter=0;
+        if(counter==size_2) counter=0;
 
         if(row+innerBandwith <= middleBandwith){
             // insert first element
-            A[row][((int)middleBandwith) - row] =  val;
+            A_middle[row-1][((int)size_2) - row] =  val;
             //cout << "inserted: " << val << endl;
             for(x=0; x<row-1; x++){
                 val = middle_valVec[i + (x+1)];
-                A[row][((int)middleBandwith) - row + (x+1)] =  val;
+                A_middle[row-1][((int)size_2) - row + (x+1)] =  val;
                 //cout << "before bw wrote " << val <<endl;
             }
             i+=x;
@@ -260,25 +267,25 @@ int main(int argc, char **argv)
             // soldan saga doldurmaya baslayabilirsin artik.
         else{
             //cout << "finished first part" << " " ;
-            A[row][counter] =  val;
+            A_middle[row-1][counter] =  val;
             //cout << "wrote " << val <<endl;
             counter++;
         }
         // cout << i << " ";
     }
-     */
+
     cout << "algos finished." << endl;
 
 
     ofstream myfile;
-    string output =  "/home/selin/Split-Data/"+ matrix_names[inputType]+ "/inner-banded-A" + to_string(inputRatio)+ ".txt";
+    string output =  "/home/selin/Split-Data/"+ matrix_names[inputType]+ "/middle-banded-A" + to_string(inputRatio)+ ".txt";
     myfile.open(output, ios::out | ios::trunc);
 
 
     cout << "Formed A: " << endl;
-    for( i=0; i<size; i++) {
-        for( j=0 ; j<lda; j++){
-            myfile << A[i][j] << " " ;
+    for( i=0; i<size-innerBandwith-1; i++) {
+        for( j=0 ; j<middleBandwith-innerBandwith; j++){
+            myfile << A_middle[i][j] << " " ;
         }
         myfile <<  endl;
         myfile <<  endl;
