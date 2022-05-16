@@ -200,8 +200,10 @@ int main(int argc, char **argv)
     // this is except diagonal.
     int k = innerBandwith;
     int lda = k+1;
+    int size_1,size_2;
 
-
+    size_1 = size;
+    size_2=lda;
    float** A = new float*[size];
    for( i=0; i<size; i++) {
        A[i]  = new float[lda];
@@ -215,8 +217,8 @@ int main(int argc, char **argv)
 
 
     /*
-   int size_1 = size-innerBandwith-1;
-   int size_2=middleBandwith-innerBandwith;
+   size_1 = size-innerBandwith-1;
+   size_2=middleBandwith-innerBandwith;
    float** A_middle = new float*[size_1];
    for( i=0; i<size-innerBandwith-1; i++) {
        A_middle[i]  = new float[size_2];
@@ -317,8 +319,8 @@ int main(int argc, char **argv)
 
 
     cout << "Formed A: " << endl;
-    for( i=0; i<size-innerBandwith-1; i++) {
-        for( j=0 ; j<middleBandwith-innerBandwith; j++){
+    for( i=0; i<size_1; i++) {
+        for( j=0 ; j<size_2; j++){
             myfile << A[i][j] << " " ;
         }
         myfile <<  endl;
