@@ -146,7 +146,11 @@ int main(int argc, char **argv)
 
 
     if(rowVec.size() != valVec.size()){
-        cout << "not equal row and valVec (NNZ) !!! " << endl;
+        cout << "not equal size - rowVec and valVec (NNZ) !!! " << endl;
+        return -1;
+    }
+    if(n != diagVec.size()){
+        cout << "not equal size - diagVec (n) !!! " << endl;
         return -1;
     }
 
@@ -212,6 +216,11 @@ int main(int argc, char **argv)
        // cout << i << " ";
     }
     cout << "algo finished." << endl;
+
+    for(i=0; i<diagVec.size(); i++){
+        A[i][(int) innerBandwith] = diagVec[i];
+    }
+    cout << "written diag onto A." << endl;
 
     ofstream myfile;
     string output =  "/home/selin/Split-Data/"+ matrix_names[inputType]+ "/banded-A" + to_string(inputRatio)+ ".txt";
