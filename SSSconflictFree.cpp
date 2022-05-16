@@ -17,13 +17,13 @@ vector<int> middle_rowVec;
 vector<double> middle_valVec;
 vector<double> middle_diagVec;
 
-int readCooFormat(int z, double ratio) {
+int readCooFormat(int z, double ratio, bool inner) {
     cout <<  " start reading coo files..." << endl;
     double doubleVal;
     int intVal;
     const fs::path matrixFolder{"/home/selin/Split-Data/" + matrix_names[z]};
     for(auto const& dir_entry: fs::directory_iterator{matrixFolder}) {
-        if (dir_entry.path().stem() == "middle") {
+        if (inner && dir_entry.path().stem() == "inner") {
             string rowFileName = dir_entry.path().string() + "/coordinate-" + to_string(ratio) + "-row.txt";
             string colFileName = dir_entry.path().string()+ "/coordinate-" + to_string(ratio) + "-col.txt";
             string valFileName = dir_entry.path().string() + "/coordinate-" + to_string(ratio) + "-val.txt";
@@ -50,8 +50,32 @@ int readCooFormat(int z, double ratio) {
             myfile.close();
             cout << valFileName << " has been read with size: " << inner_valVec.size() << endl;
         }
-        else {
-            cout << "not you wanted: " << dir_entry.path().stem() ;
+        else if (!inner && dir_entry.path().stem() == "middle") {
+            string rowFileName = dir_entry.path().string() + "/coordinate-" + to_string(ratio) + "-row.txt";
+            string colFileName = dir_entry.path().string()+ "/coordinate-" + to_string(ratio) + "-col.txt";
+            string valFileName = dir_entry.path().string() + "/coordinate-" + to_string(ratio) + "-val.txt";
+
+            std::fstream myfile(rowFileName, std::ios_base::in);
+            // else, start reading doubles.
+            while (myfile >> intVal) {
+                middle_rowVec.push_back(intVal);
+            }
+            myfile.close();
+            cout << rowFileName << " has been read with size: " << middle_rowVec.size() << endl;
+
+            myfile.open(colFileName, std::ios_base::in);
+            while (myfile >> intVal) {
+                middle_colVec.push_back(intVal);
+            }
+            myfile.close();
+            cout << colFileName << " has been read with size: " << middle_colVec.size() << endl;
+
+            myfile.open(valFileName, std::ios_base::in);
+            while (myfile >> doubleVal) {
+                middle_valVec.push_back(doubleVal);
+            }
+            myfile.close();
+            cout << valFileName << " has been read with size: " << middle_valVec.size() << endl;
         }
     }
     return 0;
@@ -78,7 +102,8 @@ int main(int argc, char **argv)
     int inputType = atoi(argv[1]);
     double inputRatio = atof(argv[2]);
     cout << "input ratio: " << inputRatio << endl;
-    readCooFormat(inputType, inputRatio);
+    // inner read = 1 , middle read = 1 !!!
+    readCooFormat(inputType, inputRatio, 0);
     readDiag(inputType);
     /*
      * [1 0 0 0 0  0 0 0    ]
@@ -204,9 +229,9 @@ int main(int argc, char **argv)
 
 
     cout << "A and A-middle initialized to 0.0" <<  endl;
-    int row, col, val, counter=0, x;
+    int row, col, counter=0, x;
+    double val;
     // i keeps track of whole element count.
-    // upper bound is not n, but instead n-1 !
    // cout << "start generating banded for inner" <<  endl;
     /*
    for( i=0; i<inner_rowVec.size(); i++) {
@@ -253,7 +278,7 @@ int main(int argc, char **argv)
         //cout << "row: " << row << " col: " << col <<  " val: " << val << endl;
         if(counter==size_2) counter=0;
 
-        if(row+innerBandwith <= middleBandwith){
+        if((row+innerBandwith) <= middleBandwith){
             // insert first element
             A_middle[row-1][((int)size_2) - row] =  val;
             //cout << "inserted: " << val << endl;
@@ -264,17 +289,18 @@ int main(int argc, char **argv)
             }
             i+=x;
         }
-            // soldan saga doldurmaya baslayabilirsin artik.
+        // soldan saga doldurmaya baslayabilirsin artik.
         else{
             //cout << "finished first part" << " " ;
             A_middle[row-1][counter] =  val;
-            //cout << "wrote " << val <<endl;
+            cout << "wrote " << val <<endl;
             counter++;
         }
         // cout << i << " ";
     }
 
     cout << "algos finished." << endl;
+    return 0;
 
 
     ofstream myfile;
