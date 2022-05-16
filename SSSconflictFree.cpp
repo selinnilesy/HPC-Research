@@ -223,7 +223,7 @@ int main(int argc, char **argv)
     cout << "written diag onto A." << endl;
 
     ofstream myfile;
-    string output =  "/home/selin/Split-Data/"+ matrix_names[inputType]+ "/banded-A" + to_string(inputRatio)+ ".txt";
+    string output =  "/home/selin/Split-Data/"+ matrix_names[inputType]+ "/inner-banded-A" + to_string(inputRatio)+ ".txt";
     myfile.open(output, ios::out | ios::trunc);
 
 
