@@ -167,6 +167,10 @@ int main(int argc, char **argv){
         cout << "please provide a ratio for bandwiths" << endl;
         return -1;
     }
+    if(!argv[3]){
+        cout << "please provide a ratio for middle bandwith : ratio of rest of the elements than inner bandwith" << endl;
+        return -1;
+    }
     readSSSFormat(atoi(argv[1]));
 
     n = matrixSize[atoi(argv[1])];
