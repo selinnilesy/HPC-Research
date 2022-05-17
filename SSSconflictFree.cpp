@@ -183,6 +183,8 @@ int main(int argc, char **argv){
     int elmCountPerRow, colInd, rowBegin;
     double innerBandwith, middleBandwith;
     innerBandwith = (int) (nnz_n_Ratios[inputType]*bandwithProportions[inputType] * inputRatio);
+    // for only inner-outer equality :
+   // middleBandwith = bandwithSize[inputType] - innerBandwith;
     middleBandwith = (int) ((bandwithSize[inputType] - innerBandwith) * restRatio);
     cout << "inner bandwith: " << innerBandwith << endl;
     cout << "middle bandwith: " << middleBandwith << endl;
@@ -221,6 +223,8 @@ int main(int argc, char **argv){
                 vals_inner.push_back(val);
             }
             // middle Region
+            // for inner-outer equality case:
+            //else if(colInd >= i-middleBandwith){
             else if(colInd >= i-innerBandwith-middleBandwith){
                 row_middle.push_back(i+1);
                 col_middle.push_back(colInd+1);
