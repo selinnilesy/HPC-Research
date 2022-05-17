@@ -7,105 +7,58 @@
 #include "header.h"
 
 using namespace std;
-vector<int> inner_colVec;
-vector<int> inner_rowVec;
-vector<double> inner_valVec;
-vector<double> inner_diagVec;
 
-vector<int> middle_colVec;
-vector<int> middle_rowVec;
-vector<double> middle_valVec;
-vector<double> middle_diagVec;
+vector<double> inner_banded;
+vector<double> middle_banded;
 
-int readCooFormat(int z, double ratio, double middleRatio, bool inner) {
-    cout <<  " start reading coo files..." << endl;
+int readBandedStorage(int z, double ratio, double middleRatio, bool inner) {
+    cout <<  " start reading banded file..." << endl;
     double doubleVal;
     int intVal;
-    const fs::path matrixFolder{"/home/selin/Split-Data/" + matrix_names[z]};
+    const fs::path matrixFolder;
+    string fileName;
+    if(inner) matrixFolder = "/home/selin/Split-Data/" + matrix_names[z]  + "/inner-outer-equal";
+    else matrixFolder = "/home/selin/Split-Data/" + matrix_names[z];
     for(auto const& dir_entry: fs::directory_iterator{matrixFolder}) {
-        if (inner && dir_entry.path().stem() == "inner") {
-            string rowFileName = dir_entry.path().string() + "/coordinate-" + to_string(ratio) + "-" + to_string(middleRatio) + "-row.txt";
-            string colFileName = dir_entry.path().string()+ "/coordinate-" + to_string(ratio)+ "-" + to_string(middleRatio) + "-col.txt";
-            string valFileName = dir_entry.path().string() + "/coordinate-" + to_string(ratio)+ "-" + to_string(middleRatio) + "-val.txt";
+        if (inner) {
+            fileName = dir_entry.path().string() + "/inner-banded-A" + to_string(ratio) + ".txt";
 
-            std::fstream myfile(rowFileName, std::ios_base::in);
+            std::fstream myfile(fileName, std::ios_base::in);
             // else, start reading doubles.
-            while (myfile >> intVal) {
-                inner_rowVec.push_back(intVal);
-            }
-            myfile.close();
-            cout << rowFileName << " has been read with size: " << inner_rowVec.size() << endl;
-
-            myfile.open(colFileName, std::ios_base::in);
-            while (myfile >> intVal) {
-                inner_colVec.push_back(intVal);
-            }
-            myfile.close();
-            cout << colFileName << " has been read with size: " << inner_colVec.size() << endl;
-
-            myfile.open(valFileName, std::ios_base::in);
             while (myfile >> doubleVal) {
-                inner_valVec.push_back(doubleVal);
+                inner_banded.push_back(doubleVal);
             }
             myfile.close();
-            cout << valFileName << " has been read with size: " << inner_valVec.size() << endl;
+            cout << fileName << " has been read with size: " << inner_banded.size() << endl;
         }
-        else if (!inner && dir_entry.path().stem() == "middle") {
-            string rowFileName = dir_entry.path().string() + "/coordinate-" + to_string(ratio)+ "-" + to_string(middleRatio) + "-row.txt";
-            string colFileName = dir_entry.path().string()+ "/coordinate-" + to_string(ratio)+ "-" + to_string(middleRatio) + "-col.txt";
-            string valFileName = dir_entry.path().string() + "/coordinate-" + to_string(ratio)+ "-" + to_string(middleRatio) + "-val.txt";
+        // two parameters used. we read middle for this.
+        else if (!inner) {
+            fileName = dir_entry.path().string() + "/middle-banded-A" + to_string(ratio)+ "-" + to_string(middleRatio) + ".txt";
 
-            std::fstream myfile(rowFileName, std::ios_base::in);
+            std::fstream myfile(fileName, std::ios_base::in);
             // else, start reading doubles.
-            while (myfile >> intVal) {
-                middle_rowVec.push_back(intVal);
-            }
-            myfile.close();
-            cout << rowFileName << " has been read with size: " << middle_rowVec.size() << endl;
-
-            myfile.open(colFileName, std::ios_base::in);
-            while (myfile >> intVal) {
-                middle_colVec.push_back(intVal);
-            }
-            myfile.close();
-            cout << colFileName << " has been read with size: " << middle_colVec.size() << endl;
-
-            myfile.open(valFileName, std::ios_base::in);
             while (myfile >> doubleVal) {
-                middle_valVec.push_back(doubleVal);
+                middle_banded.push_back(doubleVal);
             }
             myfile.close();
-            cout << valFileName << " has been read with size: " << middle_valVec.size() << endl;
+            cout << fileName << " has been read with size: " << middle_banded.size() << endl;
         }
     }
     return 0;
 }
-int readDiag(int z) {
-    cout <<  " start reading diag file..." << endl;
-    double doubleVal;
-    string diagFile = "/home/selin/SSS-Data/" + matrix_names[z] + "/diag.txt" ;
 
-    std::fstream myfile(diagFile, std::ios_base::in);
-    // else, start reading doubles.
-    while (myfile >> doubleVal) {
-        inner_diagVec.push_back(doubleVal);
-    }
-    myfile.close();
-    cout << diagFile << " has been read." << endl;
-    return 0;
-}
 
 int main(int argc, char **argv)
 {
-
     int n = matrixSize[atoi(argv[1])];
     int inputType = atoi(argv[1]);
     double inputRatio = atof(argv[2]);
     double middleRatio = atof(argv[3]);
+    bool inner = atof(argv[4]);
     cout << "input ratio: " << inputRatio << endl;
-    // inner read = 1 , middle read = 0 !!!
-    readCooFormat(inputType, inputRatio, middleRatio, 0);
-    readDiag(inputType);
+    cout << "middle ratio: " << middleRatio << endl;
+    cout << "inner bool: " << inner << endl;
+    // inner read = 1 , middle read = 0 !!!;
     /*
      * [1 0 0 0 0  0 0 0    ]
      * [8 1 0 0 0  0 0 0    ]
@@ -175,173 +128,85 @@ int main(int argc, char **argv)
     valVec.push_back(2);
  */
 
-
-    if(inner_rowVec.size() != inner_valVec.size()){
-        cout << "not equal size - rowVec and valVec (NNZ) !!! " << endl;
-        return -1;
-    }
-    if(n != inner_diagVec.size()){
-        cout << "not equal size - diagVec (n) !!! " << endl;
-        return -1;
-    }
-
-
-    double innerBandwith, middleBandwith;
     innerBandwith = (int) (nnz_n_Ratios[inputType]*bandwithProportions[inputType] * inputRatio);
-    middleBandwith = (int) ((bandwithSize[inputType] - innerBandwith)*middleRatio);
-    //innerBandwith=4;
-    //middleBandwith=0;
+    //middleBandwith = (int) ((bandwithSize[inputType] - innerBandwith)*middleRatio);
+
     cout << "inner bandwith: " << innerBandwith << endl;
     cout << "middle bandwith: " << middleBandwith << endl;
     //cout << "total bandwith: " << bandwithSize[inputType] << endl;
 
-    int i,j;
-    int size= n;
-    //int size=8;
-    // this is except diagonal.
-    int k = innerBandwith;
-    int lda = k+1;
-    int size_1,size_2;
+    int i,j,size,k,lda,size_1,size_2;
+    float** A;
 
-    /*
-    size_1 = size;
-    size_2=lda;
-   float** A = new float*[size];
-   for( i=0; i<size; i++) {
-       A[i]  = new float[lda];
-   }
-
-   for( i=0; i<size; i++) {
-       for( j=0; j<lda; j++) {
-           A[i][j]  = 0.0;
-       }
-   }
-    */
-
-
-    size_1 = size-innerBandwith-1;
-    size_2=middleBandwith;
-    float** A_middle = new float*[size_1];
-    for( i=0; i<size_1; i++) {
-        A_middle[i]  = new float[size_2];
-    }
-
-    for( i=0; i<size_1; i++) {
-        for( j=0; j<size_2; j++) {
-            A_middle[i][j]  = 0.0;
+    if(inner) {
+        k = innerBandwith;
+        lda = k+1;
+        size= n;
+        size_1 = size;
+        size_2=lda;
+        A = new float*[size];
+        for( i=0; i<size; i++) {
+            A[i]  = new float[lda];
+        }
+        for( i=0; i<size; i++) {
+            for( j=0; j<lda; j++) {
+                A[i][j]  = 0.0;
+            }
         }
     }
+    else if(!inner){
+        k = middleBandwith;
+        lda = k+1;
+        size_1 = size-innerBandwith-1;
+        size_2=middleBandwith;
+        A = new float*[size_1];
+        for( i=0; i<size_1; i++) {
+            A[i]  = new float[size_2];
+        }
 
+        for( i=0; i<size_1; i++) {
+            for( j=0; j<size_2; j++) {
+                A[i][j]  = 0.0;
+            }
+        }
+    }
+    cout << "A initialized." <<  endl;
 
-    cout << "A and A-middle initialized to 0.0" <<  endl;
-    int row, col, counter=0, x, diff, neededCol, newdiff;
-    double val;
-    // i keeps track of whole element count.
-    // cout << "start generating banded for inner" <<  endl;
-    /*
-   for( i=0; i<inner_rowVec.size(); i++) {
-       row = inner_rowVec[i] - 1;
-       col = inner_colVec[i];
-       val = inner_valVec[i];
-       //cout << "row: " << row << " col: " << col <<  " val: " << val << endl;
-       if(row <= innerBandwith){
-           // insert found row-element
-           neededCol = 1;
-           diff=col-neededCol;
-           A[row][((int)innerBandwith) - row + (diff)] =  val;
-           //cout << "inserted: " << val << endl;
-           for(x=0; x<row-1; x++){
-               // do not assume all entries in the row(sub-diags) are filled.
-               if( inner_rowVec[i + (x+1)]-1 != row) break;
-               val = inner_valVec[i + (x+1)];
-               diff =  (inner_colVec[i + (x+1)]) - neededCol;
-               A[row][((int)innerBandwith) - row + (diff)] =  val;
-           }
-           i+=x;
-       }
-       // soldan saga doldurmaya baslayabilirsin artik.
-       else{
-           neededCol = (row+1) - innerBandwith;
-           diff=col-neededCol;
-           A[row][diff] =  val;
-           //cout << "wrote " << val <<endl;
-       }
-      // cout << i << " ";
-   }
-   cout << "writing also diag onto inner-A..." << endl;
-   for(i=0; i<inner_diagVec.size(); i++){
-       A[i][(int) innerBandwith] = inner_diagVec[i];
-   }
-     */
+    readBandedStorage(inputType, inputRatio, middleRatio, inner );
+
+    cout << "banded file read onto A." <<  endl;
+
+    float* X = new float[size_1];
+    for(int i=0; i<size_1; i++) X[i] = 1.0;
+    float* Y = new float[size_1];
+    for(int i=0; i<size_1; i++) Y[i] = 0.0;
+    float alpha = 1;
+    float beta = 0;
+    int incx = 1;
+    int incy = 1;
 
     ofstream myfile;
-    string output =  "/home/selin/Split-Data/"+ matrix_names[inputType]+ "/middle-banded-A" + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
+    string output =  "/home/selin/Outputs/"+ matrix_names[inputType];
+    if(inner) output += "/inner-"  + to_string(ratio)+ ".txt";
+    if(!inner) output += "/middle-"  + to_string(ratio)+ "-" + to_string(middleRatio) + ".txt";
     myfile.open(output, ios::out | ios::trunc);
 
-    cout << "start generating banded for middle-A" <<  endl;
-    x=0;
-    for( i=0; i<middle_rowVec.size(); i++) {
-        row = middle_rowVec[i] - innerBandwith - 1;
-        col = middle_colVec[i];
-        val = middle_valVec[i];
-        //cout << "row: " << row << " col: " << col <<  " val: " << val << endl;
-
-        if(row <= middleBandwith){
-            neededCol = 1;
-            diff=col-neededCol;
-            // insert first element
-            A_middle[row-1][((int)size_2) - row + (diff)] =  val;
-            //cout << "inserted: " << val << endl;
-            for(x=0; x<row-1; x++){
-                if( middle_rowVec[i + (x+1)]-innerBandwith-1 != row) break;
-                val = middle_valVec[i + (x+1)];
-                diff =  (middle_colVec[i + (x+1)]) - neededCol;
-                A_middle[row-1][((int)size_2) - row + diff] =  val;
-            }
-            i+=x;
-        }
-        else{
-            neededCol = row - middleBandwith + 1;
-            diff=col-neededCol;
-            A_middle[row-1][diff] =  val;
-            //myfile <<  val << '\t';
-        }
-        // cout << i << " ";
-    }
-
-
-    cout << "algos finished." << endl;
-
-
-
-    cout << "Formed A: " << endl;
-    for( i=0; i<size_1; i++) {
-        for( j=0 ; j<size_2; j++){
-            myfile << A_middle[i][j] << " " ;
-        }
-        myfile <<  endl;
-        myfile <<  endl;
-    }
-
-    /* needed data for openblas ssbmv
-   float* X = new float[size];
-   for(int i=0; i<size; i++) X[i] = 1.0;
-   float* Y = new float[size];
-   for(int i=0; i<size; i++) Y[i] = 0.0;
-   float alpha = 1;
-   float beta = 0;
-   int incx = 1;
-   int incy = 1;
-    */
-
-    //cout << "Call cblas_ssbmv. " << endl ;
+    cout << "Call cblas_ssbmv. " << endl ;
 
     // column major : upper verince kernel lower'a giriyor. lower verince upper'a.
     // column major : CblasLower -> ( ! kernel'de upper) 10x10 1 bandwith icin calisiyor.
-    //cblas_ssbmv(CblasColMajor, CblasUpper, size, k, alpha, A, lda, X, incx, beta, Y, incy);
+    cblas_ssbmv(CblasColMajor, CblasUpper, size_1, k, alpha, A, lda, X, incx, beta, Y, incy);
 
-    //cout << "Output: " << endl;
-    //for(int j=0; j<size; j++) {
-    //    cout << Y[j] << endl;
-    //}
+
+    cout << "Writing Output: " << endl;
+    for( i=0; i<size_1; i++) {
+        myfile << Y[i] << " " ;
+    }
+    myfile.close();
+
+    delete [] X;
+    delete [] Y;
+    for(i=0; i<size_1; i++) delete []  A[i] ;
+    delete [] A;
+
 }
