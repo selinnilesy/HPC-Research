@@ -120,7 +120,7 @@ int main(int argc, char **argv){
 
     n = matrixSize[atoi(argv[1])];
     int inputType = atoi(argv[1]);
-    double inputRatio =  atoi(argv[2]);
+    double inputRatio =  atof(argv[2]);
 
     int *banded_coordRow = coord_row;
     int *banded_coordCol = coord_col;
