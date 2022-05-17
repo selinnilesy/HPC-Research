@@ -11,6 +11,10 @@ using namespace std;
 vector<double> inner_banded;
 vector<double> middle_banded;
 
+extern "C" {
+    extern void amux_(int *n, double* x, double *y, double *a, int *ja, int *ia);
+}
+
 int readBandedStorage(int z, double ratio, double middleRatio, bool inner, float *ptr) {
     cout <<  " start reading banded file..." << endl;
     double doubleVal;
@@ -21,31 +25,31 @@ int readBandedStorage(int z, double ratio, double middleRatio, bool inner, float
     if(inner) fileName = "/home/selin/Split-Data/" + matrix_names[z]  + "/inner-outer-equal";
     else fileName = "/home/selin/Split-Data/" + matrix_names[z];
 
-        if (inner) {
-            fileName += "/inner-banded-A" + to_string(ratio) + ".txt";
+    if (inner) {
+        fileName += "/inner-banded-A" + to_string(ratio) + ".txt";
 
-            std::fstream myfile(fileName, std::ios_base::in);
-            // else, start reading doubles.
-            while (myfile >> doubleVal) {
-                inner_banded.push_back(doubleVal);
-                ptr[counter++] = doubleVal;
-            }
-            myfile.close();
-            cout << fileName << " has been read with size: " << inner_banded.size() << endl;
+        std::fstream myfile(fileName, std::ios_base::in);
+        // else, start reading doubles.
+        while (myfile >> doubleVal) {
+            inner_banded.push_back(doubleVal);
+            ptr[counter++] = doubleVal;
         }
+        myfile.close();
+        cout << fileName << " has been read with size: " << inner_banded.size() << endl;
+    }
         // two parameters used. we read middle for this.
-        else if (!inner) {
-            fileName +=  + "/middle-banded-A" + to_string(ratio)+ "-" + to_string(middleRatio) + ".txt";
+    else if (!inner) {
+        fileName +=  + "/middle-banded-A" + to_string(ratio)+ "-" + to_string(middleRatio) + ".txt";
 
-            std::fstream myfile(fileName, std::ios_base::in);
-            // else, start reading doubles.
-            while (myfile >> doubleVal) {
-                middle_banded.push_back(doubleVal);
-                ptr[counter++] = doubleVal;
-            }
-            myfile.close();
-            cout << fileName << " has been read with size: " << middle_banded.size() << endl;
+        std::fstream myfile(fileName, std::ios_base::in);
+        // else, start reading doubles.
+        while (myfile >> doubleVal) {
+            middle_banded.push_back(doubleVal);
+            ptr[counter++] = doubleVal;
         }
+        myfile.close();
+        cout << fileName << " has been read with size: " << middle_banded.size() << endl;
+    }
     return 0;
 }
 
@@ -61,74 +65,7 @@ int main(int argc, char **argv)
     cout << "middle ratio: " << middleRatio << endl;
     cout << "inner bool: " << inner << endl;
     // inner read = 1 , middle read = 0 !!!;
-    /*
-     * [1 0 0 0 0  0 0 0    ]
-     * [8 1 0 0 0  0 0 0    ]
-     * [9 5 1 0 0  0 0 0    ]
-     * [5 7 6 1 0  0 0 0   ]
-     * [3 5 4 3 1  0 0 0   ]
-     * [0 3 5 3 4  1 0 0   ]
-     * [0 0 3 5 9  9 1 0   ]
-     * [0 0 0 3 5  8 2 1   ]
-     *
 
-    rowVec.push_back(2);
-    rowVec.push_back(3);
-
-    rowVec.push_back(3);
-    rowVec.push_back(4);
-    rowVec.push_back(4);
-    rowVec.push_back(4);
-
-    rowVec.push_back(5);
-    rowVec.push_back(5);
-    rowVec.push_back(5);
-    rowVec.push_back(5);
-
-    rowVec.push_back(6);
-    rowVec.push_back(6);
-    rowVec.push_back(6);
-    rowVec.push_back(6);
-
-    rowVec.push_back(7);
-    rowVec.push_back(7);
-    rowVec.push_back(7);
-    rowVec.push_back(7);
-
-    rowVec.push_back(8);
-    rowVec.push_back(8);
-    rowVec.push_back(8);
-    rowVec.push_back(8);
-
-    // ---
-    valVec.push_back(8);
-    valVec.push_back(9);
-    valVec.push_back(5);
-    valVec.push_back(5);
-
-    valVec.push_back(7);
-    valVec.push_back(6);
-    valVec.push_back(3);
-    valVec.push_back(5);
-
-    valVec.push_back(4);
-    valVec.push_back(3);
-    valVec.push_back(3);
-    valVec.push_back(5);
-
-    valVec.push_back(3);
-    valVec.push_back(4);
-    valVec.push_back(3);
-    valVec.push_back(5);
-
-    valVec.push_back(9);
-    valVec.push_back(9);
-    valVec.push_back(3);
-    valVec.push_back(5);
-
-    valVec.push_back(8);
-    valVec.push_back(2);
- */
 
     int innerBandwith,middleBandwith;
     innerBandwith = (int) (nnz_n_Ratios[inputType]*bandwithProportions[inputType] * inputRatio);
@@ -188,10 +125,10 @@ int main(int argc, char **argv)
     readBandedStorage(inputType, inputRatio, middleRatio, inner, B);
     cout << "banded file read onto B." <<  endl;
 
-    cout << "Call cblas_ssbmv. " << endl ;
-    // column major : upper verince kernel lower'a giriyor. lower verince upper'a.
-    // column major : CblasLower -> ( ! kernel'de upper) 10x10 1 bandwith icin calisiyor.
-    cblas_ssbmv(CblasColMajor, CblasUpper, size_1, k, alpha, B, lda, X, incx, beta, Y, incy);
+    cout << "starts computing amux..." << endl;
+    amuz_(&nrow, X, Y, );
+    std::cout  <<  " finished computing csrsss... " << diag[10] << " " << vals_lower[10] << " " << colinds_lower[10]<< " " << rowptr[10] << endl;
+
 
     ofstream myfile;
     string output;
