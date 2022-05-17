@@ -1,4 +1,3 @@
-#include <cblas.h>
 #include <stdio.h>
 #include <iostream>
 #include <string.h>
@@ -8,48 +7,54 @@
 
 using namespace std;
 
-vector<double> inner_banded;
-vector<double> middle_banded;
+vector<double> val;
+vector<int> row,col;
+int *rowPtr, *colPtr;
+double *valPtr;
+int nnz;
 
 extern "C" {
     extern void amux_(int *n, double* x, double *y, double *a, int *ja, int *ia);
 }
 
-int readBandedStorage(int z, double ratio, double middleRatio, bool inner, float *ptr) {
-    cout <<  " start reading banded file..." << endl;
+int readCSRStorage(int z, double ratio, bool lower) {
+    cout <<  " start reading Upper CSR Storage..." << endl;
+
     double doubleVal;
     int intVal;
-
-    string fileName;
+    string fileName, rowfile, colfile, valfile;
     int counter=0;
-    if(inner) fileName = "/home/selin/Split-Data/" + matrix_names[z]  + "/inner-outer-equal";
-    else fileName = "/home/selin/Split-Data/" + matrix_names[z];
+    // middle read not yet IMPLEMENTED !!!
+    // TO DO
+    if(!lower) fileName = "/home/selin/Split-Data/" + matrix_names[z]  + "/inner-outer-equal/inner/CSR-Data/upper";
+    else fileName = "/home/selin/Split-Data/" + matrix_names[z] + "/inner-outer-equal/inner/CSR-Data" ;
 
-    if (inner) {
-        fileName += "/inner-banded-A" + to_string(ratio) + ".txt";
+    rowfile = fileName + "/" + to_string(ratio) + "-row.txt";
+    colfile = fileName + "/" + to_string(ratio) + "-col.txt";
+    valfile = fileName + "/" + to_string(ratio) + "-val.txt";
 
-        std::fstream myfile(fileName, std::ios_base::in);
-        // else, start reading doubles.
-        while (myfile >> doubleVal) {
-            inner_banded.push_back(doubleVal);
-            ptr[counter++] = doubleVal;
-        }
-        myfile.close();
-        cout << fileName << " has been read with size: " << inner_banded.size() << endl;
+    std::fstream myfile(rowfile, std::ios_base::in);
+    while (myfile >> intVal) {
+        row.push_back(intVal);
     }
-        // two parameters used. we read middle for this.
-    else if (!inner) {
-        fileName +=  + "/middle-banded-A" + to_string(ratio)+ "-" + to_string(middleRatio) + ".txt";
+    myfile.close();
+    cout << rowfile << " has been read with size: " << row.size() << endl;
 
-        std::fstream myfile(fileName, std::ios_base::in);
-        // else, start reading doubles.
-        while (myfile >> doubleVal) {
-            middle_banded.push_back(doubleVal);
-            ptr[counter++] = doubleVal;
-        }
-        myfile.close();
-        cout << fileName << " has been read with size: " << middle_banded.size() << endl;
+    myfile.open(colfile, std::ios_base::in);
+    while (myfile >> intVal) {
+        col.push_back(intVal);
     }
+    myfile.close();
+
+    nnz=col.size();
+    cout << colfile << " has been read with size: " << col.size() << endl;
+
+    myfile.open(valfile, std::ios_base::in);
+    while (myfile >> doubleVal) {
+        val.push_back(doubleVal);
+    }
+    myfile.close();
+    cout << valfile << " has been read with size: " << val.size() << endl;
     return 0;
 }
 
@@ -59,85 +64,44 @@ int main(int argc, char **argv)
     int n = matrixSize[atoi(argv[1])];
     int inputType = atoi(argv[1]);
     double inputRatio = atof(argv[2]);
-    double middleRatio = atof(argv[3]);
-    bool inner = atof(argv[4]);
+
+    bool lower = atof(argv[3]);
     cout << "input ratio: " << inputRatio << endl;
-    cout << "middle ratio: " << middleRatio << endl;
-    cout << "inner bool: " << inner << endl;
-    // inner read = 1 , middle read = 0 !!!;
+    cout << "lower bool: " << lower << endl;
+
+    readCSRStorage( inputType, inputRatio, lower);
+
+    rowPtr = new int[matrixSize[inputType] + 1];
+    colPtr = new int[nnz];
+    valPtr = new double[nnz];
 
 
-    int innerBandwith,middleBandwith;
-    innerBandwith = (int) (nnz_n_Ratios[inputType]*bandwithProportions[inputType] * inputRatio);
-    //middleBandwith = (int) ((bandwithSize[inputType] - innerBandwith)*middleRatio);
+    for(int i=0; i<row.size(); i++) rowPtr[i] = row[i];
+    for(int i=0; i<col.size(); i++) colPtr[i] = col[i];
+    for(int i=0; i<val.size(); i++) valPtr[i] = val[i];
 
-    cout << "inner bandwith: " << innerBandwith << endl;
-    cout << "middle bandwith: " << middleBandwith << endl;
-    //cout << "total bandwith: " << bandwithSize[inputType] << endl;
 
-    int i,j,size,k,lda,size_1,size_2;
-    float** A;
+    int nrow= matrixSize[inputType];
 
-    if(inner) {
-        k = innerBandwith;
-        lda = k+1;
-        size= n;
-        size_1 = size;
-        size_2=lda;
-        A = new float*[size];
-        for( i=0; i<size; i++) {
-            A[i]  = new float[lda];
-        }
-        for( i=0; i<size; i++) {
-            for( j=0; j<lda; j++) {
-                A[i][j]  = 0.0;
-            }
-        }
-    }
-    else if(!inner){
-        k = middleBandwith;
-        lda = k+1;
-        size_1 = size-innerBandwith-1;
-        size_2=middleBandwith;
-        A = new float*[size_1];
-        for( i=0; i<size_1; i++) {
-            A[i]  = new float[size_2];
-        }
+    double* X = new double[nrow];
+    for(int i=0; i<nrow; i++) X[i] = 1.0;
 
-        for( i=0; i<size_1; i++) {
-            for( j=0; j<size_2; j++) {
-                A[i][j]  = 0.0;
-            }
-        }
-    }
-    cout << "A initialized." <<  endl;
-
-    float* X = new float[size_1];
-    for(int i=0; i<size_1; i++) X[i] = 1.0;
-    float* Y = new float[size_1];
-    for(int i=0; i<size_1; i++) Y[i] = 0.0;
-    float alpha = 1;
-    float beta = 0;
-    int incx = 1;
-    int incy = 1;
-
-    float *B = *A;
-    readBandedStorage(inputType, inputRatio, middleRatio, inner, B);
-    cout << "banded file read onto B." <<  endl;
+    double* Y = new double[nrow];
+    for(int i=0; i<nrow; i++) Y[i] = 0.0;
 
     cout << "starts computing amux..." << endl;
-    amuz_(&nrow, X, Y, );
-    std::cout  <<  " finished computing csrsss... " << diag[10] << " " << vals_lower[10] << " " << colinds_lower[10]<< " " << rowptr[10] << endl;
+    amux_(&nrow, X, Y, valPtr, colPtr, rowPtr);
+    std::cout  <<  " finished computing amux_... " << endl;
 
 
     ofstream myfile;
     string output;
-    if(inner) output = "/home/selin/Outputs/" + matrix_names[inputType] + "/inner-"  + to_string(inputRatio) + ".txt";
-    if(!inner) output =  "/home/selin/Outputs/" + matrix_names[inputType] + "/middle-"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
+    if(lower) output = "/home/selin/Split-Data/" + matrix_names[inputType]  + "/inner-outer-equal/inner/CSR-Data/" + to_string(inputRatio) + "-result.txt";
+    else if(!lower) output = "/home/selin/Split-Data/" + matrix_names[inputType]  + "/inner-outer-equal/inner/CSR-Data/upper/" + to_string(inputRatio) + "-result.txt";
     myfile.open(output, ios::out | ios::trunc);
 
-    cout << "Writing Y: " << endl;
-    for( i=0; i<size_1; i++) {
+    cout << "Writing result: " << endl;
+    for(int i=0; i<nrow; i++) {
         myfile << Y[i] << " " ;
     }
     myfile.close();
@@ -145,6 +109,8 @@ int main(int argc, char **argv)
 
     delete [] X;
     delete [] Y;
-    delete [] A;
+    delete [] rowPtr;
+    delete [] colPtr;
+    delete [] valPtr;
 
 }
