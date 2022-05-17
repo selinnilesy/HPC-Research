@@ -11,39 +11,41 @@ using namespace std;
 vector<double> inner_banded;
 vector<double> middle_banded;
 
-int readBandedStorage(int z, double ratio, double middleRatio, bool inner) {
+int readBandedStorage(int z, double ratio, double middleRatio, bool inner, float *ptr) {
     cout <<  " start reading banded file..." << endl;
     double doubleVal;
     int intVal;
-    const fs::path matrixFolder;
+
     string fileName;
-    if(inner) matrixFolder = "/home/selin/Split-Data/" + matrix_names[z]  + "/inner-outer-equal";
-    else matrixFolder = "/home/selin/Split-Data/" + matrix_names[z];
-    for(auto const& dir_entry: fs::directory_iterator{matrixFolder}) {
+    int counter=0;
+    if(inner) fileName = "/home/selin/Split-Data/" + matrix_names[z]  + "/inner-outer-equal";
+    else fileName = "/home/selin/Split-Data/" + matrix_names[z];
+
         if (inner) {
-            fileName = dir_entry.path().string() + "/inner-banded-A" + to_string(ratio) + ".txt";
+            fileName += "/inner-banded-A" + to_string(ratio) + ".txt";
 
             std::fstream myfile(fileName, std::ios_base::in);
             // else, start reading doubles.
             while (myfile >> doubleVal) {
                 inner_banded.push_back(doubleVal);
+                ptr[counter++] = doubleVal;
             }
             myfile.close();
             cout << fileName << " has been read with size: " << inner_banded.size() << endl;
         }
         // two parameters used. we read middle for this.
         else if (!inner) {
-            fileName = dir_entry.path().string() + "/middle-banded-A" + to_string(ratio)+ "-" + to_string(middleRatio) + ".txt";
+            fileName +=  + "/middle-banded-A" + to_string(ratio)+ "-" + to_string(middleRatio) + ".txt";
 
             std::fstream myfile(fileName, std::ios_base::in);
             // else, start reading doubles.
             while (myfile >> doubleVal) {
                 middle_banded.push_back(doubleVal);
+                ptr[counter++] = doubleVal;
             }
             myfile.close();
             cout << fileName << " has been read with size: " << middle_banded.size() << endl;
         }
-    }
     return 0;
 }
 
@@ -128,6 +130,7 @@ int main(int argc, char **argv)
     valVec.push_back(2);
  */
 
+    int innerBandwith,middleBandwith;
     innerBandwith = (int) (nnz_n_Ratios[inputType]*bandwithProportions[inputType] * inputRatio);
     //middleBandwith = (int) ((bandwithSize[inputType] - innerBandwith)*middleRatio);
 
@@ -172,10 +175,6 @@ int main(int argc, char **argv)
     }
     cout << "A initialized." <<  endl;
 
-    readBandedStorage(inputType, inputRatio, middleRatio, inner );
-
-    cout << "banded file read onto A." <<  endl;
-
     float* X = new float[size_1];
     for(int i=0; i<size_1; i++) X[i] = 1.0;
     float* Y = new float[size_1];
@@ -185,28 +184,30 @@ int main(int argc, char **argv)
     int incx = 1;
     int incy = 1;
 
-    ofstream myfile;
-    string output =  "/home/selin/Outputs/"+ matrix_names[inputType];
-    if(inner) output += "/inner-"  + to_string(ratio)+ ".txt";
-    if(!inner) output += "/middle-"  + to_string(ratio)+ "-" + to_string(middleRatio) + ".txt";
-    myfile.open(output, ios::out | ios::trunc);
+    float *B = *A;
+    readBandedStorage(inputType, inputRatio, middleRatio, inner, B);
+    cout << "banded file read onto B." <<  endl;
 
     cout << "Call cblas_ssbmv. " << endl ;
-
     // column major : upper verince kernel lower'a giriyor. lower verince upper'a.
     // column major : CblasLower -> ( ! kernel'de upper) 10x10 1 bandwith icin calisiyor.
-    cblas_ssbmv(CblasColMajor, CblasUpper, size_1, k, alpha, A, lda, X, incx, beta, Y, incy);
+    cblas_ssbmv(CblasColMajor, CblasUpper, size_1, k, alpha, B, lda, X, incx, beta, Y, incy);
 
+    ofstream myfile;
+    string output;
+    if(inner) output = "/home/selin/Outputs/" + matrix_names[inputType] + "/inner-"  + to_string(inputRatio) + ".txt";
+    if(!inner) output =  "/home/selin/Outputs/" + matrix_names[inputType] + "/middle-"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
+    myfile.open(output, ios::out | ios::trunc);
 
-    cout << "Writing Output: " << endl;
+    cout << "Writing Y: " << endl;
     for( i=0; i<size_1; i++) {
         myfile << Y[i] << " " ;
     }
     myfile.close();
+    cout << "Output completed." << endl;
 
     delete [] X;
     delete [] Y;
-    for(i=0; i<size_1; i++) delete []  A[i] ;
     delete [] A;
 
 }
