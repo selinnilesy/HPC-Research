@@ -65,7 +65,7 @@ int main(int argc, char **argv)
     int inputType = atoi(argv[1]);
     double inputRatio = atof(argv[2]);
 
-    bool lower = atof(argv[3]);
+    bool lower = atoi(argv[3]);
     cout << "input ratio: " << inputRatio << endl;
     cout << "lower bool: " << lower << endl;
 
@@ -80,7 +80,9 @@ int main(int argc, char **argv)
     for(int i=0; i<col.size(); i++) colPtr[i] = col[i];
     for(int i=0; i<val.size(); i++) valPtr[i] = val[i];
 
-
+    cout << "test: " << rowPtr[100] << endl;
+    cout << "test: " << colPtr[100] << endl;
+    cout << "test: " << valPtr[100] << endl;
     int nrow= matrixSize[inputType];
 
     double* X = new double[nrow];
