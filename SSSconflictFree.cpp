@@ -22,27 +22,24 @@ int main()
             else if(i==j){
                 matrix[i][j] = 1.0;
                 if(i > 0 && j < 9){
-                    matrix[i][j-1] = 1.0;
-                    matrix[i][j+1] = 1.0;
+                    matrix[i][j-1] = 5.0;
+                    matrix[i][j+1] = 5.0;
                 }
 
                 if(i > 1 && j < 8){
-                    matrix[i][j-2] = 1.0;
-                    matrix[i][j+2] = 1.0;
+                    matrix[i][j-2] = 2.0;
+                    matrix[i][j+2] = 2.0;
                 }
 
             }
         }
     }
-    matrix[0][1] = 1.0;
-    matrix[1][3] = 1.0;
-    matrix[0][2] = 1.0;
-    matrix[9][8] = 1.0;
-    matrix[8][6] = 1.0;
-    matrix[9][7] = 1.0;
-    matrix[2][3] = 1.0;
-    matrix[3][4] = 1.0;
-    matrix[4][3] = 1.0;
+    matrix[9][8] = 5.0;
+    matrix[9][7] = 2.0;
+    matrix[0][1] = 5.0;
+    matrix[0][2] = 2.0;
+    matrix[8][6] = 2.0;
+    matrix[1][3] = 2.0;
 
 
     /*
@@ -101,6 +98,8 @@ int main()
 
     int m;
     // for LOWER only
+
+    /*
     for(int j=1; j<=size; j++) {
         m = 1 - j;
         for(int i=j ; i<=min(size, j+k); i++){
@@ -109,6 +108,8 @@ int main()
             A[(m+i-1)*size + ind_y] = matrix[ind_x][ind_y];
         }
     }
+     */
+
     // for upper storage of A with size=10
 
     /*
@@ -135,23 +136,44 @@ int main()
     A[3*size - 2 ]=0;
     A[2*size - 1 ]=0;
     */
+
+    /*
     for(int i=0; i<size; i++) {
         for(int j=0 ; j<lda; j++){
             A[(lda)*i + j]= 1;
         }
     }
+     */
+
+
+    /*
+   for(int i=0; i<size; i++) {
+      A[i*lda + 0]= matrix[i][i];
+      if(i >=1) A[(i-1)*lda + 1]= matrix[i][i-1];
+      if(i >=2) A[(i-2)*lda +2]= matrix[i][i-2];
+   }
+     */
+
+
+   for(int i=0; i<size; i++) {
+      A[i*lda + (lda-1)]= matrix[i][i];
+      if(i >=1) A[(i)*lda + (lda-2)]= matrix[i][i-1];
+      if(i >=2) A[(i)*lda +(lda-3)]= matrix[i][i-2];
+   }
+
+
     // col major - upper  10 x 3
 
-    A[0]=0;
-    A[1]=0;
-    A[lda]=0;
+    //A[0]=0;
+    //A[1]=0;
+    //A[lda]=0;
      
     // col major - lower  10 x 3
-    /*
-    A[size*lda-1]=0;
-    A[size*lda-2]=0;
-    A[(size-1)*lda-1]=0;
-     */
+
+    //A[size*lda-1]=0;
+    //A[size*lda-2]=0;
+    //A[(size-1)*lda-1]=0;
+
 
 
 
