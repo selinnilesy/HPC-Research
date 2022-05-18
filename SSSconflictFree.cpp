@@ -78,7 +78,8 @@ int main(int argc, char **argv)
 
     for(int i=0; i<row.size(); i++) rowPtr[i] = row[i];
     for(int i=0; i<col.size(); i++) colPtr[i] = col[i];
-    for(int i=0; i<val.size(); i++) valPtr[i] = val[i];
+    // downcast to make it equal wit cblas_ssbmv.
+    for(int i=0; i<val.size(); i++) valPtr[i] = (float) val[i];
 
     cout << "test: " << rowPtr[100] << endl;
     cout << "test: " << colPtr[100] << endl;
