@@ -71,7 +71,7 @@ int main(int argc, char **argv)
         sum.push_back(lowerRes[i] + upperRes[i] + diag[i]);
     }
     for(int i=0; i<sum.size(); i++){
-        if(sum[i] != totalRes[i]) {
+        if(abs(sum[i] - totalRes[i]) > 0.1) {
             cout << "not equal index: " << i << " you found: " <<sum[i] << " banded computed: " << totalRes[i];
             return -1;
         }
