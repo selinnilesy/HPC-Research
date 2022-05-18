@@ -395,5 +395,6 @@ int main(int argc, char **argv)
 
     delete [] X;
     delete [] Y;
-    delete [] A;
+    if(inner) delete [] A;
+    else delete [] A_middle;
 }

@@ -69,21 +69,21 @@ int CNAME(BLASLONG n, BLASLONG k, FLOAT alpha,
 
   for (i = 0; i < n; i++) {
 
-      printf("-------------------------------- loop in sbmv_k.c\n");
+      //printf("-------------------------------- loop in sbmv_k.c\n");
 
 
 #ifndef LOWER
 
     length  = i;
     if (length > k) length = k;
-      printf("lower - in sbmv_k.c: i: %d and length: %d and k:%d\n", i, length, k);
+      //printf("lower - in sbmv_k.c: i: %d and length: %d and k:%d\n", i, length, k);
 
     AXPYU_K(length + 1, 0, 0,
 	   alpha * X[i],
 	   a + k - length, 1, Y + i - length, 1, NULL, 0);
 
     Y[i] -= alpha * DOTU_K(length, a + k - length, 1, X + i - length, 1);
-    printf("lower - in sbmv_k.c: dot y[%d] : %d\n", i,  DOTU_K(length, a + k - length, 1, X + i - length, 1));
+    //printf("lower - in sbmv_k.c: dot y[%d] : %d\n", i,  DOTU_K(length, a + k - length, 1, X + i - length, 1));
 
 
 
@@ -91,13 +91,13 @@ int CNAME(BLASLONG n, BLASLONG k, FLOAT alpha,
 #else
     length  = k;
     if (n - i - 1 < k) length = n - i - 1;
-     printf("upper - in sbmv_k.c: i: %d and length: %d and k:%d\n", i, length, k);
+     //printf("upper - in sbmv_k.c: i: %d and length: %d and k:%d\n", i, length, k);
 
     AXPYU_K(length + 1, 0, 0,
 	   alpha * X[i],
 	   a, 1, Y + i, 1, NULL, 0);
     Y[i] -= alpha * DOTU_K(length, a + 1, 1, X + i + 1, 1);
-     printf("upper - in sbmv_k.c: y[%d] : %d\n", i,  DOTU_K(length, a + 1, 1, X + i + 1, 1));
+     //printf("upper - in sbmv_k.c: y[%d] : %d\n", i,  DOTU_K(length, a + 1, 1, X + i + 1, 1));
 #endif
 
 
