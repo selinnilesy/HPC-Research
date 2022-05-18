@@ -78,12 +78,13 @@ int readCooFormat(int z, double inputRatio, bool reversed) {
                 tempVec.push_back(tempVal);
             }
             coord_val = new double[tempVec.size()];
+            // !reversed means lower and reverse means upper.
             if(!reversed){
-                for(int i=0; i<tempVec.size(); i++) coord_val[i] = tempVec[i];
+                for(int i=0; i<tempVec.size(); i++) coord_val[i] = -tempVec[i];
             }
             else if(reversed){
                 // use neg for skew-symmetric part !!!
-                for(int i=0; i<tempVec.size(); i++) coord_val[i] = -tempVec[i];
+                for(int i=0; i<tempVec.size(); i++) coord_val[i] = tempVec[i];
             }
             nonzeroSize_val=tempVec.size();
             cout << dir_entry.path() << " has been read." << endl;
@@ -135,6 +136,7 @@ int main(int argc, char **argv){
 
 
     std::cout  <<  " starts computing coocsr... " << endl;
+    // to be able to compare results with cblas_ssbmv, lower part values are negative.
     if(!reversed) coocsr_(&nrow,  &nnz, banded_coordval, banded_coordRow, banded_coordCol, banded_csrval, banded_csrCol, banded_csrRow);
     else if(reversed)  coocsr_(&nrow,  &nnz, banded_coordval, banded_coordCol, banded_coordRow, banded_csrval, banded_csrCol, banded_csrRow);
     std::cout  <<  " finished computing coocsr... :" << banded_csrval[10] << " " << banded_csrCol[10] << " " << banded_csrRow[10] << endl;
