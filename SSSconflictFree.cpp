@@ -242,7 +242,7 @@ int main(int argc, char **argv){
             }
         }
     }
-    cout << "read SSS format and grouped 3way bandwith" << endl;
+    cout << "write grouped 3way bandwiths in coo formats" << endl;
     writeCooFormat(inputType, inputRatio, restRatio);
 
 
