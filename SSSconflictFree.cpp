@@ -200,9 +200,9 @@ int main(int argc, char **argv){
     std::cout  <<  " FINISHED computing coocsr... " << banded_csrval[10] << " " << banded_csrCol[10] << " " << banded_csrRow[10] << endl;
 
     ofstream myfile1, myfile2, myfile3;
-    myfile1.open (matrix_names[inputType] + "-CSRout_row.txt", ios::out | ios::trunc);
-    myfile2.open (matrix_names[inputType] + "-CSRout_col.txt", ios::out | ios::trunc);
-    myfile3.open (matrix_names[inputType] + "-CSRout_val.txt", ios::out | ios::trunc);
+    myfile1.open ("/home/selin/CSR-Data/" + matrix_names[inputType] + "/banded/CSRout_row.txt", ios::out | ios::trunc);
+    myfile2.open ("/home/selin/CSR-Data/" + matrix_names[inputType] + "/banded/CSRout_col.txt", ios::out | ios::trunc);
+    myfile3.open ("/home/selin/CSR-Data/" + matrix_names[inputType] + "/banded/CSRout_val.txt", ios::out | ios::trunc);
 
     cout << "Writing to " << "-CSRout_row.txt"  << endl;
     for (int i=0; i<matrixSize[inputType]+1; i++) {
