@@ -236,10 +236,7 @@ int main(int argc, char **argv)
 
 
     cout << "A and A-middle initialized to 0.0" <<  endl;
-    int row, col, counter=0, x, diff, neededCol;
-    double val;
-    float** A;
-    float** A_middle;
+    float** A, ** A_middle;
     // i keeps track of whole element count.
     // cout << "start generating banded for inner" <<  endl;
     /*
@@ -295,7 +292,8 @@ int main(int argc, char **argv)
         }
     }
     else if(!inner){
-        k = middleBandwith;
+        k = middleBandwith-1;
+        // BE CAREFUL WITH THIS !!!!!!!!!!!!!!!!!
         lda = k+1;
         size_1 = size-innerBandwith-1;
         size_2=middleBandwith;
@@ -314,6 +312,8 @@ int main(int argc, char **argv)
 
 
     cout << "start generating banded for middle-A" <<  endl;
+    int row, col, x, diff, neededCol;
+    double val;
     x=0;
     for( i=0; i<middle_rowVec.size(); i++) {
         row = middle_rowVec[i] - innerBandwith - 1;
@@ -372,13 +372,14 @@ int main(int argc, char **argv)
     float *B;
 
     if(inner){
-        float *B = *A;
+        B = *A;
     }
-    if(!inner){
-        float *B = *A_middle;
+    else if(!inner){
+        B = *A_middle;
     }
 
     cout << "Call cblas_ssbmv. " << endl ;
+    // BE CAREFUL WITH K=LDA CASE WHEN USING MIDDLE = !INNER
     cblas_ssbmv(CblasColMajor, CblasUpper, size_1, k, alpha, B, lda, X, incx, beta, Y, incy);
 
     if(inner) output = "/home/selin/Outputs/" + matrix_names[inputType] + "/inner-"  + to_string(inputRatio) + ".txt";
