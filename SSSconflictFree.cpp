@@ -11,7 +11,7 @@ using namespace std;
 vector<double> inner_banded;
 vector<double> middle_banded;
 
-int readBandedStorage(int z, double ratio, double middleRatio, bool inner, float *ptr) {
+int readBandedStorage(int z, double ratio, double middleRatio, bool inner, double *ptr) {
     cout <<  " start reading banded file..." << endl;
     double doubleVal;
     int intVal;
@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     //cout << "total bandwith: " << bandwithSize[inputType] << endl;
 
     int i,j,size,k,lda,size_1,size_2;
-    float** A;
+    double** A;
 
     if(inner) {
         k = innerBandwith;
@@ -79,9 +79,9 @@ int main(int argc, char **argv)
         size= n;
         size_1 = size;
         size_2=lda;
-        A = new float*[size];
+        A = new double*[size];
         for( i=0; i<size; i++) {
-            A[i]  = new float[lda];
+            A[i]  = new double[lda];
         }
         for( i=0; i<size; i++) {
             for( j=0; j<lda; j++) {
@@ -94,9 +94,9 @@ int main(int argc, char **argv)
         lda = k+1;
         size_1 = size-innerBandwith-1;
         size_2=middleBandwith;
-        A = new float*[size_1];
+        A = new double*[size_1];
         for( i=0; i<size_1; i++) {
-            A[i]  = new float[size_2];
+            A[i]  = new double[size_2];
         }
 
         for( i=0; i<size_1; i++) {
@@ -107,23 +107,23 @@ int main(int argc, char **argv)
     }
     cout << "A initialized." <<  endl;
 
-    float* X = new float[size_1];
+    double* X = new double[size_1];
     for(int i=0; i<size_1; i++) X[i] = 1.0;
-    float* Y = new float[size_1];
+    double* Y = new double[size_1];
     for(int i=0; i<size_1; i++) Y[i] = 0.0;
-    float alpha = 1;
-    float beta = 0;
+    double alpha = 1;
+    double beta = 0;
     int incx = 1;
     int incy = 1;
 
-    float *B = *A;
+    double *B = *A;
     readBandedStorage(inputType, inputRatio, middleRatio, inner, B);
     cout << "banded file read onto B." <<  endl;
 
-    cout << "Call cblas_ssbmv. " << endl ;
+    cout << "Call cblas_dsbmv. " << endl ;
     // column major : upper verince kernel lower'a giriyor. lower verince upper'a.
     // column major : CblasLower -> ( ! kernel'de upper) 10x10 1 bandwith icin calisiyor.
-    cblas_ssbmv(CblasColMajor, CblasUpper, size_1, k, alpha, B, lda, X, incx, beta, Y, incy);
+    cblas_dsbmv(CblasColMajor, CblasUpper, size_1, k, alpha, B, lda, X, incx, beta, Y, incy);
 
     ofstream myfile;
     string output;
