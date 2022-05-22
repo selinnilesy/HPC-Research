@@ -168,7 +168,7 @@ int main(int argc, char **argv)
 
 
     cout << "A and A-middle initialized to 0.0" <<  endl;
-    float** A, ** A_middle;
+    double** A, ** A_middle;
     // i keeps track of whole element count.
     // cout << "start generating banded for inner" <<  endl;
     /*
@@ -213,9 +213,9 @@ int main(int argc, char **argv)
         size= n;
         size_1 = size;
         size_2=lda;
-        A = new float*[size];
+        A = new double*[size];
         for( i=0; i<size; i++) {
-            A[i]  = new float[lda];
+            A[i]  = new double[lda];
         }
         for( i=0; i<size; i++) {
             for( j=0; j<lda; j++) {
@@ -229,9 +229,9 @@ int main(int argc, char **argv)
         lda = k+1;
         size_1 = size-innerBandwith-1;
         size_2=middleBandwith;
-        A_middle = new float*[size_1];
+        A_middle = new double*[size_1];
         for( i=0; i<size_1; i++) {
-            A_middle[i]  = new float[size_2];
+            A_middle[i]  = new double[size_2];
         }
 
         for( i=0; i<size_1; i++) {
@@ -292,16 +292,16 @@ int main(int argc, char **argv)
     cout << "written A/A_middle." << endl;
     myfile.close();
      */
-    
-    float* X = new float[size_1];
+
+    double* X = new double[size_1];
     for(int i=0; i<size_1; i++) X[i] = 1.0;
-    float* Y = new float[size_1];
+    double* Y = new double[size_1];
     for(int i=0; i<size_1; i++) Y[i] = 0.0;
     float alpha = 1;
     float beta = 0;
     int incx = 1;
     int incy = 1;
-    float *B;
+    double *B;
 
     if(inner){
         B = *A;
@@ -312,7 +312,7 @@ int main(int argc, char **argv)
 
     cout << "Call cblas_ssbmv. " << endl ;
     // BE CAREFUL WITH K=LDA CASE WHEN USING MIDDLE = !INNER
-    cblas_ssbmv(CblasColMajor, CblasUpper, size_1, k, alpha, B, lda, X, incx, beta, Y, incy);
+    cblas_dsbmv(CblasColMajor, CblasUpper, size_1, k, alpha, B, lda, X, incx, beta, Y, incy);
 
     if(inner) output = "/home/selin/Outputs/" + matrix_names[inputType] + "/inner-"  + to_string(inputRatio) + ".txt";
     if(!inner) output =  "/home/selin/Outputs/" + matrix_names[inputType] + "/middle-"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
