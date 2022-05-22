@@ -107,75 +107,7 @@ int main(int argc, char **argv)
     // inner read = 1 , middle read = 0 !!!
     readCooFormat(inputType, inputRatio, middleRatio, 0);
     readDiag(inputType);
-    /*
-     * [1 0 0 0 0  0 0 0    ]
-     * [8 1 0 0 0  0 0 0    ]
-     * [9 5 1 0 0  0 0 0    ]
-     * [5 7 6 1 0  0 0 0   ]
-     * [3 5 4 3 1  0 0 0   ]
-     * [0 3 5 3 4  1 0 0   ]
-     * [0 0 3 5 9  9 1 0   ]
-     * [0 0 0 3 5  8 2 1   ]
-     *
-
-    rowVec.push_back(2);
-    rowVec.push_back(3);
-
-    rowVec.push_back(3);
-    rowVec.push_back(4);
-    rowVec.push_back(4);
-    rowVec.push_back(4);
-
-    rowVec.push_back(5);
-    rowVec.push_back(5);
-    rowVec.push_back(5);
-    rowVec.push_back(5);
-
-    rowVec.push_back(6);
-    rowVec.push_back(6);
-    rowVec.push_back(6);
-    rowVec.push_back(6);
-
-    rowVec.push_back(7);
-    rowVec.push_back(7);
-    rowVec.push_back(7);
-    rowVec.push_back(7);
-
-    rowVec.push_back(8);
-    rowVec.push_back(8);
-    rowVec.push_back(8);
-    rowVec.push_back(8);
-
-    // ---
-    valVec.push_back(8);
-    valVec.push_back(9);
-    valVec.push_back(5);
-    valVec.push_back(5);
-
-    valVec.push_back(7);
-    valVec.push_back(6);
-    valVec.push_back(3);
-    valVec.push_back(5);
-
-    valVec.push_back(4);
-    valVec.push_back(3);
-    valVec.push_back(3);
-    valVec.push_back(5);
-
-    valVec.push_back(3);
-    valVec.push_back(4);
-    valVec.push_back(3);
-    valVec.push_back(5);
-
-    valVec.push_back(9);
-    valVec.push_back(9);
-    valVec.push_back(3);
-    valVec.push_back(5);
-
-    valVec.push_back(8);
-    valVec.push_back(2);
- */
-
+   
 
     if(inner_rowVec.size() != inner_valVec.size()){
         cout << "not equal size - rowVec and valVec (NNZ) !!! " << endl;
