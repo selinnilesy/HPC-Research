@@ -10,14 +10,14 @@ using namespace std;
 vector<double> lowerRes,upperRes, totalRes,diag,  sum;
 int nnz;
 
-int readResult(int z, double ratio) {
+int readResult(int z, double ratio, double mratio) {
     cout <<  " start reading multip result lower/upper..." << endl;
 
     double doubleVal;
     string fileName;
     // middle read not yet IMPLEMENTED !!!
     // TO DO
-    fileName = "/home/selin/Split-Data/" + matrix_names[z]  + "/inner-outer-equal/inner/CSR-Data/upper/" + to_string(ratio)+ "-result.txt";
+    fileName = "/home/selin/Split-Data/" + matrix_names[z]  + "/middle/CSR-Data/upper/" + to_string(ratio)+ "-" + to_string(mratio) + "-result.txt";
     std::fstream myfile(fileName, std::ios_base::in);
     while (myfile >> doubleVal) {
         upperRes.push_back(doubleVal);
@@ -25,7 +25,7 @@ int readResult(int z, double ratio) {
     myfile.close();
     cout << fileName << " has been read with size: " << upperRes.size() << endl;
 
-    fileName = "/home/selin/Split-Data/" + matrix_names[z]  + "/inner-outer-equal/inner/CSR-Data/" + to_string(ratio)+ "-result.txt";
+    fileName = "/home/selin/Split-Data/" + matrix_names[z]  + "/middle/CSR-Data/" + to_string(ratio)+ "-" + to_string(mratio)+ "-result.txt";
     myfile.open(fileName, std::ios_base::in);
     while (myfile >> doubleVal) {
         lowerRes.push_back(doubleVal);
@@ -34,7 +34,7 @@ int readResult(int z, double ratio) {
     nnz=lowerRes.size();
     cout << fileName << " has been read with size: " << lowerRes.size() << endl;
 
-    fileName = "/home/selin/Outputs/" + matrix_names[z]  + "/inner-" + to_string(ratio)+ ".txt";
+    fileName = "/home/selin/Outputs/" + matrix_names[z]  + "/middle-" + to_string(ratio)+ "-" + to_string(mratio) + ".txt";
     myfile.open(fileName, std::ios_base::in);
     while (myfile >> doubleVal) {
         totalRes.push_back(doubleVal);
@@ -58,9 +58,11 @@ int main(int argc, char **argv)
     int n = matrixSize[atoi(argv[1])];
     int inputType = atoi(argv[1]);
     double inputRatio = atof(argv[2]);
+    double mr = atof(argv[3]);
     cout << "input ratio: " << inputRatio << endl;
+    cout << "middle ratio: " << mr << endl;
 
-    readResult(inputType, inputRatio);
+    readResult(inputType, inputRatio, mr);
     cout << "test: " << lowerRes[0] << endl;
     cout << "test: " << upperRes[0] << endl;
     cout << "test: " << totalRes[0] << endl;
