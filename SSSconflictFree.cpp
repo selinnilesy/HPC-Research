@@ -140,6 +140,7 @@ int main(int argc, char **argv)
     amux_(&nrow, X, Y, valPtr, colPtr, rowPtr);
     std::cout  <<  " finished computing amux_... " << endl;
 
+    
 
     ofstream myfile;
     string output;
