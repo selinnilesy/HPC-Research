@@ -33,7 +33,6 @@ int readResult(int z, double ratio, double mratio, int innerB) {
     myfile.close();
     nnz=lowerRes.size();
     cout << fileName << " has been read with size: " << lowerRes.size() << endl;
-
     fileName = "/home/selin/SSS-Data/" + matrix_names[z]  + "/diag.txt";
     myfile.open(fileName, std::ios_base::in);
     while (myfile >> doubleVal) {
