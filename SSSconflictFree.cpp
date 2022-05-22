@@ -297,8 +297,8 @@ int main(int argc, char **argv)
     for(int i=0; i<size_1; i++) X[i] = 1.0;
     double* Y = new double[size_1];
     for(int i=0; i<size_1; i++) Y[i] = 0.0;
-    float alpha = 1;
-    float beta = 0;
+    double alpha = 1;
+    double beta = 0;
     int incx = 1;
     int incy = 1;
     double *B;
