@@ -73,11 +73,11 @@ int main(int argc, char **argv)
 
 
     for(int i=0; i<lowerRes.size(); i++){
-        sum.push_back(lowerRes[i] + upperRes[i] + diag[i]);
+        sum.push_back(lowerRes[i] + upperRes[i]);
     }
     for(int i=0; i<sum.size(); i++){
         if(abs(sum[i] - totalRes[i]) > 0.01) {
-            cout << "not equal index: " << i << " you found: " <<sum[i] << " banded computed: " << totalRes[i];
+            cout << "not equal index: " << i << " you found: " <<sum[i] << " cblas_dsbmv computed: " << totalRes[i];
             return -1;
         }
     }
