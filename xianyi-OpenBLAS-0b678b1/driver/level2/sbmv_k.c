@@ -42,7 +42,7 @@
 
 int CNAME(BLASLONG n, BLASLONG k, FLOAT alpha,
 	  FLOAT *a, BLASLONG lda,
-	  FLOAT *x, BLASLONG incx, FLOAT *y, BLASLONG incy, void *buffer){
+	  FLOAT *x, BLASLONG incx, FLOAT *y, BLASLONG incy, void *buffer, BLASLONG innerBandwith ){
 
   BLASLONG i, length;
 
@@ -79,11 +79,11 @@ int CNAME(BLASLONG n, BLASLONG k, FLOAT alpha,
       //printf("lower - in sbmv_k.c: i: %d and length: %d and k:%d\n", i, length, k);
 
     AXPYU_K(length + 1, 0, 0,
-	   alpha * X[i],
+	   alpha * X[i + (innerBandwith)],
 	   a + k - length, 1, Y + i - length, 1, NULL, 0);
 
-    Y[i] -= alpha * DOTU_K(length, a + k - length, 1, X + i - length, 1);
-    //printf("lower - in sbmv_k.c: dot y[%d] : %d\n", i,  DOTU_K(length, a + k - length, 1, X + i - length, 1));
+    Y[i + (innerBandwith)] -= alpha * DOTU_K(length, a + k - length, 1, X + i - length, 1);
+    printf("running modified lib. ");
 
 
 

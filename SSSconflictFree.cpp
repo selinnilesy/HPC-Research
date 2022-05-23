@@ -15,8 +15,9 @@ vector<double> inner_diagVec;
 vector<int> middle_colVec;
 vector<int> middle_rowVec;
 vector<double> middle_valVec;
+vector<double> middle_diagVec;
 
-int readCooFormatForBanded(int z, double ratio, double middleRatio, bool inner) {
+int readCooFormat(int z, double ratio, double middleRatio, bool inner) {
     cout <<  " start reading coo files..." << endl;
     double doubleVal;
     int intVal;
@@ -79,7 +80,7 @@ int readCooFormatForBanded(int z, double ratio, double middleRatio, bool inner) 
     }
     return 0;
 }
-int readDiagAsWell(int z) {
+int readDiag(int z) {
     cout <<  " start reading diag file..." << endl;
     double doubleVal;
     string diagFile = "/home/selin/SSS-Data/" + matrix_names[z] + "/diag.txt" ;
@@ -104,9 +105,9 @@ int main(int argc, char **argv)
     bool inner = atoi(argv[4]);
     cout << "input ratio: " << inputRatio << endl;
     // inner read = 1 , middle read = 0 !!!
-    readCooFormatForBanded(inputType, inputRatio, middleRatio, 0);
-    readDiagAsWell(inputType);
-   
+    readCooFormat(inputType, inputRatio, middleRatio, 0);
+    readDiag(inputType);
+
 
     if(inner_rowVec.size() != inner_valVec.size()){
         cout << "not equal size - rowVec and valVec (NNZ) !!! " << endl;
@@ -209,6 +210,7 @@ int main(int argc, char **argv)
     if(inner) {
         k = innerBandwith;
         lda = k+1;
+        size= n;
         size_1 = size;
         size_2=lda;
         A = new double*[size];
@@ -222,11 +224,11 @@ int main(int argc, char **argv)
         }
     }
     else if(!inner){
-        k = innerBandwith+ middleBandwith;
+        k = middleBandwith;
         // BE CAREFUL WITH THIS !!!!!!!!!!!!!!!!!
         lda = k+1;
-        size_1 = size;
-        size_2=lda;
+        size_1 = size-innerBandwith;
+        size_2=middleBandwith;
         A_middle = new double*[size_1];
         for( i=0; i<size_1; i++) {
             A_middle[i]  = new double[size_2];
@@ -238,7 +240,6 @@ int main(int argc, char **argv)
             }
         }
     }
-
     cout << "A initialized with float 0's." <<  endl;
 
 
@@ -247,40 +248,36 @@ int main(int argc, char **argv)
     double val;
     x=0;
     for( i=0; i<middle_rowVec.size(); i++) {
-        row = middle_rowVec[i] - 1;
+        row = middle_rowVec[i] - innerBandwith - 1;
         col = middle_colVec[i];
         val = middle_valVec[i];
-        if(row <= innerBandwith + middleBandwith){
-            // insert found row-element
+        //cout << "row: " << row << " col: " << col <<  " val: " << val << endl;
+        if(row <= middleBandwith){
             neededCol = 1;
             diff=col-neededCol;
-            A_middle[row][(lda-1) - row + (diff)] =  val;
+            // insert first element
+            A_middle[row][((int)size_2) - row + (diff)] =  val;
+            //cout << "inserted: " << val << endl;
             for(x=0; x<row-1; x++){
-                // do not assume all entries in the row(sub-diags) are filled.
-                if( middle_rowVec[i + (x+1)]-1 != row) break;
+                if( middle_rowVec[i + (x+1)]-innerBandwith-1 != row) break;
                 val = middle_valVec[i + (x+1)];
                 diff =  (middle_colVec[i + (x+1)]) - neededCol;
-                A_middle[row][(lda-1) - row + (diff)] =  val;
+                A_middle[row][((int)size_2) - row + diff] =  val;
             }
             i+=x;
         }
         else{
-            neededCol = (row) - k;
+            neededCol = row - middleBandwith + 1;
             diff=col-neededCol;
             A_middle[row][diff] =  val;
         }
     }
-    cout << "writing also diag onto inner-A..." << endl;
-    for(i=0; i<inner_diagVec.size(); i++){
-        A_middle[i][lda-1] = inner_diagVec[i];
-    }
-
     cout << "algos finished. Formed A/A_middle." << endl;
 
     ofstream myfile;
     string output;
 
-
+    /*
     if(inner) output = "/home/selin/Split-Data/" + matrix_names[inputType] + "/inner-outer-equal/inner/inner-banded-A"  + to_string(inputRatio) + ".txt";
     if(!inner) output =  "/home/selin/Split-Data/" + matrix_names[inputType] + "/middle-banded-A"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
     myfile.open(output, ios::out | ios::trunc);
@@ -294,12 +291,12 @@ int main(int argc, char **argv)
     }
     cout << "written A/A_middle." << endl;
     myfile.close();
+     */
 
-
-    double* X = new double[size_1];
-    for(int i=0; i<size_1; i++) X[i] = 1.0;
-    double* Y = new double[size_1];
-    for(int i=0; i<size_1; i++) Y[i] = 0.0;
+    double* X = new double[n];
+    for(int i=0; i<n; i++) X[i] = 1.0;
+    double* Y = new double[n];
+    for(int i=0; i<n; i++) Y[i] = 0.0;
     double alpha = 1;
     double beta = 0;
     int incx = 1;
@@ -315,18 +312,18 @@ int main(int argc, char **argv)
 
     cout << "Call cblas_ssbmv. " << endl ;
     // BE CAREFUL WITH K=LDA CASE WHEN USING MIDDLE = !INNER
-    cblas_dsbmv(CblasColMajor, CblasUpper, size_1, k, alpha, B, lda, X, incx, beta, Y, incy);
+    cblas_dsbmv(CblasColMajor, CblasUpper, size_1, k, alpha, B, lda, X, incx, beta, Y, incy, innerBandwith);
 
     if(inner) output = "/home/selin/Outputs/" + matrix_names[inputType] + "/inner-"  + to_string(inputRatio) + ".txt";
     if(!inner) output =  "/home/selin/Outputs/" + matrix_names[inputType] + "/middle-"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
     myfile.open(output, ios::out | ios::trunc);
 
     cout << "Writing Y: " << endl;
-    for( i=0; i<size_1; i++) {
+    for( i=0; i<n; i++) {
         myfile << Y[i] << " " ;
     }
     myfile.close();
-    cout << "Output completed." << endl;
+    cout << "Output completed." << output << endl;
 
     delete [] X;
     delete [] Y;
