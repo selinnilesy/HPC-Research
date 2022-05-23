@@ -15,7 +15,6 @@ vector<double> inner_diagVec;
 vector<int> middle_colVec;
 vector<int> middle_rowVec;
 vector<double> middle_valVec;
-vector<double> middle_diagVec;
 
 int readCooFormat(int z, double ratio, double middleRatio, bool inner) {
     cout <<  " start reading coo files..." << endl;
@@ -210,7 +209,6 @@ int main(int argc, char **argv)
     if(inner) {
         k = innerBandwith;
         lda = k+1;
-        size= n;
         size_1 = size;
         size_2=lda;
         A = new double*[size];
@@ -224,11 +222,11 @@ int main(int argc, char **argv)
         }
     }
     else if(!inner){
-        k = middleBandwith-1;
+        k = innerBandwith+ middleBandwith;
         // BE CAREFUL WITH THIS !!!!!!!!!!!!!!!!!
         lda = k+1;
-        size_1 = size-innerBandwith-1;
-        size_2=middleBandwith;
+        size_1 = size;
+        size_2=lda;
         A_middle = new double*[size_1];
         for( i=0; i<size_1; i++) {
             A_middle[i]  = new double[size_2];
@@ -240,6 +238,7 @@ int main(int argc, char **argv)
             }
         }
     }
+
     cout << "A initialized with float 0's." <<  endl;
 
 
@@ -248,30 +247,34 @@ int main(int argc, char **argv)
     double val;
     x=0;
     for( i=0; i<middle_rowVec.size(); i++) {
-        row = middle_rowVec[i] - innerBandwith - 1;
+        row = middle_rowVec[i] - 1;
         col = middle_colVec[i];
         val = middle_valVec[i];
-        //cout << "row: " << row << " col: " << col <<  " val: " << val << endl;
-        if(row <= middleBandwith){
+        if(row <= innerBandwith + middleBandwith){
+            // insert found row-element
             neededCol = 1;
             diff=col-neededCol;
-            // insert first element
-            A_middle[row-1][((int)size_2) - row + (diff)] =  val;
-            //cout << "inserted: " << val << endl;
+            A_middle[row][(lda-1) - row + (diff)] =  val;
             for(x=0; x<row-1; x++){
-                if( middle_rowVec[i + (x+1)]-innerBandwith-1 != row) break;
+                // do not assume all entries in the row(sub-diags) are filled.
+                if( middle_rowVec[i + (x+1)]-1 != row) break;
                 val = middle_valVec[i + (x+1)];
                 diff =  (middle_colVec[i + (x+1)]) - neededCol;
-                A_middle[row-1][((int)size_2) - row + diff] =  val;
+                A_middle[row][(lda-1) - row + (diff)] =  val;
             }
             i+=x;
         }
         else{
-            neededCol = row - middleBandwith + 1;
+            neededCol = (row) - k;
             diff=col-neededCol;
-            A_middle[row-1][diff] =  val;
+            A_middle[row][diff] =  val;
         }
     }
+    cout << "writing also diag onto inner-A..." << endl;
+    for(i=0; i<inner_diagVec.size(); i++){
+        A_middle[i][lda-1] = inner_diagVec[i];
+    }
+
     cout << "algos finished. Formed A/A_middle." << endl;
 
     ofstream myfile;
