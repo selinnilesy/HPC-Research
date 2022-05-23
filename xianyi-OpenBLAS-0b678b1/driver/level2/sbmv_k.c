@@ -67,7 +67,7 @@ int CNAME(BLASLONG n, BLASLONG k, FLOAT alpha,
 
     printf("in sbmv_k.c: alpha: %d k: %d\n", alpha, k);
 
-  for (i = 0; i < n; i++) {
+  for (i = 0; i < (n-innerBandwith); i++) {
 
       //printf("-------------------------------- loop in sbmv_k.c\n");
 
@@ -79,11 +79,10 @@ int CNAME(BLASLONG n, BLASLONG k, FLOAT alpha,
       //printf("lower - in sbmv_k.c: i: %d and length: %d and k:%d\n", i, length, k);
 
     AXPYU_K(length + 1, 0, 0,
-	   alpha * X[i + (innerBandwith)],
+	   alpha * X[i + ((int) innerBandwith)],
 	   a + k - length, 1, Y + i - length, 1, NULL, 0);
 
-    Y[i + (innerBandwith)] -= alpha * DOTU_K(length, a + k - length, 1, X + i - length, 1);
-    printf("running modified lib. ");
+    Y[i + ((int) innerBandwith)] -= alpha * DOTU_K(length, a + k - length, 1, X + i - length, 1);
 
 
 
@@ -92,6 +91,7 @@ int CNAME(BLASLONG n, BLASLONG k, FLOAT alpha,
     length  = k;
     if (n - i - 1 < k) length = n - i - 1;
      //printf("upper - in sbmv_k.c: i: %d and length: %d and k:%d\n", i, length, k);
+     printf("running modified lib.-upper ");
 
     AXPYU_K(length + 1, 0, 0,
 	   alpha * X[i],
@@ -104,10 +104,12 @@ int CNAME(BLASLONG n, BLASLONG k, FLOAT alpha,
     a += lda;
   }
 
+    printf("just finished computing in modified lib. ");
   if (incy != 1) {
     COPY_K(n, Y, 1, y, incy);
   }
   printf("in sbmv_k.c\n");
+  printf("just written Y in run modified lib. ");
   return 0;
 }
 
