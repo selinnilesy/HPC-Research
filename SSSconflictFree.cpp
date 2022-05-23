@@ -16,7 +16,7 @@ vector<int> middle_colVec;
 vector<int> middle_rowVec;
 vector<double> middle_valVec;
 
-int readCooFormat(int z, double ratio, double middleRatio, bool inner) {
+int readCooFormatForBanded(int z, double ratio, double middleRatio, bool inner) {
     cout <<  " start reading coo files..." << endl;
     double doubleVal;
     int intVal;
@@ -79,7 +79,7 @@ int readCooFormat(int z, double ratio, double middleRatio, bool inner) {
     }
     return 0;
 }
-int readDiag(int z) {
+int readDiagAsWell(int z) {
     cout <<  " start reading diag file..." << endl;
     double doubleVal;
     string diagFile = "/home/selin/SSS-Data/" + matrix_names[z] + "/diag.txt" ;
@@ -104,8 +104,8 @@ int main(int argc, char **argv)
     bool inner = atoi(argv[4]);
     cout << "input ratio: " << inputRatio << endl;
     // inner read = 1 , middle read = 0 !!!
-    readCooFormat(inputType, inputRatio, middleRatio, 0);
-    readDiag(inputType);
+    readCooFormatForBanded(inputType, inputRatio, middleRatio, 0);
+    readDiagAsWell(inputType);
    
 
     if(inner_rowVec.size() != inner_valVec.size()){
@@ -280,7 +280,7 @@ int main(int argc, char **argv)
     ofstream myfile;
     string output;
 
-    /*
+
     if(inner) output = "/home/selin/Split-Data/" + matrix_names[inputType] + "/inner-outer-equal/inner/inner-banded-A"  + to_string(inputRatio) + ".txt";
     if(!inner) output =  "/home/selin/Split-Data/" + matrix_names[inputType] + "/middle-banded-A"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
     myfile.open(output, ios::out | ios::trunc);
@@ -294,7 +294,7 @@ int main(int argc, char **argv)
     }
     cout << "written A/A_middle." << endl;
     myfile.close();
-     */
+
 
     double* X = new double[size_1];
     for(int i=0; i<size_1; i++) X[i] = 1.0;
