@@ -41,28 +41,13 @@ extern "C" {
     extern void csrsss_(int *nrow, int *nnz, double* a, int *ja, int *ia, bool* sorted, double *diag, double* al, int *jal, int *ial, double* au);
 }
 
-int readSSSFormat(int z) {
+int readCSRFormat(int z) {
     double tempVal;
     vector<double> tempVec;
         const fs::path matrixFolder{"/home/selin/CSR-Data/" + matrix_names[z] +"/banded"};
         for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
             std::fstream myfile(dir_entry.path(), std::ios_base::in);
-            if(dir_entry.path().stem() == "rowptr") {
-                int tempValInt;
-                vector<int> tempVecInt;
-                while (myfile >> tempValInt) {
-                    tempVecInt.push_back(tempValInt);
-                }
-                rowptrPtrs.push_back(new int[tempVecInt.size()]);
-                int *temp = rowptrPtrs[0];
-                for(int i=0; i<tempVecInt.size(); i++) temp[i]=tempVecInt[i];
-                rowptrSize.push_back(tempVecInt.size());
-
-                cout << dir_entry.path() << " has been read." << endl;
-                myfile.close();
-                continue;
-            }
-            else if(dir_entry.path().stem() == "CSRout_row") {
+           if(dir_entry.path().stem() == "CSRout_row") {
                 int tempValInt;
                 vector<int> tempVecInt;
                 while (myfile >> tempValInt) {
@@ -75,21 +60,7 @@ int readSSSFormat(int z) {
                 myfile.close();
                 continue;
             }
-            else if(dir_entry.path().stem() == "col") {
-                int tempValInt;
-                vector<int> tempVecInt;
-                while (myfile >> tempValInt) {
-                    tempVecInt.push_back(tempValInt);
-                }
-                colindPtrs.push_back(new int[tempVecInt.size()]);
-                int *temp = colindPtrs[0];
-                for(int i=0; i<tempVecInt.size(); i++) temp[i]=tempVecInt[i];
-                colindSize.push_back(tempVecInt.size());
-                cout << dir_entry.path() << " has been read." << endl;
-                myfile.close();
-                continue;
-            }
-            else if(dir_entry.path().stem() == "CSRout_col") {
+           else if(dir_entry.path().stem() == "CSRout_col") {
                 int tempValInt;
                 vector<int> tempVecInt;
                 while (myfile >> tempValInt) {
@@ -106,20 +77,7 @@ int readSSSFormat(int z) {
             while (myfile >> tempVal) {
                 tempVec.push_back(tempVal);
             }
-
-            if(dir_entry.path().stem() == "dvalues"){
-                dvaluesPtrs.push_back(new double[tempVec.size()]);
-                double *temp = dvaluesPtrs[0];
-                for(int i=0; i<tempVec.size(); i++) temp[i]=tempVec[i];
-                dvaluesSize.push_back(tempVec.size());
-            }
-            else if(dir_entry.path().stem() == "values"){
-                valuesPtrs.push_back(new double[tempVec.size()]);
-                double *temp = valuesPtrs[0];
-                for(int i=0; i<tempVec.size(); i++) temp[i]=tempVec[i];
-                valuesSize.push_back(tempVec.size());
-            }
-            else if(dir_entry.path().stem() == "CSRout_val"){
+           if(dir_entry.path().stem() == "CSRout_val"){
                 csr_val = new double[tempVec.size()];
                 for(int i=0; i<tempVec.size(); i++) csr_val[i]=tempVec[i];
             }
@@ -140,7 +98,7 @@ int main(int argc, char **argv){
         cout << "please provide input matrix index (int): boneS10, Emilia_923, ldoor, af_5_k101, Serena, audikw_1" << endl;
         return -1;
     }
-    readSSSFormat(atoi(argv[1]));
+    readCSRFormat(atoi(argv[1]));
 
     n = matrixSize[atoi(argv[1])];
     int inputType = atoi(argv[1]);
