@@ -46,22 +46,7 @@ int readSSSFormat(int z) {
         const fs::path matrixFolder{"/home/selin/CSR-Data/" + matrix_names[z]};
         for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
             std::fstream myfile(dir_entry.path(), std::ios_base::in);
-            if(dir_entry.path().stem() == "rowptr") {
-                int tempValInt;
-                vector<int> tempVecInt;
-                while (myfile >> tempValInt) {
-                    tempVecInt.push_back(tempValInt);
-                }
-                rowptrPtrs.push_back(new int[tempVecInt.size()]);
-                int *temp = rowptrPtrs[0];
-                for(int i=0; i<tempVecInt.size(); i++) temp[i]=tempVecInt[i];
-                rowptrSize.push_back(tempVecInt.size());
-
-                cout << dir_entry.path() << " has been read." << endl;
-                myfile.close();
-                continue;
-            }
-            else if(dir_entry.path().stem() == "coordinate-row") {
+            if(dir_entry.path().stem() == "coordinate-row") {
                 int tempValInt;
                 vector<int> tempVecInt;
                 while (myfile >> tempValInt) {
@@ -72,23 +57,8 @@ int readSSSFormat(int z) {
                 coord_row = new int[tempVecInt.size()];
                 for(int i=0; i<tempVecInt.size(); i++) coord_row[i]=tempVecInt[i];
 
-                cout << dir_entry.path() << " has been read." << endl;
+                cout << dir_entry.path() << " has been read: " <<  tempVecInt.size() << endl;
                 myfile.close();
-                continue;
-            }
-            else if(dir_entry.path().stem() == "col") {
-                int tempValInt;
-                vector<int> tempVecInt;
-                while (myfile >> tempValInt) {
-                    tempVecInt.push_back(tempValInt);
-                }
-                colindPtrs.push_back(new int[tempVecInt.size()]);
-                int *temp = colindPtrs[0];
-                for(int i=0; i<tempVecInt.size(); i++) temp[i]=tempVecInt[i];
-                colindSize.push_back(tempVecInt.size());
-                cout << dir_entry.path() << " has been read." << endl;
-                myfile.close();
-                continue;
             }
             else if(dir_entry.path().stem() == "coordinate-col") {
                 int tempValInt;
@@ -100,37 +70,21 @@ int readSSSFormat(int z) {
                 coord_col = new int[tempVecInt.size()];
                 for(int i=0; i<tempVecInt.size(); i++) coord_col[i]=tempVecInt[i];
 
-                cout << dir_entry.path() << " has been read." << endl;
+                cout << dir_entry.path() << " has been read: " << tempVecInt.size() << endl;
                 myfile.close();
-                continue;
             }
             // else, start reading doubles.
-            while (myfile >> tempVal) {
-                tempVec.push_back(tempVal);
-            }
-
-            if(dir_entry.path().stem() == "dvalues"){
-                dvaluesPtrs.push_back(new double[tempVec.size()]);
-                double *temp = dvaluesPtrs[0];
-                for(int i=0; i<tempVec.size(); i++) temp[i]=tempVec[i];
-                dvaluesSize.push_back(tempVec.size());
-            }
-            else if(dir_entry.path().stem() == "values"){
-                valuesPtrs.push_back(new double[tempVec.size()]);
-                double *temp = valuesPtrs[0];
-                for(int i=0; i<tempVec.size(); i++) temp[i]=tempVec[i];
-                valuesSize.push_back(tempVec.size());
-            }
             else if(dir_entry.path().stem() == "coordinate-val"){
+                while (myfile >> tempVal) {
+                    tempVec.push_back(tempVal);
+                }
                 coord_val = new double[tempVec.size()];
                 for(int i=0; i<tempVec.size(); i++) coord_val[i]=tempVec[i];
                 if(tempVec.size() != nonzerosSize[z]) cout << "Vals count not equal." << endl;
+                myfile.close();
+                cout << dir_entry.path() << " has been read: " << tempVec.size() << endl;
             }
             else cout << "unexpected file name: " << dir_entry.path() << endl;
-            cout << dir_entry.path() << " has been read." << endl;
-
-            tempVec.clear();
-            myfile.close();
         }
     return 0;
 }
@@ -176,13 +130,6 @@ int main(int argc, char **argv){
     n = matrixSize[atoi(argv[1])];
     int inputType = atoi(argv[1]);
 
-    double *matrixOffDiagonal = valuesPtrs[0];
-    int *matrixColind = colindPtrs[0];
-    int *matrixRowptr= rowptrPtrs[0];
-
-    delete [] matrixOffDiagonal;
-    delete [] matrixColind;
-    delete [] matrixRowptr;
 
     int *banded_coordRow = coord_row;
     int *banded_coordCol = coord_col;
