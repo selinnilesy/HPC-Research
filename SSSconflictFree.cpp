@@ -24,9 +24,9 @@ int readCooFormat(int z, double ratio, double middleRatio, bool inner) {
     const fs::path matrixFolder{"/home/selin/Split-Data/" + matrix_names[z]};
     for(auto const& dir_entry: fs::directory_iterator{matrixFolder}) {
         if (inner && dir_entry.path().stem() == "inner") {
-            string rowFileName = dir_entry.path().string() + "/coordinate-" + to_string(ratio) + "-" + to_string(middleRatio) + "-row.txt";
-            string colFileName = dir_entry.path().string()+ "/coordinate-" + to_string(ratio)+ "-" + to_string(middleRatio) + "-col.txt";
-            string valFileName = dir_entry.path().string() + "/coordinate-" + to_string(ratio)+ "-" + to_string(middleRatio) + "-val.txt";
+            string rowFileName = dir_entry.path().string() + "/coordinate-" + to_string(ratio)+ "-"+ to_string(middleRatio) + "-row.txt";
+            string colFileName = dir_entry.path().string()+ "/coordinate-" + to_string(ratio)+ "-" + to_string(middleRatio)+ "-col.txt";
+            string valFileName = dir_entry.path().string() + "/coordinate-" + to_string(ratio) + "-" + to_string(middleRatio)+  "-val.txt";
 
             std::fstream myfile(rowFileName, std::ios_base::in);
             // else, start reading doubles.
@@ -104,8 +104,10 @@ int main(int argc, char **argv)
     double middleRatio = atof(argv[3]);
     bool inner = atoi(argv[4]);
     cout << "input ratio: " << inputRatio << endl;
+    cout << "middle ratio: " << middleRatio << endl;
+    cout << "inner: " << inner << endl;
     // inner read = 1 , middle read = 0 !!!
-    readCooFormat(inputType, inputRatio, middleRatio, 0);
+    readCooFormat(inputType, inputRatio, middleRatio, inner);
     readDiag(inputType);
 
 
@@ -134,78 +136,9 @@ int main(int argc, char **argv)
     // this is except diagonal.
     int size_1,size_2;
     int k,lda;
-
-    /*
-    size_1 = size;
-    size_2=lda;
-   float** A = new float*[size];
-   for( i=0; i<size; i++) {
-       A[i]  = new float[lda];
-   }
-
-   for( i=0; i<size; i++) {
-       for( j=0; j<lda; j++) {
-           A[i][j]  = 0.0;
-       }
-   }
-    */
-
-
-    /* initial version to write onto file.
-    size_1 = size-innerBandwith-1;
-    size_2=middleBandwith;
-    float** A_middle = new float*[size_1];
-    for( i=0; i<size_1; i++) {
-        A_middle[i]  = new float[size_2];
-    }
-
-    for( i=0; i<size_1; i++) {
-        for( j=0; j<size_2; j++) {
-            A_middle[i][j]  = 0.0;
-        }
-    }
-     */
-
-
-    cout << "A and A-middle initialized to 0.0" <<  endl;
     double** A, ** A_middle;
-    // i keeps track of whole element count.
-    // cout << "start generating banded for inner" <<  endl;
-    /*
-   for( i=0; i<inner_rowVec.size(); i++) {
-       row = inner_rowVec[i] - 1;
-       col = inner_colVec[i];
-       val = inner_valVec[i];
-       //cout << "row: " << row << " col: " << col <<  " val: " << val << endl;
-       if(row <= innerBandwith){
-           // insert found row-element
-           neededCol = 1;
-           diff=col-neededCol;
-           A[row][((int)innerBandwith) - row + (diff)] =  val;
-           //cout << "inserted: " << val << endl;
-           for(x=0; x<row-1; x++){
-               // do not assume all entries in the row(sub-diags) are filled.
-               if( inner_rowVec[i + (x+1)]-1 != row) break;
-               val = inner_valVec[i + (x+1)];
-               diff =  (inner_colVec[i + (x+1)]) - neededCol;
-               A[row][((int)innerBandwith) - row + (diff)] =  val;
-           }
-           i+=x;
-       }
-       // soldan saga doldurmaya baslayabilirsin artik.
-       else{
-           neededCol = (row+1) - innerBandwith;
-           diff=col-neededCol;
-           A[row][diff] =  val;
-           //cout << "wrote " << val <<endl;
-       }
-      // cout << i << " ";
-   }
-   cout << "writing also diag onto inner-A..." << endl;
-   for(i=0; i<inner_diagVec.size(); i++){
-       A[i][(int) innerBandwith] = inner_diagVec[i];
-   }
-     */
+    int row, col, diff, neededCol, x;
+    double val;
 
     if(inner) {
         k = innerBandwith;
@@ -240,9 +173,48 @@ int main(int argc, char **argv)
             }
         }
     }
-    cout << "A initialized with float 0's." <<  endl;
+    cout << "A/A-middle initialized to 0.0" <<  endl;
+
+    // i keeps track of whole element count.
+    // cout << "start generating banded for inner" <<  endl;
+
+   for( i=0; i<inner_rowVec.size(); i++) {
+       row = inner_rowVec[i] - 1;
+       col = inner_colVec[i];
+       val = inner_valVec[i];
+       //cout << "row: " << row << " col: " << col <<  " val: " << val << endl;
+       if(row <= innerBandwith){
+           // insert found row-element
+           neededCol = 1;
+           diff=col-neededCol;
+           A[row][((int)innerBandwith) - row + (diff)] =  val;
+           //cout << "inserted: " << val << endl;
+           for(x=0; x<row-1; x++){
+               // do not assume all entries in the row(sub-diags) are filled.
+               if( inner_rowVec[i + (x+1)]-1 != row) break;
+               val = inner_valVec[i + (x+1)];
+               diff =  (inner_colVec[i + (x+1)]) - neededCol;
+               A[row][((int)innerBandwith) - row + (diff)] =  val;
+           }
+           i+=x;
+       }
+       // soldan saga doldurmaya baslayabilirsin artik.
+       else{
+           neededCol = (row+1) - innerBandwith;
+           diff=col-neededCol;
+           A[row][diff] =  val;
+           //cout << "wrote " << val <<endl;
+       }
+      // cout << i << " ";
+   }
+   cout << "writing also diag onto inner-A..." << endl;
+   for(i=0; i<inner_diagVec.size(); i++){
+       A[i][(int) innerBandwith] = inner_diagVec[i];
+   }
 
 
+
+    /*
     cout << "start generating banded for middle-A" <<  endl;
     int row, col, x, diff, neededCol;
     double val;
@@ -273,6 +245,7 @@ int main(int argc, char **argv)
         }
     }
     cout << "algos finished. Formed A/A_middle." << endl;
+     */
 
     ofstream myfile;
     string output;
@@ -312,15 +285,14 @@ int main(int argc, char **argv)
 
     cout << "Call cblas_ssbmv. " << endl ;
     // BE CAREFUL WITH K=LDA CASE WHEN USING MIDDLE = !INNER
-    int bw = innerBandwith;
-    cblas_dsbmv(CblasColMajor, CblasUpper, n, k, alpha, B, lda, X, incx, beta, Y, incy, innerBandwith);
+    cblas_dsbmv(CblasColMajor, CblasUpper, n, k, alpha, B, lda, X, incx, beta, Y, incy);
 
     if(inner) output = "/home/selin/Outputs/" + matrix_names[inputType] + "/inner-"  + to_string(inputRatio) + ".txt";
     if(!inner) output =  "/home/selin/Outputs/" + matrix_names[inputType] + "/middle-"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
     myfile.open(output, ios::out | ios::trunc);
 
     cout << "Writing Y: " << endl;
-    for( i=0; i<n; i++) {
+    for( i=0; i<size_1; i++) {
         myfile << Y[i] << " " ;
     }
     myfile.close();
