@@ -13,9 +13,11 @@
 #include <iterator>
 #include <bitset>
 #include <cmath>
+#include <cstring>
 #include <unordered_set>
 #include <algorithm>    // std::sort, std::stable_sort
 #include <experimental/filesystem>
+#include <cstdint> // include this header for uint64_t
 
 
 using namespace std;
