@@ -53,8 +53,10 @@ void cblas_dgbmv(const CBLAS_LAYOUT layout,
       #ifdef F77_CHAR
          F77_TA = C2F_CHAR(&TA);
       #endif
+      printf("starting cblas dgbmc.c\n");
       F77_dgbmv(F77_TA, &F77_M, &F77_N, &F77_KL, &F77_KU, &alpha,
                      A, &F77_lda, X, &F77_incX, &beta, Y, &F77_incY);
+      printf("smth did not go wrong.\n");
    }
    else if (layout == CblasRowMajor)
    {

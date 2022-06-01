@@ -87,6 +87,7 @@ void CNAME(BLASLONG m, BLASLONG n, BLASLONG ku, BLASLONG kl, FLOAT alpha,
 	   alpha * X[i],
 	   a + start, 1, Y + start - offset_u, 1, NULL, 0);
 #else
+    printf("no transpose.\n");
     Y[i] += alpha * DOTU_K(length, a + start, 1, X + start - offset_u, 1);
 #endif
 

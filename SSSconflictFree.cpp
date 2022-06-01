@@ -312,8 +312,16 @@ int main(int argc, char **argv)
     myfile.close();
     cout << "Output completed." << output << endl;
 
-    delete [] X;
-    delete [] Y;
-    if(inner) delete [] A;
-    else delete [] A_middle;
+    /*
+    if(X) {
+        delete [] X;
+        cout << "deleted X." << endl;
+    }
+    if(Y) {
+        delete [] Y;
+        cout << "deleted Y." << endl;
+    }
+     */
+    //if(inner) delete [] A;
+    //else delete [] A_middle;
 }
