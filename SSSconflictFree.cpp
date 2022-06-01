@@ -135,7 +135,7 @@ int main(int argc, char **argv)
     // this is except diagonal.
     int size_1,size_2;
     int k,lda;
-    double** A, ** A_middle;
+    double** A, **A_middle;
     int row, col, diff, neededCol, x;
     double val;
     int kl, ku;
@@ -221,6 +221,7 @@ int main(int argc, char **argv)
     for(i=0; i<inner_diagVec.size(); i++){
         A[i][(int) innerBandwith] = inner_diagVec[i];
     }
+    cout << "completed band storage." << endl;
 
 
     /*
@@ -256,31 +257,33 @@ int main(int argc, char **argv)
     cout << "algos finished. Formed A/A_middle." << endl;
      */
 
+
     ofstream myfile;
     string output;
-
-
-    if(inner) output = "/home/selin/Split-Data/" + matrix_names[inputType] + "/inner/dgbmv-inner-banded-A"  + to_string(inputRatio) + ".txt";
-    if(!inner) output =  "/home/selin/Split-Data/" + matrix_names[inputType] + "/middle-banded-A"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
-    myfile.open(output, ios::out | ios::trunc);
-    cout << "writing A/A_middle ..." << endl;
-    for( i=0; i<size_1; i++) {
-        for( j=0 ; j<size_2; j++){
-            myfile << A[i][j] << " " ;
-        }
-        myfile <<  endl;
-        myfile <<  endl;
-    }
-    cout << "written A/A_middle." << endl;
-    myfile.close();
+    /*
+       if(inner) output = "/home/selin/Split-Data/" + matrix_names[inputType] + "/inner/dgbmv-inner-banded-A"  + to_string(inputRatio) + ".txt";
+       if(!inner) output =  "/home/selin/Split-Data/" + matrix_names[inputType] + "/middle-banded-A"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
+       myfile.open(output, ios::out | ios::trunc);
+       cout << "writing A/A_middle ..." << endl;
+       for( i=0; i<size_1; i++) {
+           for( j=0 ; j<size_2; j++){
+               myfile << A[i][j] << " " ;
+           }
+           myfile <<  endl;
+           myfile <<  endl;
+       }
+       cout << "written A/A_middle." << endl;
+       myfile.close();
+        */
 
 
     double* X = new double[n];
     for(int i=0; i<n; i++) X[i] = 1.0;
     double* Y = new double[n];
     for(int i=0; i<n; i++) Y[i] = 0.0;
-    double alpha = 1;
-    double beta = 0;
+
+    double alpha = 1.0;
+    double beta = 0.0;
     int incx = 1;
     int incy = 1;
     double *B;
