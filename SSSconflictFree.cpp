@@ -178,39 +178,39 @@ int main(int argc, char **argv)
     // i keeps track of whole element count.
     // cout << "start generating banded for inner" <<  endl;
 
-   for( i=0; i<inner_rowVec.size(); i++) {
-       row = inner_rowVec[i] - 1;
-       col = inner_colVec[i];
-       val = inner_valVec[i];
-       //cout << "row: " << row << " col: " << col <<  " val: " << val << endl;
-       if(row <= innerBandwith){
-           // insert found row-element
-           neededCol = 1;
-           diff=col-neededCol;
-           A[row][((int)innerBandwith) - row + (diff)] =  val;
-           //cout << "inserted: " << val << endl;
-           for(x=0; x<row-1; x++){
-               // do not assume all entries in the row(sub-diags) are filled.
-               if( inner_rowVec[i + (x+1)]-1 != row) break;
-               val = inner_valVec[i + (x+1)];
-               diff =  (inner_colVec[i + (x+1)]) - neededCol;
-               A[row][((int)innerBandwith) - row + (diff)] =  val;
-           }
-           i+=x;
-       }
-       // soldan saga doldurmaya baslayabilirsin artik.
-       else{
-           neededCol = (row+1) - innerBandwith;
-           diff=col-neededCol;
-           A[row][diff] =  val;
-           //cout << "wrote " << val <<endl;
-       }
-      // cout << i << " ";
-   }
-   cout << "writing also diag onto inner-A..." << endl;
-   for(i=0; i<inner_diagVec.size(); i++){
-       A[i][(int) innerBandwith] = inner_diagVec[i];
-   }
+    for( i=0; i<inner_rowVec.size(); i++) {
+        row = inner_rowVec[i] - 1;
+        col = inner_colVec[i];
+        val = inner_valVec[i];
+        //cout << "row: " << row << " col: " << col <<  " val: " << val << endl;
+        if(row <= innerBandwith){
+            // insert found row-element
+            neededCol = 1;
+            diff=col-neededCol;
+            A[row][((int)innerBandwith) - row + (diff)] =  val;
+            //cout << "inserted: " << val << endl;
+            for(x=0; x<row-1; x++){
+                // do not assume all entries in the row(sub-diags) are filled.
+                if( inner_rowVec[i + (x+1)]-1 != row) break;
+                val = inner_valVec[i + (x+1)];
+                diff =  (inner_colVec[i + (x+1)]) - neededCol;
+                A[row][((int)innerBandwith) - row + (diff)] =  val;
+            }
+            i+=x;
+        }
+            // soldan saga doldurmaya baslayabilirsin artik.
+        else{
+            neededCol = (row+1) - innerBandwith;
+            diff=col-neededCol;
+            A[row][diff] =  val;
+            //cout << "wrote " << val <<endl;
+        }
+        // cout << i << " ";
+    }
+    cout << "writing also diag onto inner-A..." << endl;
+    for(i=0; i<inner_diagVec.size(); i++){
+        A[i][(int) innerBandwith] = inner_diagVec[i];
+    }
 
 
 
