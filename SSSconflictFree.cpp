@@ -152,15 +152,15 @@ int main()
 
    for(int i=0; i<size; i++) {
       A[i*lda + 2]= matrix[i][i];
-      if(i >=1) A[(i)*lda + 1]= -matrix[i][i-1];
-      if(i >=2) A[(i)*lda +0]= -matrix[i][i-2];
+      if(i >=1) A[(i)*lda + 1]= matrix[i][i-1];
+      if(i >=2) A[(i)*lda +0]= matrix[i][i-2];
    }
    A[0] =0;
    A[1]=0;
    A[lda]=0;
     for(int i=0; i<size; i++) {
-        A[(i)*lda + (lda-2)]= matrix[i][i+1];
-        A[(i)*lda +(lda-1)]= matrix[i][i+2];
+        A[(i)*lda + (lda-2)]= -matrix[i][i+1];
+        A[(i)*lda +(lda-1)]= -matrix[i][i+2];
     }
 
     A[lda*(size-1) + lda-1]=0;
@@ -219,7 +219,7 @@ int main()
     //const CBLAS_UPLO Uplo = CblasLower;
     // column major : upper verince kernel lower'a giriyor. lower verince upper'a.
     // column major : CblasLower -> ( ! kernel'de upper) 10x10 1 bandwith icin calisiyor.
-    cblas_dgbmv(CblasRowMajor, CblasNoTrans , size, size, kl, ku, alpha, A, lda, X, incx, beta, Y, incy);
+    cblas_dgbmv(CblasColMajor, CblasNoTrans , size, size, kl, ku, alpha, A, lda, X, incx, beta, Y, incy);
 
     cout << "Output: " << endl;
     for(int j=0; j<size; j++) {
