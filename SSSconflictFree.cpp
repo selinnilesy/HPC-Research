@@ -152,8 +152,8 @@ int main()
 
    for(int i=0; i<size; i++) {
       A[i*lda + 2]= matrix[i][i];
-      if(i >=1) A[(i)*lda + 1]= matrix[i][i-1];
-      if(i >=2) A[(i)*lda +0]= matrix[i][i-2];
+      if(i >=1) A[(i)*lda + 1]= -matrix[i][i-1];
+      if(i >=2) A[(i)*lda +0]= -matrix[i][i-2];
    }
    A[0] =0;
    A[1]=0;
