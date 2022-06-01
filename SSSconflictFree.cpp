@@ -295,7 +295,7 @@ int main(int argc, char **argv)
     cout << "Call cblas_dgbmv... " << endl ;
     // BE CAREFUL WITH K=LDA CASE WHEN USING MIDDLE = !INNER
     //cblas_dsbmv(CblasColMajor, CblasUpper, n, k, alpha, B, lda, X, incx, beta, Y, incy);
-    cblas_dgbmv(CblasRowMajor, CblasNoTrans , size_1, size_1, kl, ku, alpha, B, lda, X, incx, beta, Y, incy);
+    cblas_dgbmv(CblasColMajor, CblasNoTrans , size_1, size_1, kl, ku, alpha, B, lda, X, incx, beta, Y, incy);
     cout << "Completed cblas_dgbmv. " << endl ;
 
     if(inner) output = "/home/selin/Outputs/" + matrix_names[inputType] + "/dgbmv-inner-"  + to_string(inputRatio) + ".txt";
