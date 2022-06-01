@@ -29,7 +29,6 @@ int readCooFormat(int z, double ratio, double middleRatio, bool inner) {
             string valFileName = dir_entry.path().string() + "/coordinate-" + to_string(ratio) + "-" + to_string(middleRatio)+  "-val.txt";
 
             std::fstream myfile(rowFileName, std::ios_base::in);
-            // else, start reading doubles.
             while (myfile >> intVal) {
                 inner_rowVec.push_back(intVal);
             }
@@ -139,10 +138,13 @@ int main(int argc, char **argv)
     double** A, ** A_middle;
     int row, col, diff, neededCol, x;
     double val;
+    int kl, ku;
 
     if(inner) {
         k = innerBandwith;
-        lda = k+1;
+        kl=ku=k;
+        //lda = k+1;
+        lda =kl+ku+1;
         size= n;
         size_1 = size;
         size_2=lda;
@@ -178,40 +180,47 @@ int main(int argc, char **argv)
     // i keeps track of whole element count.
     // cout << "start generating banded for inner" <<  endl;
 
+    int rowDiff;
     for( i=0; i<inner_rowVec.size(); i++) {
         row = inner_rowVec[i] - 1;
         col = inner_colVec[i];
         val = inner_valVec[i];
-        //cout << "row: " << row << " col: " << col <<  " val: " << val << endl;
         if(row <= innerBandwith){
-            // insert found row-element
             neededCol = 1;
             diff=col-neededCol;
             A[row][((int)innerBandwith) - row + (diff)] =  val;
-            //cout << "inserted: " << val << endl;
+            //cout << "actual i-j: " << row << "-" << ((int)innerBandwith) - row + (diff) << endl;
+            // for dbmv
+            rowDiff=  row-diff ;
+            A[row-rowDiff][ (lda-1)  -  (((int)innerBandwith) - row + (diff))   ] =  -val;
+            //cout << "reflected i-j: " << row-rowDiff << "-" <<(lda-1)  -  (((int)innerBandwith) - row + (diff))  << endl;
             for(x=0; x<row-1; x++){
-                // do not assume all entries in the row(sub-diags) are filled.
                 if( inner_rowVec[i + (x+1)]-1 != row) break;
                 val = inner_valVec[i + (x+1)];
                 diff =  (inner_colVec[i + (x+1)]) - neededCol;
+                rowDiff=  row-diff ;
                 A[row][((int)innerBandwith) - row + (diff)] =  val;
+                //cout << "actual i-j: " << row << "-" << ((int)innerBandwith) - row + (diff) << endl;
+
+                // for dbmv
+                A[row-rowDiff][ (lda-1)  -  (((int)innerBandwith) - row + (diff))   ] =  -val;
+                //cout << "reflected i-j: " << row-rowDiff << "-" <<(lda-1)  -  (((int)innerBandwith) - row + (diff))  << endl;
+
             }
             i+=x;
         }
-            // soldan saga doldurmaya baslayabilirsin artik.
         else{
             neededCol = (row+1) - innerBandwith;
             diff=col-neededCol;
             A[row][diff] =  val;
-            //cout << "wrote " << val <<endl;
+            // for dbmv
+            A[row-((int)innerBandwith-diff)][ (lda-1)  - diff] =  -val;
         }
-        // cout << i << " ";
     }
     cout << "writing also diag onto inner-A..." << endl;
     for(i=0; i<inner_diagVec.size(); i++){
         A[i][(int) innerBandwith] = inner_diagVec[i];
     }
-
 
 
     /*
@@ -250,21 +259,21 @@ int main(int argc, char **argv)
     ofstream myfile;
     string output;
 
-    /*
-    if(inner) output = "/home/selin/Split-Data/" + matrix_names[inputType] + "/inner-outer-equal/inner/inner-banded-A"  + to_string(inputRatio) + ".txt";
+
+    if(inner) output = "/home/selin/Split-Data/" + matrix_names[inputType] + "/inner/dgbmv-inner-banded-A"  + to_string(inputRatio) + ".txt";
     if(!inner) output =  "/home/selin/Split-Data/" + matrix_names[inputType] + "/middle-banded-A"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
     myfile.open(output, ios::out | ios::trunc);
     cout << "writing A/A_middle ..." << endl;
     for( i=0; i<size_1; i++) {
         for( j=0 ; j<size_2; j++){
-            myfile << A_middle[i][j] << " " ;
+            myfile << A[i][j] << " " ;
         }
         myfile <<  endl;
         myfile <<  endl;
     }
     cout << "written A/A_middle." << endl;
     myfile.close();
-     */
+
 
     double* X = new double[n];
     for(int i=0; i<n; i++) X[i] = 1.0;
@@ -283,11 +292,13 @@ int main(int argc, char **argv)
         B = *A_middle;
     }
 
-    cout << "Call cblas_ssbmv. " << endl ;
+    cout << "Call cblas_dgbmv... " << endl ;
     // BE CAREFUL WITH K=LDA CASE WHEN USING MIDDLE = !INNER
-    cblas_dsbmv(CblasColMajor, CblasUpper, n, k, alpha, B, lda, X, incx, beta, Y, incy);
+    //cblas_dsbmv(CblasColMajor, CblasUpper, n, k, alpha, B, lda, X, incx, beta, Y, incy);
+    cblas_dgbmv(CblasRowMajor, CblasNoTrans , size_1, size_1, kl, ku, alpha, B, lda, X, incx, beta, Y, incy);
+    cout << "Completed cblas_dgbmv. " << endl ;
 
-    if(inner) output = "/home/selin/Outputs/" + matrix_names[inputType] + "/inner-"  + to_string(inputRatio) + ".txt";
+    if(inner) output = "/home/selin/Outputs/" + matrix_names[inputType] + "/dgbmv-inner-"  + to_string(inputRatio) + ".txt";
     if(!inner) output =  "/home/selin/Outputs/" + matrix_names[inputType] + "/middle-"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
     myfile.open(output, ios::out | ios::trunc);
 
