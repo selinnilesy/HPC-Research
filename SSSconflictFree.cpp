@@ -82,8 +82,7 @@ int readSSSFormat(int z, bool banded) {
  */
 
 int main(int argc, char **argv){
-    int n, rowLimit;
-    cout << "i call read CSR Format. " << endl;
+    int n;
     //init();
     if(!argv[1]){
         cout << "please provide input matrix index (int): boneS10, Emilia_923, ldoor, af_5_k101, Serena, audikw_1" << endl;
@@ -93,7 +92,12 @@ int main(int argc, char **argv){
         cout << "please provide bool for banded" << endl;
         return -1;
     }
+    if(!argv[3]){
+        cout << "please state if its openmp or serial" << endl;
+        return -1;
+    }
     bool banded = atoi(argv[2]);
+    bool parallel = atoi(argv[3]);
     readSSSFormat(atoi(argv[1]) , banded);
 
     n = matrixSize[atoi(argv[1])];
@@ -108,20 +112,41 @@ int main(int argc, char **argv){
     double *y = new double[n];
     for(int i=0; i<n; i++) x[i] = 1.0;
     for(int i=0; i<n; i++) y[i] = 0.0;
-    //memset(y, 0, (size_t) (n*sizeof(double)));
-    cout << x[0] << " " << y[0];
+    ofstream myfile1;
 
     int colInd;
-    cout << "start computing sequential ssbmv..." << endl;
-   // clock_t t = clock();
-    double itime, ftime, val;
-    itime = omp_get_wtime();
-    //for (int run = 0; run < 1000; run++) {
-        #pragma omp parallel for
+    if(!parallel){
+        cout << "start computing serial SSS mv..." << endl;
+        clock_t t = clock();
+        double row_i,row_e, val;
+        //for (int run = 0; run < 1000; run++) {
+            for (int i = 0; i < n; i++) {
+                val=0.0;
+                row_i = matrixRowptr[i] - 1;
+                row_e = matrixRowptr[i+1] - 1;
+                val += matrixDiagonal[i] * x[i];
+                for (int j =row_i; j < row_e; j++) {
+                    colInd = matrixColind[j] - 1;
+                    val += matrixOffDiagonal[j] * x[colInd];
+                    y[colInd] += matrixOffDiagonal[j] * x[i];
+                }
+                y[i] += val;
+            }
+        // }
+        t = clock() - t;
+        printf ("It took me %f seconds for serial run.\n", ((float)t)/CLOCKS_PER_SEC);
+        if(!banded) myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/unbanded/result.txt", ios::out | ios::trunc);
+        else myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/banded/result.txt", ios::out | ios::trunc);
+    }
+    else{
+        cout << "start computing parallel SSS mv..." << endl;
+        double itime, ftime, val, row_i,row_e;
+        itime = omp_get_wtime();
+        #pragma omp parallel for private(val, colInd, row_i, row_e)
         for (int i = 0; i < n; i++) {
             val=0.0;
-            double row_i = matrixRowptr[i] - 1;
-            double row_e = matrixRowptr[i+1] - 1;
+            row_i = matrixRowptr[i] - 1;
+            row_e = matrixRowptr[i+1] - 1;
             val += matrixDiagonal[i] * x[i];
             for (int j =row_i; j < row_e; j++) {
                 colInd = matrixColind[j] - 1;
@@ -132,22 +157,19 @@ int main(int argc, char **argv){
             #pragma omp atomic update
             y[i] += val;
         }
-   // }
-    //t = clock() - t;
-    ftime = omp_get_wtime();
-    printf ("It took me %f seconds for omp-run.\n", ftime - itime);
-    //printf ("It took me %f seconds for omp-run.\n", ((float)t)/CLOCKS_PER_SEC);
+        ftime = omp_get_wtime();
+        printf ("It took me %f seconds for omp-run.\n", ftime - itime);
+        if(!banded) myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/unbanded/result_omp.txt", ios::out | ios::trunc);
+        else myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/banded/result_omp.txt", ios::out | ios::trunc);
+    }
 
 
-    ofstream myfile1;
-    if(!banded) myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/unbanded/result_omp.txt", ios::out | ios::trunc);
-    else myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/banded/result_omp.txt", ios::out | ios::trunc);
-
-    cout << "Writing to output. " << endl;
+    cout << "Writing to output... " << endl;
     for (int i=0; i<n; i++) {
         myfile1 << y[i] << '\t';
     }
     myfile1.close();
+    cout << "Completed output... " << endl;
 
     return 0;
 }
