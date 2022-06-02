@@ -3,6 +3,7 @@
 //
 
 #include <iostream>
+#include <omp.h>
 #include  "header.h"
 //#include <mpi.h>
 //#include "rcmtest.cpp"
@@ -112,20 +113,35 @@ int main(int argc, char **argv){
 
     int colInd;
     cout << "start computing sequential ssbmv..." << endl;
-    for(int i=0; i<n; i++){
-        y[i] = matrixDiagonal[i] * x[i];
-        for(int j=matrixRowptr[i]-1; j<matrixRowptr[i+1]-1; j++){
-            colInd = matrixColind[j] - 1;
-            y[i] += matrixOffDiagonal[j] * x[colInd];
-            y[colInd] += matrixOffDiagonal[j]*x[i];
+   // clock_t t = clock();
+    double itime, ftime, val;
+    itime = omp_get_wtime();
+    //for (int run = 0; run < 1000; run++) {
+        #pragma omp parallel for
+        for (int i = 0; i < n; i++) {
+            val=0.0;
+            double row_i = matrixRowptr[i] - 1;
+            double row_e = matrixRowptr[i+1] - 1;
+            val += matrixDiagonal[i] * x[i];
+            for (int j =row_i; j < row_e; j++) {
+                colInd = matrixColind[j] - 1;
+                val += matrixOffDiagonal[j] * x[colInd];
+                #pragma omp atomic update
+                y[colInd] += matrixOffDiagonal[j] * x[i];
+            }
+            #pragma omp atomic update
+            y[i] += val;
         }
-    }
-    cout << "finished computing sequential ssbmv." << endl;
+   // }
+    //t = clock() - t;
+    ftime = omp_get_wtime();
+    printf ("It took me %f seconds for omp-run.\n", ftime - itime);
+    //printf ("It took me %f seconds for omp-run.\n", ((float)t)/CLOCKS_PER_SEC);
 
 
     ofstream myfile1;
-    if(!banded) myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/unbanded/result.txt", ios::out | ios::trunc);
-    else myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/banded/result.txt", ios::out | ios::trunc);
+    if(!banded) myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/unbanded/result_omp.txt", ios::out | ios::trunc);
+    else myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/banded/result_omp.txt", ios::out | ios::trunc);
 
     cout << "Writing to output. " << endl;
     for (int i=0; i<n; i++) {
