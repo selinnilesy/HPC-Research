@@ -145,15 +145,15 @@ int main(int argc, char **argv)
         kl=ku=k;
         //lda = k+1;
         lda =kl+ku+1;
-        size= n;
-        size_1 = size;
-        size_2=lda;
-        A = new double*[size];
-        for( i=0; i<size; i++) {
-            A[i]  = new double[lda];
+        //size= n+kl;
+        size_1 = lda;
+        size_2=n;
+        A = new double*[size_1];
+        for( i=0; i<size_1; i++) {
+            A[i]  = new double[size_2];
         }
-        for( i=0; i<size; i++) {
-            for( j=0; j<lda; j++) {
+        for( i=0; i<size_1; i++) {
+            for( j=0; j<size_2; j++) {
                 A[i][j]  = 0.0;
             }
         }
@@ -182,45 +182,20 @@ int main(int argc, char **argv)
 
     int rowDiff;
     for( i=0; i<inner_rowVec.size(); i++) {
-        row = inner_rowVec[i] - 1;
-        col = inner_colVec[i];
+        row = inner_rowVec[i];
+        col = inner_colVec[i] ;
         val = inner_valVec[i];
-        if(row <= innerBandwith){
-            neededCol = 1;
-            diff=col-neededCol;
-            A[row][((int)innerBandwith) - row + (diff)] =  val;
-            //cout << "actual i-j: " << row << "-" << ((int)innerBandwith) - row + (diff) << endl;
-            // for dbmv
-            rowDiff=  row-diff ;
-            A[row-rowDiff][ (lda-1)  -  (((int)innerBandwith) - row + (diff))   ] =  -val;
-            //cout << "reflected i-j: " << row-rowDiff << "-" <<(lda-1)  -  (((int)innerBandwith) - row + (diff))  << endl;
-            for(x=0; x<row-1; x++){
-                if( inner_rowVec[i + (x+1)]-1 != row) break;
-                val = inner_valVec[i + (x+1)];
-                diff =  (inner_colVec[i + (x+1)]) - neededCol;
-                rowDiff=  row-diff ;
-                A[row][((int)innerBandwith) - row + (diff)] =  val;
-                //cout << "actual i-j: " << row << "-" << ((int)innerBandwith) - row + (diff) << endl;
-
-                // for dbmv
-                A[row-rowDiff][ (lda-1)  -  (((int)innerBandwith) - row + (diff))   ] =  -val;
-                //cout << "reflected i-j: " << row-rowDiff << "-" <<(lda-1)  -  (((int)innerBandwith) - row + (diff))  << endl;
-
-            }
-            i+=x;
-        }
-        else{
-            neededCol = (row+1) - innerBandwith;
-            diff=col-neededCol;
-            A[row][diff] =  val;
-            // for dbmv
-            A[row-((int)innerBandwith-diff)][ (lda-1)  - diff] =  -val;
-        }
+        A[ku+1+row-col -1 ][col - 1] = val;
     }
     cout << "writing also diag onto inner-A..." << endl;
-    for(i=0; i<inner_diagVec.size(); i++){
-        A[i][(int) innerBandwith] = inner_diagVec[i];
+    /*
+    for( i=0; i<size_1; i++) {
+        for( j=0; j<size_2; j++) {
+            cout << A[i][j] << " ";
+        }
+        cout << endl;
     }
+     */
     cout << "completed band storage." << endl;
 
 
@@ -260,7 +235,8 @@ int main(int argc, char **argv)
 
     ofstream myfile;
     string output;
-    /*
+
+
        if(inner) output = "/home/selin/Split-Data/" + matrix_names[inputType] + "/inner/dgbmv-inner-banded-A"  + to_string(inputRatio) + ".txt";
        if(!inner) output =  "/home/selin/Split-Data/" + matrix_names[inputType] + "/middle-banded-A"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
        myfile.open(output, ios::out | ios::trunc);
@@ -274,7 +250,8 @@ int main(int argc, char **argv)
        }
        cout << "written A/A_middle." << endl;
        myfile.close();
-        */
+       
+
 
 
     double* X = new double[n];
@@ -288,6 +265,7 @@ int main(int argc, char **argv)
     int incy = 1;
     double *B;
 
+
     if(inner){
         B = *A;
     }
@@ -298,7 +276,7 @@ int main(int argc, char **argv)
     cout << "Call cblas_dgbmv... " << endl ;
     // BE CAREFUL WITH K=LDA CASE WHEN USING MIDDLE = !INNER
     //cblas_dsbmv(CblasColMajor, CblasUpper, n, k, alpha, B, lda, X, incx, beta, Y, incy);
-    cblas_dgbmv(CblasColMajor, CblasNoTrans , size_1, size_1, kl, ku, alpha, B, lda, X, incx, beta, Y, incy);
+    cblas_dgbmv(CblasRowMajor, CblasNoTrans , n, n, kl, ku, alpha, B, lda, X, incx, beta, Y, incy);
     cout << "Completed cblas_dgbmv. " << endl ;
 
     if(inner) output = "/home/selin/Outputs/" + matrix_names[inputType] + "/dgbmv-inner-"  + to_string(inputRatio) + ".txt";
