@@ -99,106 +99,61 @@ int main()
     int lda=kl+ku+1;
     int incx = 1;
     int incy = 1;
-    double* A = new double[lda*(size+kl)];
-    double* B = new double[lda*size];
-
-    int m;
-    // for LOWER only
-
-
-    /*
-    for(int j=1; j<=size; j++) {
-        m = 1 - j;
-        for(int i=j ; i<=min(size, j+k); i++){
-            int ind_x = i-1;
-            int ind_y = j-1;
-            A[(m+i-1)*size + ind_y] = matrix[ind_x][ind_y];
+    double** A = new double*[size+ku];
+    for(int i=0; i<size+ku; i++){
+        A[i] = new double[lda+1];
+    }
+    for(int i=0; i<size+ku; i++){
+        for(int j=0; j<lda+1; j++){
+            A[i][j] = 0.0;
         }
     }
 
+    int m;
 
-    // for upper storage of A with size=10
+
+     // WORKING PART
+
+   for(int i=0; i<size; i++) {
+      A[i][2]= matrix[i][i];
+      if(i >=1) A[i][1]= matrix[i][i-1];
+      if(i >=2) A[i][0]= matrix[i][i-2];
+   }
+    for(int i=0; i<size; i++) {
+        if(i <size-1) A[i][lda-2]= -matrix[i][i+1];
+        if(i <size-2) A[i][lda-1]= -matrix[i][i+2];
+    }
+    double* B = *A;
 
 
-    A[0]=0;
-    A[1]=0;
-    A[size]=0;
-    A[size -1 + size]=1;
-    A[2*size + size - 1]=1;
-    A[2*size + size - 2]=1;
-     */
-    // for upper storage of A with size=5 k=1
     /*
-    A[0]=0;
-    A[2*size -1 ]=1;
-     */
-    // for lower storage of A with size=10 k=2
-    /*
-    A[0]=1;
-    A[1]=1;
-    A[size]=1;
-    A[3*size - 1 ]=0;
-    A[3*size - 2 ]=0;
-    A[2*size - 1 ]=0;
+    int n=size;
+    /* try rowwise
+    for(int i=0; i<n; i++){
+        A[2][i] = 1;
+    }
+    for(int i=0; i<n-1; i++){
+        A[3][i] = 5;
+    }
+    for(int i=0; i<n-2; i++){
+        A[4][i] = 2;
+    }
+    for(int i=0; i<n-1; i++){
+        A[1][i+1] = 5;
+    }
+    for(int i=0; i<n-2; i++){
+        A[0][i+2] = 2;
+    }
     */
 
 
-    for(int i=0; i<size; i++) {
-        for(int j=0 ; j<lda; j++){
-            A[(lda)*i + j]= 1;
-        }
-    }
-
-
-   for(int i=0; i<size; i++) {
-      A[i*lda + 2]= matrix[i][i];
-      if(i >=1) A[(i)*lda + 1]= matrix[i][i-1];
-      if(i >=2) A[(i)*lda +0]= matrix[i][i-2];
-   }
-   A[0] =0;
-   A[1]=0;
-   A[lda]=0;
-    for(int i=0; i<size; i++) {
-        A[(i)*lda + (lda-2)]= -matrix[i][i+1];
-        A[(i)*lda +(lda-1)]= -matrix[i][i+2];
-    }
-
-    A[lda*(size-1) + lda-1]=0;
-    A[lda*(size-1) + lda-1]=0;
-    A[(lda)*(size-2) + lda-1]=0;
-
-
-    /*
-    for(int i=0; i<size; i++) {
-        A[i*lda + (lda-1)]= matrix[i][i];
-        if(i >=1) A[(i)*lda + (lda-2)]= matrix[i][i-1];
-        if(i >=2) A[(i)*lda +(lda-3)]= matrix[i][i-2];
-    }
-    for(int i=0; i<size-1; i++) {
-        if(i >=1) B[(i)*lda + 0]= matrix[i][i-2];
-    }
-    B[(1)*lda + 0] = 2;
-     */
-
-
-    // col major - upper  10 x 3
-
-    //A[0]=0;
-    //A[1]=0;
-    //A[lda]=0;
-
-    // col major - lower  10 x 3
-
-    //A[size*lda-1]=0;
-    //A[size*lda-2]=0;
-    //A[(size-1)*lda-1]=0;
 
 
     cout << "Formed A: " << endl;
 
-    for(int i=0; i<size; i++) {
-        for(int j=0 ; j<lda; j++){
-            cout << A[(lda)*i + j] << " " ;
+    for(int i=0; i<size+ku; i++) {
+        for(int j=0 ; j<lda+1; j++){
+            cout << A[i][j] << " " ;
         }
         cout <<  endl;
     }
@@ -219,7 +174,8 @@ int main()
     //const CBLAS_UPLO Uplo = CblasLower;
     // column major : upper verince kernel lower'a giriyor. lower verince upper'a.
     // column major : CblasLower -> ( ! kernel'de upper) 10x10 1 bandwith icin calisiyor.
-    cblas_dgbmv(CblasColMajor, CblasNoTrans , size, size, kl, ku, alpha, A, lda, X, incx, beta, Y, incy);
+
+    cblas_dgbmv(CblasColMajor, CblasNoTrans , size, size, kl, ku, alpha, B, lda, X, incx, beta, Y, incy);
 
     cout << "Output: " << endl;
     for(int j=0; j<size; j++) {
