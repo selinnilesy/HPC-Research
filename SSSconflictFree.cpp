@@ -119,7 +119,7 @@ int main(int argc, char **argv){
         cout << "start computing serial SSS mv..." << endl;
         clock_t t = clock();
         double row_i,row_e, val;
-        //for (int run = 0; run < 1000; run++) {
+        for (int run = 0; run < 1000; run++) {
             for (int i = 0; i < n; i++) {
                 val=0.0;
                 row_i = matrixRowptr[i] - 1;
@@ -132,30 +132,34 @@ int main(int argc, char **argv){
                 }
                 y[i] += val;
             }
-        // }
+        }
         t = clock() - t;
-        printf ("It took me %f seconds for serial run.\n", ((float)t)/CLOCKS_PER_SEC);
+        printf ("It took me %f seconds for 1000-times serial run.\n", ((float)t)/CLOCKS_PER_SEC);
         if(!banded) myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/unbanded/result.txt", ios::out | ios::trunc);
         else myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/banded/result.txt", ios::out | ios::trunc);
     }
     else{
+        int threadCount = n/2;
         cout << "start computing parallel SSS mv..." << endl;
         double itime, ftime, val, row_i,row_e;
         itime = omp_get_wtime();
-        #pragma omp parallel for private(val, colInd, row_i, row_e)
-        for (int i = 0; i < n; i++) {
-            val=0.0;
-            row_i = matrixRowptr[i] - 1;
-            row_e = matrixRowptr[i+1] - 1;
-            val += matrixDiagonal[i] * x[i];
-            for (int j =row_i; j < row_e; j++) {
-                colInd = matrixColind[j] - 1;
-                val += matrixOffDiagonal[j] * x[colInd];
+        for (int run = 0; run < 1000; run++) {
+            #pragma omp parallel for private(val, colInd, row_i, row_e)
+            #pragma omp set_num_threads(threadCounts)
+            for (int i = 0; i < n; i++) {
+                val = 0.0;
+                row_i = matrixRowptr[i] - 1;
+                row_e = matrixRowptr[i + 1] - 1;
+                val += matrixDiagonal[i] * x[i];
+                for (int j = row_i; j < row_e; j++) {
+                    colInd = matrixColind[j] - 1;
+                    val += matrixOffDiagonal[j] * x[colInd];
                 #pragma omp atomic update
-                y[colInd] += matrixOffDiagonal[j] * x[i];
+                    y[colInd] += matrixOffDiagonal[j] * x[i];
+                }
+                #pragma omp atomic update
+                y[i] += val;
             }
-            #pragma omp atomic update
-            y[i] += val;
         }
         ftime = omp_get_wtime();
         printf ("It took me %f seconds for omp-run.\n", ftime - itime);
@@ -171,5 +175,11 @@ int main(int argc, char **argv){
     myfile1.close();
     cout << "Completed output... " << endl;
 
+    delete [] x;
+    delete [] y;
+    delete [] matrixRowptr;
+    delete [] matrixColind;
+    delete [] matrixOffDiagonal;
+    delete [] matrixDiagonal;
     return 0;
 }
