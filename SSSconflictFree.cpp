@@ -99,8 +99,8 @@ int main()
     int lda=kl+ku+1;
     int incx = 1;
     int incy = 1;
-    double* A = new double[lda*size];
-    double* B = new double[lda*size-1];
+    double* A = new double[lda*(size+kl)];
+    double* B = new double[lda*size];
 
     int m;
     // for LOWER only
