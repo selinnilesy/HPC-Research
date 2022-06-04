@@ -119,7 +119,7 @@ int main(int argc, char **argv){
         cout << "start computing serial SSS mv..." << endl;
         clock_t t = clock();
         double row_i,row_e, val;
-        for (int run = 0; run < 1000; run++) {
+       // for (int run = 0; run < 1000; run++) {
             for (int i = 0; i < n; i++) {
                 val=0.0;
                 row_i = matrixRowptr[i] - 1;
@@ -132,7 +132,7 @@ int main(int argc, char **argv){
                 }
                 y[i] += val;
             }
-        }
+        //}
         t = clock() - t;
         printf ("It took me %f seconds for 1000-times serial run.\n", ((float)t)/CLOCKS_PER_SEC);
         if(!banded) myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/unbanded/result.txt", ios::out | ios::trunc);
@@ -153,8 +153,10 @@ int main(int argc, char **argv){
                 val += matrixDiagonal[i] * x[i];
                 for (int j = row_i; j < row_e; j++) {
                     colInd = matrixColind[j] - 1;
-                    val += matrixOffDiagonal[j] * x[colInd];
-                #pragma omp atomic update
+                    // lower part is going to be negated for DKEW SYMMETRIC.
+                    val -= matrixOffDiagonal[j] * x[colInd];
+                    // upper part's sign will be kept
+                    #pragma omp atomic update
                     y[colInd] += matrixOffDiagonal[j] * x[i];
                 }
                 #pragma omp atomic update
