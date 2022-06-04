@@ -7,7 +7,7 @@
 
 using namespace std;
 
-vector<double> lowerRes,upperRes, totalRes,diag,  sum;
+vector<double> lowerRes,upperRes, dsbmvRes,diag, dgbmvRes;
 int nnz;
 
 int readResult(int z, double ratio) {
@@ -37,10 +37,18 @@ int readResult(int z, double ratio) {
     fileName = "/home/selin/Outputs/" + matrix_names[z]  + "/inner-" + to_string(ratio)+ ".txt";
     myfile.open(fileName, std::ios_base::in);
     while (myfile >> doubleVal) {
-        totalRes.push_back(doubleVal);
+        dsbmvRes.push_back(doubleVal);
     }
     myfile.close();
-    cout << fileName << " has been read with size: " << totalRes.size() << endl;
+    cout << fileName << " has been read with size: " << dsbmvRes.size() << endl;
+
+    fileName = "/home/selin/Outputs/" + matrix_names[z]  + "/dgbmv-inner-" + to_string(ratio)+ ".txt";
+    myfile.open(fileName, std::ios_base::in);
+    while (myfile >> doubleVal) {
+        dgbmvRes.push_back(doubleVal);
+    }
+    myfile.close();
+    cout << fileName << " has been read with size: " << dgbmvRes.size() << endl;
 
     fileName = "/home/selin/SSS-Data/" + matrix_names[z]  + "/diag.txt";
     myfile.open(fileName, std::ios_base::in);
@@ -61,19 +69,26 @@ int main(int argc, char **argv)
     cout << "input ratio: " << inputRatio << endl;
 
     readResult(inputType, inputRatio);
-    cout << "test: " << lowerRes[0] << endl;
-    cout << "test: " << upperRes[0] << endl;
-    cout << "test: " << totalRes[0] << endl;
-    cout << "test: " << diag[0] << endl;
+    cout << "lowerRes: " << lowerRes[0] << endl;
+    cout << "upperRes: " << upperRes[0] << endl;
+    cout << "diag: " << diag[0] << endl;
+    cout << "dsbmvRes: " << dsbmvRes[0] << endl;
+    cout << "dgbmvRes: " << dgbmvRes[0] << endl;
 
-
-    for(int i=0; i<lowerRes.size(); i++){
-        sum.push_back(lowerRes[i] + upperRes[i] + diag[i]);
+    cout << endl;
+    cout << "checking DSBMV: " << endl;
+    for(int i=0; i<dsbmvRes.size(); i++){
+        if(abs( (lowerRes[i] + upperRes[i] + diag[i] )- dsbmvRes[i]) > 0.1) {
+            cout << "not equal - index: " << i << " correct result: " <<  (lowerRes[i] + upperRes[i] + diag[i] ) << " dsbmv computed: " << dsbmvRes[i] << endl;
+            break;
+        }
     }
-    for(int i=0; i<sum.size(); i++){
-        if(abs(sum[i] - totalRes[i]) > 0.01) {
-            cout << "not equal index: " << i << " you found: " <<sum[i] << " banded computed: " << totalRes[i];
-            return -1;
+    cout << endl;
+    cout << "checking DGBMV: " << endl;
+    for(int i=0; i<dgbmvRes.size(); i++){
+        if(abs( (lowerRes[i] + upperRes[i] + diag[i] )- dgbmvRes[i]) > 0.1) {
+            cout << "not equal - index: " << i << " correct result: " <<  (lowerRes[i] + upperRes[i] + diag[i] ) << " dgbmv computed: " << dgbmvRes[i] << endl;
+            break;
         }
     }
     return 0;
