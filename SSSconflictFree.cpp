@@ -5,6 +5,7 @@
 #include <string>
 #include <cmath>
 #include "header.h"
+#include <time.h>
 
 using namespace std;
 vector<int> inner_colVec;
@@ -131,11 +132,9 @@ int main(int argc, char **argv)
 
     int i,j;
     int size= n;
-    //int size=8;
-    // this is except diagonal.
     int size_1,size_2;
     int k,lda;
-    double** A, **A_middle;
+    double* A, **A_middle;
     int row, col, diff, neededCol, x;
     double val;
     int kl, ku;
@@ -146,15 +145,17 @@ int main(int argc, char **argv)
         //lda = k+1;
         lda =kl+ku+1;
         //size= n+kl;
-        size_1 = lda;
-        size_2=n;
-        A = new double*[size_1];
+        size_1=n+kl;
+        size_2 = lda+1;
+        A = new double[size_1*size_2];
+        /*
         for( i=0; i<size_1; i++) {
             A[i]  = new double[size_2];
         }
+         */
         for( i=0; i<size_1; i++) {
             for( j=0; j<size_2; j++) {
-                A[i][j]  = 0.0;
+                A[i*size_2 + j]  = 0.0;
             }
         }
     }
@@ -182,22 +183,51 @@ int main(int argc, char **argv)
 
     int rowDiff;
     for( i=0; i<inner_rowVec.size(); i++) {
-        row = inner_rowVec[i];
-        col = inner_colVec[i] ;
+        row = inner_rowVec[i] - 1;
+        col = inner_colVec[i];
         val = inner_valVec[i];
-        A[ku+1+row-col -1 ][col - 1] = val;
+        if(row <= innerBandwith){
+            neededCol = 1;
+            diff=col-neededCol;
+            A[row*size_2 + ((int)innerBandwith) - row + (diff)] =  val;
+            //cout << "actual i-j: " << row << "-" << ((int)innerBandwith) - row + (diff) << endl;
+            // for dbmv
+            rowDiff=  row-diff ;
+            A[(row-rowDiff) * size_2 + (lda-1)  -  (((int)innerBandwith) - row + (diff))   ] =  -val;
+            //cout << "reflected i-j: " << row-rowDiff << "-" <<(lda-1)  -  (((int)innerBandwith) - row + (diff))  << endl;
+            for(x=0; x<row-1; x++){
+                if( inner_rowVec[i + (x+1)]-1 != row) break;
+                val = inner_valVec[i + (x+1)];
+                diff =  (inner_colVec[i + (x+1)]) - neededCol;
+                rowDiff=  row-diff ;
+                A[row* size_2  +  ((int)innerBandwith) - row + (diff)] =  val;
+                //cout << "actual i-j: " << row << "-" << ((int)innerBandwith) - row + (diff) << endl;
+
+                // for dbmv
+                A[(row-rowDiff)*size_2 + (lda-1)  -  (((int)innerBandwith) - row + (diff))   ] =  -val;
+                //cout << "reflected i-j: " << row-rowDiff << "-" <<(lda-1)  -  (((int)innerBandwith) - row + (diff))  << endl;
+
+            }
+            i+=x;
+        }
+        else{
+            neededCol = (row+1) - innerBandwith;
+            diff=col-neededCol;
+            A[row * size_2 + diff] =  val;
+            // for dbmv
+            A[(row-((int)innerBandwith-diff)) * size_2 + (lda-1)  - diff] =  -val;
+        }
     }
     cout << "writing also diag onto inner-A..." << endl;
-    /*
-    for( i=0; i<size_1; i++) {
-        for( j=0; j<size_2; j++) {
-            cout << A[i][j] << " ";
-        }
-        cout << endl;
+    for(i=0; i<inner_diagVec.size(); i++){
+        A[i*size_2 + (int) innerBandwith] = inner_diagVec[i];
     }
-     */
     cout << "completed band storage." << endl;
 
+    middle_colVec.clear();
+    middle_rowVec.clear();
+    middle_valVec.clear();
+    middle_diagVec.clear();
 
     /*
     cout << "start generating banded for middle-A" <<  endl;
@@ -235,7 +265,7 @@ int main(int argc, char **argv)
 
     ofstream myfile;
     string output;
-
+    /*
 
        if(inner) output = "/home/selin/Split-Data/" + matrix_names[inputType] + "/inner/dgbmv-inner-banded-A"  + to_string(inputRatio) + ".txt";
        if(!inner) output =  "/home/selin/Split-Data/" + matrix_names[inputType] + "/middle-banded-A"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
@@ -243,21 +273,21 @@ int main(int argc, char **argv)
        cout << "writing A/A_middle ..." << endl;
        for( i=0; i<size_1; i++) {
            for( j=0 ; j<size_2; j++){
-               myfile << A[i][j] << " " ;
+               myfile << A[i*size_2 + j] << " " ;
            }
            myfile <<  endl;
            myfile <<  endl;
        }
        cout << "written A/A_middle." << endl;
        myfile.close();
-       
+       */
 
 
 
     double* X = new double[n];
-    for(int i=0; i<n; i++) X[i] = 1.0;
+    for(i=0; i<n; i++) X[i] = 1.0;
     double* Y = new double[n];
-    for(int i=0; i<n; i++) Y[i] = 0.0;
+    for(i=0; i<n; i++) Y[i] = 0.0;
 
     double alpha = 1.0;
     double beta = 0.0;
@@ -265,32 +295,52 @@ int main(int argc, char **argv)
     int incy = 1;
     double *B;
 
-
+    /*
     if(inner){
         B = *A;
     }
     else if(!inner){
         B = *A_middle;
     }
+     */
 
-    cout << "Call cblas_dgbmv... " << endl ;
     // BE CAREFUL WITH K=LDA CASE WHEN USING MIDDLE = !INNER
     //cblas_dsbmv(CblasColMajor, CblasUpper, n, k, alpha, B, lda, X, incx, beta, Y, incy);
-    cblas_dgbmv(CblasRowMajor, CblasNoTrans , n, n, kl, ku, alpha, B, lda, X, incx, beta, Y, incy);
-    cout << "Completed cblas_dgbmv. " << endl ;
+    int *n_ptr = new int;
+    *n_ptr=n;
+    int *kl_ptr = new int;
+    int *ku_ptr = new int;
+    *kl_ptr=kl;
+    *ku_ptr=ku;
+    int *lda_ptr = new int;
+    *lda_ptr=lda;
+    int *incx_ptr = new int;
+    int *incy_ptr = new int;
+    *incx_ptr=1;
+    *incy_ptr=1;
+    clock_t t;
+    cout << "Call cblas_dgbmv... " << endl ;
+    t = clock();
+    for(int i=0; i<1000; i++)
+    cblas_dgbmv(CblasColMajor, CblasNoTrans , *n_ptr, *n_ptr, *kl_ptr, *ku_ptr, alpha, A, *lda_ptr, X, *incx_ptr, beta, Y, *incy_ptr);
+    t = clock() - t;
+    printf ("It took me %d clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
+    cout << "Completed cblas_dgbmv. " << endl << flush ;
 
-    if(inner) output = "/home/selin/Outputs/" + matrix_names[inputType] + "/dgbmv-inner-"  + to_string(inputRatio) + ".txt";
+    /*
+     * if(inner) output = "/home/selin/Outputs/" + matrix_names[inputType] + "/dgbmv-inner-"  + to_string(inputRatio) + ".txt";
     if(!inner) output =  "/home/selin/Outputs/" + matrix_names[inputType] + "/middle-"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
     myfile.open(output, ios::out | ios::trunc);
 
     cout << "Writing Y: " << endl;
-    for( i=0; i<size_1; i++) {
+    for( i=0; i<n; i++) {
         myfile << Y[i] << " " ;
     }
     myfile.close();
     cout << "Output completed." << output << endl;
+     */
 
-    /*
+
     if(X) {
         delete [] X;
         cout << "deleted X." << endl;
@@ -299,7 +349,7 @@ int main(int argc, char **argv)
         delete [] Y;
         cout << "deleted Y." << endl;
     }
-     */
-    //if(inner) delete [] A;
-    //else delete [] A_middle;
+
+    if(inner) delete [] A;
+    else delete [] A_middle;
 }

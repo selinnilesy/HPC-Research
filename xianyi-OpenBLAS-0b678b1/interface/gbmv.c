@@ -229,18 +229,20 @@ void CNAME(enum CBLAS_ORDER order,
 #ifdef SMP
   nthreads = num_cpu_avail(2);
 
-  if (nthreads == 1) {
+  //if (nthreads == 1) {
 #endif
-
-  (gbmv[(int)trans])(m, n, kl, ku, alpha, a, lda, x, incx, y, incy, buffer);
-
+  (gbmv[(int) trans])(m, n, kl, ku, alpha, a, lda, x, incx, y, incy, buffer);
+//}
+  /*
 #ifdef SMP
   } else {
 
+    printf("else multp thread SMP.\n");
     (gbmv_thread[(int)trans])(m, n, kl, ku, alpha, a, lda, x, incx, y, incy, buffer, nthreads);
 
   }
 #endif
+   */
 
   blas_memory_free(buffer);
 
