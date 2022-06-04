@@ -292,7 +292,7 @@ int main(int argc, char **argv)
     myfile.open(output, ios::out | ios::trunc);
 
     cout << "Writing Y: " << endl;
-    for( i=0; i<size_1; i++) {
+    for( i=0; i<n; i++) {
         myfile << Y[i] << " " ;
     }
     myfile.close();
