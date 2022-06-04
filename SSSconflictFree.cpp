@@ -9,17 +9,17 @@
 using namespace std;
 vector<int> inner_colVec;
 vector<int> inner_rowVec;
-vector<double> inner_valVec;
-vector<double> inner_diagVec;
+vector<float> inner_valVec;
+vector<float> inner_diagVec;
 
 vector<int> middle_colVec;
 vector<int> middle_rowVec;
-vector<double> middle_valVec;
-vector<double> middle_diagVec;
+vector<float> middle_valVec;
+vector<float> middle_diagVec;
 
 int readCooFormat(int z, double ratio, double middleRatio, bool inner) {
     cout <<  " start reading coo files..." << endl;
-    double doubleVal;
+    float doubleVal;
     int intVal;
     const fs::path matrixFolder{"/home/selin/Split-Data/" + matrix_names[z]};
     for(auto const& dir_entry: fs::directory_iterator{matrixFolder}) {
@@ -82,7 +82,7 @@ int readCooFormat(int z, double ratio, double middleRatio, bool inner) {
 }
 int readDiag(int z) {
     cout <<  " start reading diag file..." << endl;
-    double doubleVal;
+    float doubleVal;
     string diagFile = "/home/selin/SSS-Data/" + matrix_names[z] + "/diag.txt" ;
 
     std::fstream myfile(diagFile, std::ios_base::in);
@@ -136,9 +136,9 @@ int main(int argc, char **argv)
     // this is except diagonal.
     int size_1,size_2;
     int k,lda;
-    double** A, ** A_middle;
+    float** A, ** A_middle;
     int row, col, diff, neededCol, x;
-    double val;
+    float val;
 
     if(inner) {
         k = innerBandwith;
@@ -146,9 +146,9 @@ int main(int argc, char **argv)
         size= n;
         size_1 = size;
         size_2=lda;
-        A = new double*[size];
+        A = new float*[size];
         for( i=0; i<size; i++) {
-            A[i]  = new double[lda];
+            A[i]  = new float[lda];
         }
         for( i=0; i<size; i++) {
             for( j=0; j<lda; j++) {
@@ -162,9 +162,9 @@ int main(int argc, char **argv)
         lda = k+1;
         size_1 = size-innerBandwith;
         size_2=middleBandwith;
-        A_middle = new double*[size_1];
+        A_middle = new float*[size_1];
         for( i=0; i<size_1; i++) {
-            A_middle[i]  = new double[size_2];
+            A_middle[i]  = new float[size_2];
         }
 
         for( i=0; i<size_1; i++) {
@@ -266,15 +266,15 @@ int main(int argc, char **argv)
     myfile.close();
      */
 
-    double* X = new double[n];
+    float* X = new float[n];
     for(int i=0; i<n; i++) X[i] = 1.0;
-    double* Y = new double[n];
+    float* Y = new float[n];
     for(int i=0; i<n; i++) Y[i] = 0.0;
-    double alpha = 1;
-    double beta = 0;
+    float alpha = 1;
+    float beta = 0;
     int incx = 1;
     int incy = 1;
-    double *B;
+    float *B;
 
     if(inner){
         B = *A;
@@ -285,7 +285,7 @@ int main(int argc, char **argv)
 
     cout << "Call cblas_ssbmv. " << endl ;
     // BE CAREFUL WITH K=LDA CASE WHEN USING MIDDLE = !INNER
-    cblas_dsbmv(CblasColMajor, CblasUpper, n, k, alpha, B, lda, X, incx, beta, Y, incy);
+    cblas_ssbmv(CblasColMajor, CblasUpper, n, k, alpha, B, lda, X, incx, beta, Y, incy);
 
     if(inner) output = "/home/selin/Outputs/" + matrix_names[inputType] + "/inner-"  + to_string(inputRatio) + ".txt";
     if(!inner) output =  "/home/selin/Outputs/" + matrix_names[inputType] + "/middle-"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
