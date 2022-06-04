@@ -189,22 +189,22 @@ int main(int argc, char **argv)
         if(row <= innerBandwith){
             neededCol = 1;
             diff=col-neededCol;
-            A[row*size_2 + ((int)innerBandwith) - row + (diff)] =  val;
+            A[row*size_2 + ((int)innerBandwith) - row + (diff)] =  -val;
             //cout << "actual i-j: " << row << "-" << ((int)innerBandwith) - row + (diff) << endl;
             // for dbmv
             rowDiff=  row-diff ;
-            A[(row-rowDiff) * size_2 + (lda-1)  -  (((int)innerBandwith) - row + (diff))   ] =  -val;
+            A[(row-rowDiff) * size_2 + (lda-1)  -  (((int)innerBandwith) - row + (diff))   ] =  val;
             //cout << "reflected i-j: " << row-rowDiff << "-" <<(lda-1)  -  (((int)innerBandwith) - row + (diff))  << endl;
             for(x=0; x<row-1; x++){
                 if( inner_rowVec[i + (x+1)]-1 != row) break;
                 val = inner_valVec[i + (x+1)];
                 diff =  (inner_colVec[i + (x+1)]) - neededCol;
                 rowDiff=  row-diff ;
-                A[row* size_2  +  ((int)innerBandwith) - row + (diff)] =  val;
+                A[row* size_2  +  ((int)innerBandwith) - row + (diff)] =  -val;
                 //cout << "actual i-j: " << row << "-" << ((int)innerBandwith) - row + (diff) << endl;
 
                 // for dbmv
-                A[(row-rowDiff)*size_2 + (lda-1)  -  (((int)innerBandwith) - row + (diff))   ] =  -val;
+                A[(row-rowDiff)*size_2 + (lda-1)  -  (((int)innerBandwith) - row + (diff))   ] =  val;
                 //cout << "reflected i-j: " << row-rowDiff << "-" <<(lda-1)  -  (((int)innerBandwith) - row + (diff))  << endl;
 
             }
@@ -213,9 +213,9 @@ int main(int argc, char **argv)
         else{
             neededCol = (row+1) - innerBandwith;
             diff=col-neededCol;
-            A[row * size_2 + diff] =  val;
+            A[row * size_2 + diff] =  -val;
             // for dbmv
-            A[(row-((int)innerBandwith-diff)) * size_2 + (lda-1)  - diff] =  -val;
+            A[(row-((int)innerBandwith-diff)) * size_2 + (lda-1)  - diff] =  val;
         }
     }
     cout << "writing also diag onto inner-A..." << endl;
@@ -321,14 +321,12 @@ int main(int argc, char **argv)
     clock_t t;
     cout << "Call cblas_dgbmv... " << endl ;
     t = clock();
-    for(int i=0; i<1000; i++)
+    //for(int i=0; i<1000; i++)
     cblas_dgbmv(CblasColMajor, CblasNoTrans , *n_ptr, *n_ptr, *kl_ptr, *ku_ptr, alpha, A, *lda_ptr, X, *incx_ptr, beta, Y, *incy_ptr);
     t = clock() - t;
     printf ("It took me %d clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
-    cout << "Completed cblas_dgbmv. " << endl << flush ;
 
-    /*
-     * if(inner) output = "/home/selin/Outputs/" + matrix_names[inputType] + "/dgbmv-inner-"  + to_string(inputRatio) + ".txt";
+    if(inner) output = "/home/selin/Outputs/" + matrix_names[inputType] + "/dgbmv-inner-"  + to_string(inputRatio) + ".txt";
     if(!inner) output =  "/home/selin/Outputs/" + matrix_names[inputType] + "/middle-"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
     myfile.open(output, ios::out | ios::trunc);
 
@@ -338,7 +336,7 @@ int main(int argc, char **argv)
     }
     myfile.close();
     cout << "Output completed." << output << endl;
-     */
+     
 
 
     if(X) {
