@@ -18,7 +18,7 @@ int readResult(int z, double ratio) {
     string fileName;
     // middle read not yet IMPLEMENTED !!!
     // TO DO
-    fileName = "/home/selin/Split-Data/" + matrix_names[z]  + "/inner-outer-equal/inner/CSR-Data/upper/" + to_string(ratio)+ "-result.txt";
+    fileName = "/home/selin/Split-Data/" + matrix_names[z]  + "/inner/CSR-Data/upper/" + to_string(ratio)+ "-result.txt";
     std::fstream myfile(fileName, std::ios_base::in);
     while (myfile >> doubleVal) {
         upperRes.push_back(doubleVal);
@@ -26,7 +26,7 @@ int readResult(int z, double ratio) {
     myfile.close();
     cout << fileName << " has been read with size: " << upperRes.size() << endl;
 
-    fileName = "/home/selin/Split-Data/" + matrix_names[z]  + "/inner-outer-equal/inner/CSR-Data/" + to_string(ratio)+ "-result.txt";
+    fileName = "/home/selin/Split-Data/" + matrix_names[z]  + "/inner/CSR-Data/" + to_string(ratio)+ "-result.txt";
     myfile.open(fileName, std::ios_base::in);
     while (myfile >> doubleVal) {
         lowerRes.push_back(doubleVal);
@@ -153,8 +153,8 @@ int main(int argc, char **argv)
     cout << endl;
     cout << "checking DSBMV: " << endl;
     for(int i=0; i<dsbmvRes.size(); i++){
-        if(abs( (lowerRes[i] + upperRes[i] + diag[i] )- dsbmvRes[i]) > 0.1) {
-            cout << "not equal - index: " << i << " correct result: " <<  (lowerRes[i] + upperRes[i] + diag[i] ) << " dsbmv computed: " << dsbmvRes[i] << endl;
+        if(abs( (-lowerRes[i] + upperRes[i] + diag[i] )- dsbmvRes[i]) > 0.1) {
+            cout << "not equal - index: " << i << " correct result: " <<  (-lowerRes[i] + upperRes[i] + diag[i] ) << " dsbmv computed: " << dsbmvRes[i] << endl;
             break;
         }
     }
