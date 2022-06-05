@@ -8,6 +8,7 @@
 using namespace std;
 
 vector<double> lowerRes,upperRes, dsbmvRes,diag, dgbmvRes;
+vector<double> inner, inner_outer;
 int nnz;
 
 int readResult(int z, double ratio) {
@@ -57,6 +58,80 @@ int readResult(int z, double ratio) {
     }
     myfile.close();
     cout << fileName << " has been read with size: " << diag.size() << endl;
+
+    /*
+    fileName = "/home/selin/Split-Data/" + matrix_names[z]  + "/inner/coordinate-" +to_string(ratio) + "-0.300000-col.txt";
+    myfile.open(fileName, std::ios_base::in);
+    while (myfile >> doubleVal) {
+        inner.push_back(doubleVal);
+    }
+    myfile.close();
+    cout << fileName << " has been read with size: " << inner.size() << endl;
+
+    fileName = "/home/selin/Split-Data/" + matrix_names[z]  + "/inner-outer-equal/inner/coordinate-" +to_string(ratio) + "-col.txt";
+    myfile.open(fileName, std::ios_base::in);
+    while (myfile >> doubleVal) {
+        inner_outer.push_back(doubleVal);
+    }
+    myfile.close();
+    cout << fileName << " has been read with size: " << inner_outer.size() << endl;
+    for(int i=0; i<inner_outer.size(); i++){
+        if(inner_outer[i] != inner[i]) {
+            cout << "not equal inner-outer and inner data" << endl;
+            break;
+        }
+    }
+    inner_outer.clear();
+    inner.clear();
+
+    fileName = "/home/selin/Split-Data/" + matrix_names[z]  + "/inner/coordinate-" +to_string(ratio) + "-0.300000-row.txt";
+    myfile.open(fileName, std::ios_base::in);
+    while (myfile >> doubleVal) {
+        inner.push_back(doubleVal);
+    }
+    myfile.close();
+    cout << fileName << " has been read with size: " << inner.size() << endl;
+
+    fileName = "/home/selin/Split-Data/" + matrix_names[z]  + "/inner-outer-equal/inner/coordinate-" +to_string(ratio) + "-row.txt";
+    myfile.open(fileName, std::ios_base::in);
+    while (myfile >> doubleVal) {
+        inner_outer.push_back(doubleVal);
+    }
+    myfile.close();
+    cout << fileName << " has been read with size: " << inner_outer.size() << endl;
+    for(int i=0; i<inner_outer.size(); i++){
+        if(inner_outer[i] != inner[i]) {
+            cout << "not equal inner-outer and inner data" << endl;
+            break;
+        }
+    }
+    inner_outer.clear();
+    inner.clear();
+
+    fileName = "/home/selin/Split-Data/" + matrix_names[z]  + "/inner/coordinate-" +to_string(ratio) + "-0.300000-val.txt";
+    myfile.open(fileName, std::ios_base::in);
+    while (myfile >> doubleVal) {
+        inner.push_back(doubleVal);
+    }
+    myfile.close();
+    cout << fileName << " has been read with size: " << inner.size() << endl;
+
+    fileName = "/home/selin/Split-Data/" + matrix_names[z]  + "/inner-outer-equal/inner/coordinate-" +to_string(ratio) + "-val.txt";
+    myfile.open(fileName, std::ios_base::in);
+    while (myfile >> doubleVal) {
+        inner_outer.push_back(doubleVal);
+    }
+    myfile.close();
+    cout << fileName << " has been read with size: " << inner_outer.size() << endl;
+    for(int i=0; i<inner_outer.size(); i++){
+        if(inner_outer[i] != inner[i]) {
+            cout << "not equal inner-outer and inner data" << endl;
+            break;
+        }
+    }
+    inner_outer.clear();
+    inner.clear();
+     */
     return 0;
 }
 
@@ -77,7 +152,7 @@ int main(int argc, char **argv)
 
     cout << endl;
     cout << "checking DSBMV: " << endl;
-    for(int i=1; i<dsbmvRes.size(); i++){
+    for(int i=0; i<dsbmvRes.size(); i++){
         if(abs( (-lowerRes[i] + upperRes[i] + diag[i] )- dsbmvRes[i]) > 0.1) {
             cout << "not equal - index: " << i << " correct result: " <<  (-lowerRes[i] + upperRes[i] + diag[i] ) << " dsbmv computed: " << dsbmvRes[i] << endl;
             break;
@@ -85,7 +160,7 @@ int main(int argc, char **argv)
     }
     cout << endl;
     cout << "checking DGBMV: " << endl;
-    for(int i=1; i<dgbmvRes.size(); i++){
+    for(int i=0; i<dgbmvRes.size(); i++){
         if(abs( (lowerRes[i] + upperRes[i] + diag[i] )- dgbmvRes[i]) > 0.1) {
             cout << "not equal - index: " << i << " correct result: " <<  (lowerRes[i] + upperRes[i] + diag[i] ) << " dgbmv computed: " << dgbmvRes[i] << endl;
             break;
