@@ -250,7 +250,7 @@ int main(int argc, char **argv)
     ofstream myfile;
     string output;
 
-
+    /*
     if(inner) output = "/home/selin/Split-Data/" + matrix_names[inputType] + "/inner-outer-equal/inner/inner-banded-A2"  + to_string(inputRatio) + ".txt";
     if(!inner) output =  "/home/selin/Split-Data/" + matrix_names[inputType] + "/middle-banded-A"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
     myfile.open(output, ios::out | ios::trunc);
@@ -264,6 +264,7 @@ int main(int argc, char **argv)
     }
     cout << "written A/A_middle." << endl;
     myfile.close();
+     */
 
 
     double* X = new double[n];
@@ -274,14 +275,27 @@ int main(int argc, char **argv)
     double beta = 0;
     int incx = 1;
     int incy = 1;
-    double *B;
 
+    vector<double> copy_banded;
+    for(int i=0; i<size; i++) {
+        for(int j=0; j<lda; j++) {
+            copy_banded.push_back(A[i][j]);
+        }
+    }
+    if(inner) delete [] A;
+    else delete [] A_middle;
+
+    double *B = new double[size*lda];
+    for(int i=0; i<size*lda; i++) B[i] = copy_banded[i];
+
+    /*
     if(inner){
         B = *A;
     }
     else if(!inner){
         B = *A_middle;
     }
+     */
 
     cout << "Call cblas_ssbmv. " << endl ;
     // BE CAREFUL WITH K=LDA CASE WHEN USING MIDDLE = !INNER
@@ -300,6 +314,6 @@ int main(int argc, char **argv)
 
     delete [] X;
     delete [] Y;
-    if(inner) delete [] A;
-    else delete [] A_middle;
+    //if(inner) delete [] A;
+    //else delete [] A_middle;
 }
