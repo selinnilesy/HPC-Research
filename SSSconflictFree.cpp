@@ -77,7 +77,7 @@ int main(int argc, char **argv)
 
     cout << endl;
     cout << "checking DSBMV: " << endl;
-    for(int i=0; i<dsbmvRes.size(); i++){
+    for(int i=1; i<dsbmvRes.size(); i++){
         if(abs( (-lowerRes[i] + upperRes[i] + diag[i] )- dsbmvRes[i]) > 0.1) {
             cout << "not equal - index: " << i << " correct result: " <<  (-lowerRes[i] + upperRes[i] + diag[i] ) << " dsbmv computed: " << dsbmvRes[i] << endl;
             break;
@@ -85,7 +85,7 @@ int main(int argc, char **argv)
     }
     cout << endl;
     cout << "checking DGBMV: " << endl;
-    for(int i=0; i<dgbmvRes.size(); i++){
+    for(int i=1; i<dgbmvRes.size(); i++){
         if(abs( (lowerRes[i] + upperRes[i] + diag[i] )- dgbmvRes[i]) > 0.1) {
             cout << "not equal - index: " << i << " correct result: " <<  (lowerRes[i] + upperRes[i] + diag[i] ) << " dgbmv computed: " << dgbmvRes[i] << endl;
             break;
