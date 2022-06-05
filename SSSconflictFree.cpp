@@ -41,7 +41,7 @@ extern "C" {
 extern void coocsr_(int *nrow, int *nnz, double* a, int* ir,int* jc, double* ao, int* jao, int* iao);
 }
 
-int readCooFormatEqual(int z, double inputRatio, middleRatio, bool reversed) {
+int readCooFormatEqual(int z, double inputRatio, double middleRatio, bool reversed) {
     double tempVal;
     int tempValInt;
     vector<double> tempVec;
