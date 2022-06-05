@@ -250,21 +250,21 @@ int main(int argc, char **argv)
     ofstream myfile;
     string output;
 
-    /*
-    if(inner) output = "/home/selin/Split-Data/" + matrix_names[inputType] + "/inner-outer-equal/inner/inner-banded-A"  + to_string(inputRatio) + ".txt";
+
+    if(inner) output = "/home/selin/Split-Data/" + matrix_names[inputType] + "/inner-outer-equal/inner/inner-banded-A2"  + to_string(inputRatio) + ".txt";
     if(!inner) output =  "/home/selin/Split-Data/" + matrix_names[inputType] + "/middle-banded-A"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
     myfile.open(output, ios::out | ios::trunc);
     cout << "writing A/A_middle ..." << endl;
     for( i=0; i<size_1; i++) {
         for( j=0 ; j<size_2; j++){
-            myfile << A_middle[i][j] << " " ;
+            myfile << A[i][j] << " " ;
         }
         myfile <<  endl;
         myfile <<  endl;
     }
     cout << "written A/A_middle." << endl;
     myfile.close();
-     */
+
 
     double* X = new double[n];
     for(int i=0; i<n; i++) X[i] = 1.0;
