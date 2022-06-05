@@ -67,8 +67,8 @@ int readCSRStorage(int z, double ratio, bool lower) {
     int counter=0;
     // middle read not yet IMPLEMENTED !!!
     // TO DO
-    if(!lower) fileName = "/home/selin/Split-Data/" + matrix_names[z]  + "/inner-outer-equal/inner/CSR-Data/upper";
-    else fileName = "/home/selin/Split-Data/" + matrix_names[z] + "/inner-outer-equal/inner/CSR-Data" ;
+    if(!lower) fileName = "/home/selin/Split-Data/" + matrix_names[z]  + "/inner/CSR-Data/upper";
+    else fileName = "/home/selin/Split-Data/" + matrix_names[z] + "/inner/CSR-Data" ;
 
     rowfile = fileName + "/" + to_string(ratio) + "-row.txt";
     colfile = fileName + "/" + to_string(ratio) + "-col.txt";
@@ -145,8 +145,8 @@ int main(int argc, char **argv)
     ofstream myfile;
     string output;
     if(inner){
-        if(lower) output = "/home/selin/Split-Data/" + matrix_names[inputType]  + "/inner-outer-equal/inner/CSR-Data/" + to_string(inputRatio) + "-result.txt";
-        else if(!lower) output = "/home/selin/Split-Data/" + matrix_names[inputType]  + "/inner-outer-equal/inner/CSR-Data/upper/" + to_string(inputRatio) + "-result.txt";
+        if(lower) output = "/home/selin/Split-Data/" + matrix_names[inputType]  + "/inner/CSR-Data/" + to_string(inputRatio) + "-result.txt";
+        else if(!lower) output = "/home/selin/Split-Data/" + matrix_names[inputType]  + "/inner/CSR-Data/upper/" + to_string(inputRatio) + "-result.txt";
     }
     else{
         if(lower) output = "/home/selin/Split-Data/" + matrix_names[inputType]  + "/middle/CSR-Data/" + to_string(inputRatio) + "-" +to_string(middleRatio) + "-result.txt";
