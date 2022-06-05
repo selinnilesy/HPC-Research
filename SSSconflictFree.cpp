@@ -208,20 +208,20 @@ int main(int argc, char **argv){
     if(inner_equal_middle) {
         if (reversed) {
             myfile1.open(
-                    "/home/selin/Split-Data/" + matrix_names[inputType] + "/inner-outer-equal/inner/CSR-Data/upper/" +
+                    "/home/selin/Split-Data/" + matrix_names[inputType] + "/inner/CSR-Data/upper/" +
                     to_string(inputRatio) + "-row.txt", ios::out | ios::trunc);
             myfile2.open(
-                    "/home/selin/Split-Data/" + matrix_names[inputType] + "/inner-outer-equal/inner/CSR-Data/upper/" +
+                    "/home/selin/Split-Data/" + matrix_names[inputType] + "/inner/CSR-Data/upper/" +
                     to_string(inputRatio) + "-col.txt", ios::out | ios::trunc);
             myfile3.open(
-                    "/home/selin/Split-Data/" + matrix_names[inputType] + "/inner-outer-equal/inner/CSR-Data/upper/" +
+                    "/home/selin/Split-Data/" + matrix_names[inputType] + "/inner/CSR-Data/upper/" +
                     to_string(inputRatio) + "-val.txt", ios::out | ios::trunc);
         } else if (!reversed) {
-            myfile1.open("/home/selin/Split-Data/" + matrix_names[inputType] + "/inner-outer-equal/inner/CSR-Data/" +
+            myfile1.open("/home/selin/Split-Data/" + matrix_names[inputType] + "/inner/CSR-Data/" +
                          to_string(inputRatio) + "-row.txt", ios::out | ios::trunc);
-            myfile2.open("/home/selin/Split-Data/" + matrix_names[inputType] + "/inner-outer-equal/inner/CSR-Data/" +
+            myfile2.open("/home/selin/Split-Data/" + matrix_names[inputType] + "/inner/CSR-Data/" +
                          to_string(inputRatio) + "-col.txt", ios::out | ios::trunc);
-            myfile3.open("/home/selin/Split-Data/" + matrix_names[inputType] + "/inner-outer-equal/inner/CSR-Data/" +
+            myfile3.open("/home/selin/Split-Data/" + matrix_names[inputType] + "/inner/CSR-Data/" +
                          to_string(inputRatio) + "-val.txt", ios::out | ios::trunc);
         }
     }
