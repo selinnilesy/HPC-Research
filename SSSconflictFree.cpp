@@ -41,14 +41,14 @@ extern "C" {
 extern void coocsr_(int *nrow, int *nnz, double* a, int* ir,int* jc, double* ao, int* jao, int* iao);
 }
 
-int readCooFormatEqual(int z, double inputRatio, bool reversed) {
+int readCooFormatEqual(int z, double inputRatio, middleRatio, bool reversed) {
     double tempVal;
     int tempValInt;
     vector<double> tempVec;
     fstream myfile;
-    const fs::path matrixFolder{"/home/selin/Split-Data/" + matrix_names[z] + "/inner-outer-equal/inner"};
+    const fs::path matrixFolder{"/home/selin/Split-Data/" + matrix_names[z] + "/inner"};
     for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
-        if(dir_entry.path().stem() == ("coordinate-"+ to_string(inputRatio)+ "-row")) {
+        if(dir_entry.path().stem() == ("coordinate-"+ to_string(inputRatio)+"-" + to_string(middleRatio) + "-row")) {
             myfile.open(dir_entry.path(), std::ios_base::in);
             vector<int> tempVecInt;
             while (myfile >> tempValInt) {
@@ -60,7 +60,7 @@ int readCooFormatEqual(int z, double inputRatio, bool reversed) {
             cout << dir_entry.path() << " has been read." << endl;
             myfile.close();
         }
-        else if(dir_entry.path().stem() == ("coordinate-"+ to_string(inputRatio)+ "-col")) {
+        else if(dir_entry.path().stem() == ("coordinate-"+ to_string(inputRatio)+"-" + to_string(middleRatio) + "-col")) {
             myfile.open(dir_entry.path(), std::ios_base::in);
             vector<int> tempVecInt;
             while (myfile >> tempValInt) {
@@ -72,7 +72,7 @@ int readCooFormatEqual(int z, double inputRatio, bool reversed) {
             cout << dir_entry.path() << " has been read." << endl;
             myfile.close();
         }
-        else if(dir_entry.path().stem() == ("coordinate-"+ to_string(inputRatio)+ "-val")){
+        else if(dir_entry.path().stem() == ("coordinate-"+ to_string(inputRatio)+ "-" + to_string(middleRatio) + "-val")){
             myfile.open(dir_entry.path(), std::ios_base::in);
             while (myfile >> tempVal) {
                 tempVec.push_back(tempVal);
@@ -180,7 +180,7 @@ int main(int argc, char **argv){
     std::cout  <<  "reversed ?: " << reversed << endl;
     std::cout  <<  "inner_equal_middle ?: " << inner_equal_middle << endl;
     if(!inner_equal_middle) readCooFormatNotEqual(inputType,   inputRatio, middleRatio ,reversed);
-    else if(inner_equal_middle)  readCooFormatEqual(inputType,  inputRatio, reversed);
+    else if(inner_equal_middle)  readCooFormatEqual(inputType,  inputRatio,middleRatio,  reversed);
 
     if(nonzeroSize_row != nonzeroSize_col) std::cout  <<  " nonzeroSize_row and nonzeroSize_col not equal"  << endl;
     if(nonzeroSize_row != nonzeroSize_val) std::cout  <<  " nonzeroSize_row and nonzeroSize_val not equal"  << endl;
