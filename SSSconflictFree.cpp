@@ -190,23 +190,17 @@ int main(int argc, char **argv)
             neededCol = 1;
             diff=col-neededCol;
             A[row*size_2 + ((int)innerBandwith) - row + (diff)] =  -val;
-            //cout << "actual i-j: " << row << "-" << ((int)innerBandwith) - row + (diff) << endl;
             // for dbmv
             rowDiff=  row-diff ;
             A[(row-rowDiff) * size_2 + (lda-1)  -  (((int)innerBandwith) - row + (diff))   ] =  val;
-            //cout << "reflected i-j: " << row-rowDiff << "-" <<(lda-1)  -  (((int)innerBandwith) - row + (diff))  << endl;
             for(x=0; x<row-1; x++){
                 if( inner_rowVec[i + (x+1)]-1 != row) break;
                 val = inner_valVec[i + (x+1)];
                 diff =  (inner_colVec[i + (x+1)]) - neededCol;
                 rowDiff=  row-diff ;
                 A[row* size_2  +  ((int)innerBandwith) - row + (diff)] =  -val;
-                //cout << "actual i-j: " << row << "-" << ((int)innerBandwith) - row + (diff) << endl;
-
                 // for dbmv
                 A[(row-rowDiff)*size_2 + (lda-1)  -  (((int)innerBandwith) - row + (diff))   ] =  val;
-                //cout << "reflected i-j: " << row-rowDiff << "-" <<(lda-1)  -  (((int)innerBandwith) - row + (diff))  << endl;
-
             }
             i+=x;
         }
@@ -293,38 +287,18 @@ int main(int argc, char **argv)
     double beta = 0.0;
     int incx = 1;
     int incy = 1;
-    double *B;
 
-    /*
-    if(inner){
-        B = *A;
-    }
-    else if(!inner){
-        B = *A_middle;
-    }
-     */
 
-    // BE CAREFUL WITH K=LDA CASE WHEN USING MIDDLE = !INNER
-    //cblas_dsbmv(CblasColMajor, CblasUpper, n, k, alpha, B, lda, X, incx, beta, Y, incy);
-    int *n_ptr = new int;
-    *n_ptr=n;
-    int *kl_ptr = new int;
-    int *ku_ptr = new int;
-    *kl_ptr=kl;
-    *ku_ptr=ku;
-    int *lda_ptr = new int;
-    *lda_ptr=lda;
-    int *incx_ptr = new int;
-    int *incy_ptr = new int;
-    *incx_ptr=1;
-    *incy_ptr=1;
     clock_t t;
     cout << "Call cblas_dgbmv... " << endl ;
     t = clock();
-    //for(int i=0; i<1000; i++)
-    cblas_dgbmv(CblasColMajor, CblasNoTrans , *n_ptr, *n_ptr, *kl_ptr, *ku_ptr, alpha, A, *lda_ptr, X, *incx_ptr, beta, Y, *incy_ptr);
+    //for(int i=0; i<0000; i++)
+    //cblas_dsbmv(CblasColMajor, CblasUpper, n, k, alpha, B, lda, X, incx, beta, Y, incy);
+
+    // for dgbmv, A is one dimensional anyway.
+    cblas_dgbmv(CblasColMajor, CblasNoTrans , n, n, kl, ku, alpha, A, lda, X, incx, beta, Y, incy);
     t = clock() - t;
-    printf ("It took me %d clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
+    printf ("It took me %f seconds.\n",((float)t)/CLOCKS_PER_SEC);
 
     if(inner) output = "/home/selin/Outputs/" + matrix_names[inputType] + "/dgbmv-inner-"  + to_string(inputRatio) + ".txt";
     if(!inner) output =  "/home/selin/Outputs/" + matrix_names[inputType] + "/middle-"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
