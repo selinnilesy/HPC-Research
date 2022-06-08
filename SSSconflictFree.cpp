@@ -159,7 +159,7 @@ int main(int argc, char **argv)
     cout << "dgbmvRes: " << dgbmvRes[0] << endl;
 
     cout << endl;
-    cout << "checking DSBMV: " << endl;
+    cout << "checking DSBMV with lower/upper AMUX: " << endl;
     std::cout.precision(10);
     for(int i=0; i<dsbmvRes.size(); i++){
         if(abs( (lowerRes[i] + upperRes[i] + diag[i] )- dsbmvRes[i]) > 0.1 ) {
@@ -167,10 +167,10 @@ int main(int argc, char **argv)
             break;
         }
     }
-    cout << endl;
+    cout << "checking DGBMV with Serial Multiplication: " << endl;
     for(int i=0; i<dsbmvRes.size(); i++){
         if(abs( serialRes[i]+ diag[i]- dsbmvRes[i]) > 0.1 ) {
-            cout << "not equal - index: " << i << " correct result: " <<  serialRes[i]+ diag[i] << " dsbmv computed: " << dsbmvRes[i] << " with difference: " << abs( serialRes[i]- dsbmvRes[i]) << endl;
+            cout << "not equal - index: " << i << " correct result: " <<  serialRes[i]+ diag[i] << " dsbmv computed: " << dsbmvRes[i] << " with difference: " << abs( serialRes[i]+ diag[i]- dsbmvRes[i]) << endl;
             break;
         }
     }
