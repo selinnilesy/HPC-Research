@@ -11,7 +11,67 @@
 
 using namespace std;
 #define MATRIX_COUNT 6
-
+int readInnerSSSFormat(int z) {
+    fs::path matrixFolder;
+    matrixFolder = "/home/selin/SSS-Data/" + matrix_names[z] +"/inner";
+    for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
+        std::fstream myfile(dir_entry.path(), std::ios_base::in);
+        if(dir_entry.path().stem() == "rowptr") {
+            int tempValInt;
+            vector<int> tempVecInt;
+            while (myfile >> tempValInt) {
+                tempVecInt.push_back(tempValInt);
+            }
+            rowptrPtrs.push_back(new int[tempVecInt.size()]);
+            int *temp = rowptrPtrs[0];
+            for(int i=0; i<tempVecInt.size(); i++) temp[i]=tempVecInt[i];
+            rowptrSize.push_back(tempVecInt.size());
+            cout << dir_entry.path() << " has been read with size: " <<tempVecInt.size() << endl;
+            myfile.close();
+        }
+        else if(dir_entry.path().stem() == "colind") {
+            int tempValInt;
+            vector<int> tempVecInt;
+            while (myfile >> tempValInt) {
+                tempVecInt.push_back(tempValInt);
+            }
+            colindPtrs.push_back(new int[tempVecInt.size()]);
+            int *temp = colindPtrs[0];
+            for(int i=0; i<tempVecInt.size(); i++) temp[i]=tempVecInt[i];
+            colindSize.push_back(tempVecInt.size());
+            cout << dir_entry.path() << " has been read with size: " <<  tempVecInt.size() << endl;
+            myfile.close();
+        }
+        else if(dir_entry.path().stem() == "diag"){
+            double tempVal;
+            vector<double> tempVec;
+            while (myfile >> tempVal) {
+                tempVec.push_back(tempVal);
+            }
+            dvaluesPtrs.push_back(new double[tempVec.size()]);
+            double *temp = dvaluesPtrs[0];
+            for(int i=0; i<tempVec.size(); i++) temp[i]=tempVec[i];
+            dvaluesSize.push_back(tempVec.size());
+            cout << dir_entry.path() << " has been read with size: " <<  tempVec.size() << endl;
+            myfile.close();
+        }
+        else if(dir_entry.path().stem() == "vals"){
+            double tempVal;
+            vector<double> tempVec;
+            while (myfile >> tempVal) {
+                tempVec.push_back(tempVal);
+            }
+            valuesPtrs.push_back(new double[tempVec.size()]);
+            double *temp = valuesPtrs[0];
+            for(int i=0; i<tempVec.size(); i++) temp[i]=tempVec[i];
+            valuesSize.push_back(tempVec.size());
+            cout << dir_entry.path() << " has been read with size: " <<  tempVec.size() << endl;
+            myfile.close();
+        }
+        else cout << "unexpected file name: " << dir_entry.path() << endl;
+    }
+    return 0;
+}
 int readSSSFormat(int z, bool banded) {
     fs::path matrixFolder;
     if(!banded) matrixFolder = "/home/selin/SSS-Data/" + matrix_names[z] + "/unbanded" ;
@@ -98,7 +158,8 @@ int main(int argc, char **argv){
     }
     bool banded = atoi(argv[2]);
     bool parallel = atoi(argv[3]);
-    readSSSFormat(atoi(argv[1]) , banded);
+    //readSSSFormat(atoi(argv[1]) , banded);
+    readInnerSSSFormat(atoi(argv[1]));
 
     n = matrixSize[atoi(argv[1])];
     int inputType = atoi(argv[1]);
@@ -135,8 +196,9 @@ int main(int argc, char **argv){
         //}
         t = clock() - t;
         printf ("It took me %f seconds for 1000-times serial run.\n", ((float)t)/CLOCKS_PER_SEC);
-        if(!banded) myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/unbanded/result.txt", ios::out | ios::trunc);
-        else myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/banded/result.txt", ios::out | ios::trunc);
+        //if(!banded) myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/unbanded/result.txt", ios::out | ios::trunc);
+        //else myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/banded/result.txt", ios::out | ios::trunc);
+        myfile1.open ("/home/selin/SSS-Data/" + matrix_names[inputType] + "/inner/serial-result.txt", ios::out | ios::trunc);
     }
     else{
         int threadCount = n/2;
