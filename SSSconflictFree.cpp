@@ -4,6 +4,7 @@
 #include <string.h>
 #include <string>
 #include <cmath>
+#include <time.h>
 #include "header.h"
 
 using namespace std;
@@ -298,9 +299,12 @@ int main(int argc, char **argv)
      */
 
     cout << "Call cblas_ssbmv. " << endl ;
+    clock_t t = clock();
     // BE CAREFUL WITH K=LDA CASE WHEN USING MIDDLE = !INNER
-    //for(int i=0; i<1000; i++)
+    for(int i=0; i<1000; i++)
     cblas_dsbmv(CblasColMajor, CblasUpper, n, k, alpha, B, lda, X, incx, beta, Y, incy);
+    t = clock() -t;
+    cout << "Passed time: " << (double) t/CLOCKS_PER_SEC << endl;
 
     if(inner) output = "/home/selin/Outputs/" + matrix_names[inputType] + "/inner-"  + to_string(inputRatio) + ".txt";
     if(!inner) output =  "/home/selin/Outputs/" + matrix_names[inputType] + "/middle-"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";

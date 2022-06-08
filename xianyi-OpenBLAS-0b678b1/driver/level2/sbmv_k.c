@@ -65,7 +65,7 @@ int CNAME(BLASLONG n, BLASLONG k, FLOAT alpha,
     COPY_K(n, x, incx, X, 1);
   }
 
-    printf("in sbmv_k.c: alpha: %d k: %d\n", alpha, k);
+    //printf("in sbmv_k.c: alpha: %d k: %d\n", alpha, k);
 
   for (i = 0; i < n; i++) {
 
@@ -107,7 +107,7 @@ int CNAME(BLASLONG n, BLASLONG k, FLOAT alpha,
   if (incy != 1) {
     COPY_K(n, Y, 1, y, incy);
   }
-  printf("in sbmv_k.c\n");
+  //printf("in sbmv_k.c\n");
   return 0;
 }
 
