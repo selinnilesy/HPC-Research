@@ -152,6 +152,7 @@ int main(int argc, char **argv)
 
     cout << endl;
     cout << "checking DSBMV: " << endl;
+    std::cout.precision(10);
     for(int i=0; i<dsbmvRes.size(); i++){
         if(abs( (lowerRes[i] + upperRes[i] + diag[i] )- dsbmvRes[i]) > 0.1 ) {
             cout << "not equal - index: " << i << " correct result: " <<  (lowerRes[i] + upperRes[i] + diag[i] ) << " dsbmv computed: " << dsbmvRes[i] << " with difference: " << abs( (lowerRes[i] + upperRes[i] + diag[i] )- dsbmvRes[i]) << endl;
@@ -162,7 +163,7 @@ int main(int argc, char **argv)
     cout << "checking DGBMV: " << endl;
     for(int i=0; i<dgbmvRes.size(); i++){
         if(abs( (lowerRes[i] + upperRes[i] + diag[i] )- dgbmvRes[i]) > 0.1) {
-            cout << "not equal - index: " << i << " correct result: " <<  (lowerRes[i] + upperRes[i] + diag[i] ) << " dgbmv computed: " << dgbmvRes[i] << endl;
+            cout << "not equal - index: " << i << " correct result: " <<  (lowerRes[i] + upperRes[i] + diag[i] ) << " dgbmv computed: " << dgbmvRes[i] << " with difference: " << abs( (lowerRes[i] + upperRes[i] + diag[i] )- dgbmvRes[i]) << endl;
             break;
         }
     }
