@@ -257,8 +257,7 @@ int main(int argc, char **argv)
 
     ofstream myfile;
     string output;
-
-
+    /*
        if(inner) output = "/home/selin/Split-Data/" + matrix_names[inputType] + "/inner/dgbmv-inner-banded-A"  + to_string(inputRatio) + ".txt";
        if(!inner) output =  "/home/selin/Split-Data/" + matrix_names[inputType] + "/middle-banded-A"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
        myfile.open(output, ios::out | ios::trunc);
@@ -272,8 +271,7 @@ int main(int argc, char **argv)
        }
        cout << "written A/A_middle." << endl;
        myfile.close();
-
-
+    */
 
 
     double* X = new double[n];
@@ -305,7 +303,7 @@ int main(int argc, char **argv)
     //cblas_dsbmv(CblasColMajor, CblasUpper, n, k, alpha, B, lda, X, incx, beta, Y, incy);
 
     // for dgbmv, A is already one dimensional anyway.
-    //for(int i=0; i<1000; i++)
+    for(int i=0; i<1000; i++)
     cblas_dgbmv(CblasColMajor, CblasNoTrans , n, n, kl, ku, alpha, B, lda, X, incx, beta, Y, incy);
     t = clock() - t;
     printf ("It took me %f seconds.\n",((float)t)/CLOCKS_PER_SEC);
