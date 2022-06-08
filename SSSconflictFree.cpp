@@ -299,6 +299,7 @@ int main(int argc, char **argv)
 
     cout << "Call cblas_ssbmv. " << endl ;
     // BE CAREFUL WITH K=LDA CASE WHEN USING MIDDLE = !INNER
+    //for(int i=0; i<1000; i++)
     cblas_dsbmv(CblasColMajor, CblasUpper, n, k, alpha, B, lda, X, incx, beta, Y, incy);
 
     if(inner) output = "/home/selin/Outputs/" + matrix_names[inputType] + "/inner-"  + to_string(inputRatio) + ".txt";

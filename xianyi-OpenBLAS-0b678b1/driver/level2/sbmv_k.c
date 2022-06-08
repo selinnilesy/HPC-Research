@@ -82,7 +82,7 @@ int CNAME(BLASLONG n, BLASLONG k, FLOAT alpha,
 	   alpha * X[i],
 	   a + k - length, 1, Y + i - length, 1, NULL, 0);
 
-    Y[i] += alpha * DOTU_K(length, a + k - length, 1, X + i - length, 1);
+    Y[i] -= alpha * DOTU_K(length, a + k - length, 1, X + i - length, 1);
     //printf("lower - in sbmv_k.c: dot y[%d] : %d\n", i,  DOTU_K(length, a + k - length, 1, X + i - length, 1));
 
 
@@ -96,7 +96,7 @@ int CNAME(BLASLONG n, BLASLONG k, FLOAT alpha,
     AXPYU_K(length + 1, 0, 0,
 	   alpha * X[i],
 	   a, 1, Y + i, 1, NULL, 0);
-    Y[i] += alpha * DOTU_K(length, a + 1, 1, X + i + 1, 1);
+    Y[i] -= alpha * DOTU_K(length, a + 1, 1, X + i + 1, 1);
      printf("upper - in sbmv_k.c: y[%d] : %d\n", i,  DOTU_K(length, a + 1, 1, X + i + 1, 1));
 #endif
 
