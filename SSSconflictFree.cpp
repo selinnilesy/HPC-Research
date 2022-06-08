@@ -18,6 +18,7 @@ vector<int> elm_row; // use this to find out row_ptr values
 int *csr_row, *csr_col;
 double *csr_val;
 
+int offd_count_innerbandw;
 
 
 void init(){
@@ -66,7 +67,7 @@ int readCSRFormat(int z, double ratio) {
             }
             csr_col = new int[tempVecInt.size()];
             for(int i=0; i<tempVecInt.size(); i++) csr_col[i]=tempVecInt[i];
-
+            offd_count_innerbandw = tempVecInt.size();
             cout << dir_entry.path() << " has been read." << endl;
         }
         else if(dir_entry.path().stem() == to_string(ratio) +"-val") {
@@ -101,17 +102,19 @@ int main(int argc, char **argv){
 
     std::cout  <<  " starts computing csrsss... " << endl;
 
-    int nnz = nonzerosSize[inputType];
+    int nnz = offd_count_innerbandw;
     int nrow=matrixSize[inputType];
 
-    double *diag = new double[matrixSize[inputType]];
-    int *rowptr = new int[matrixSize[inputType]+1];
+    double *diag = new double[nrow];
+    int *rowptr = new int[nrow+1];
     // strict lower part
-    int *colinds_lower = new int[(nonzerosSize[inputType] - matrixSize[inputType])/2];
-    double *vals_lower = new double[(nonzerosSize[inputType] - matrixSize[inputType])/2];
-    double *vals_upper = new double[(nonzerosSize[inputType] - matrixSize[inputType])/2];
+    int *colinds_lower = new int[nnz];
+    double *vals_lower = new double[nnz];
+    double *vals_upper = new double[nnz];
+
 
     bool sorted = 0;
+    /*
     vector<double> test;
     cout << "test diag" << endl;
     int z_count=0;
@@ -133,6 +136,7 @@ int main(int argc, char **argv){
         test_f << test[i] << '\t';
     }
     test_f.close();
+     */
 
 
     cout << "starts computing csrsss_..." << endl;
@@ -150,17 +154,19 @@ int main(int argc, char **argv){
         myfile1 << rowptr[i] << '\t';
     }
     cout << "Writing to " << "-SSSout_colind.txt"  << endl;
-    for (int i=0; i<(nnz-nrow)/2; i++) {
+    for (int i=0; i<nnz; i++) {
         myfile2 << colinds_lower[i] << '\t';
     }
     cout << "Writing to " << "-SSSout_vals.txt"  << endl;
-    for (int i=0; i<(nnz-nrow)/2; i++){
+    for (int i=0; i<nnz; i++){
         myfile3 << vals_lower[i] << '\t';
     }
+    /*
     cout << "Writing to " << "-SSSout_diag.txt"  << endl;
     for (int i=0; i<nrow; i++){
         myfile4 << diag[i] << '\t';
     }
+     */
     myfile1.close();
     myfile2.close();
     myfile3.close();
