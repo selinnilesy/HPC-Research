@@ -145,8 +145,8 @@ int main(int argc, char **argv)
         //lda = k+1;
         lda =kl+ku+1;
         //size= n+kl;
-        size_1=n+kl;
-        size_2 = lda+1;
+        size_1=n;
+        size_2 = lda;
         A = new double[size_1*size_2];
         /*
         for( i=0; i<size_1; i++) {
@@ -295,7 +295,8 @@ int main(int argc, char **argv)
     //for(int i=0; i<0000; i++)
     //cblas_dsbmv(CblasColMajor, CblasUpper, n, k, alpha, B, lda, X, incx, beta, Y, incy);
 
-    // for dgbmv, A is one dimensional anyway.
+    // for dgbmv, A is already one dimensional anyway.
+    //for(int i=0; i<1000; i++)
     cblas_dgbmv(CblasColMajor, CblasNoTrans , n, n, kl, ku, alpha, A, lda, X, incx, beta, Y, incy);
     t = clock() - t;
     printf ("It took me %f seconds.\n",((float)t)/CLOCKS_PER_SEC);
