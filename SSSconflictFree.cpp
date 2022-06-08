@@ -7,7 +7,7 @@
 
 using namespace std;
 
-vector<double> lowerRes,upperRes, dsbmvRes,diag, dgbmvRes;
+vector<double> lowerRes,upperRes, dsbmvRes,diag, dgbmvRes, serialRes;
 vector<double> inner, inner_outer;
 int nnz;
 
@@ -58,6 +58,14 @@ int readResult(int z, double ratio) {
     }
     myfile.close();
     cout << fileName << " has been read with size: " << diag.size() << endl;
+
+    fileName = "/home/selin/Split-Data/" + matrix_names[z]  + "/inner/CSR-Data/serial-result.txt";
+    myfile.open(fileName, std::ios_base::in);
+    while (myfile >> doubleVal) {
+        serialRes.push_back(doubleVal);
+    }
+    myfile.close();
+    cout << fileName << " has been read with size: " << serialRes.size() << endl;
 
     /*
     fileName = "/home/selin/Split-Data/" + matrix_names[z]  + "/inner/coordinate-" +to_string(ratio) + "-0.300000-col.txt";
@@ -160,6 +168,12 @@ int main(int argc, char **argv)
         }
     }
     cout << endl;
+    for(int i=0; i<dsbmvRes.size(); i++){
+        if(abs( serialRes[i]+ diag[i]- dsbmvRes[i]) > 0.1 ) {
+            cout << "not equal - index: " << i << " correct result: " <<  serialRes[i]+ diag[i] << " dsbmv computed: " << dsbmvRes[i] << " with difference: " << abs( serialRes[i]- dsbmvRes[i]) << endl;
+            break;
+        }
+    }
     cout << "checking DGBMV: " << endl;
     for(int i=0; i<dgbmvRes.size(); i++){
         if(abs( (lowerRes[i] + upperRes[i] + diag[i] )- dgbmvRes[i]) > 0.1) {
