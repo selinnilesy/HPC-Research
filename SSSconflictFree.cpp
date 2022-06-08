@@ -13,7 +13,7 @@ using namespace std;
 #define MATRIX_COUNT 6
 int readInnerSSSFormat(int z) {
     fs::path matrixFolder;
-    matrixFolder = "/home/selin/SSS-Data/" + matrix_names[z] +"/inner";
+    matrixFolder = "/home/selin/Split-Data/" + matrix_names[z] +"/inner/CSR-Data";
     for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
         std::fstream myfile(dir_entry.path(), std::ios_base::in);
         if(dir_entry.path().stem() == "rowptr") {
@@ -198,7 +198,7 @@ int main(int argc, char **argv){
         printf ("It took me %f seconds for 1000-times serial run.\n", ((float)t)/CLOCKS_PER_SEC);
         //if(!banded) myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/unbanded/result.txt", ios::out | ios::trunc);
         //else myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/banded/result.txt", ios::out | ios::trunc);
-        myfile1.open ("/home/selin/SSS-Data/" + matrix_names[inputType] + "/inner/serial-result.txt", ios::out | ios::trunc);
+        myfile1.open ("/home/selin/Split-Data/" + matrix_names[inputType] + "/inner/CSR-Data/serial-result.txt", ios::out | ios::trunc);
     }
     else{
         int threadCount = n/2;
