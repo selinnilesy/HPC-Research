@@ -152,7 +152,7 @@ int main(int argc, char **argv){
         return -1;
     }
     if(!argv[2]){
-        cout << "please provide bool for banded" << endl;
+        cout << "please provide middle bandwith ratio" << endl;
         return -1;
     }
     if(!argv[3]){
@@ -198,11 +198,12 @@ int main(int argc, char **argv){
                 val=0.0;
                 row_i = rowptr_csr[i] - 1;
                 row_e = rowptr_csr[i+1] - 1;
-                row_e = rowptr_csr[i+1] - 1;
+                //val += matrixDiagonal[i] * x[i];
                 for (int j =row_i; j < row_e; j++) {
                     colInd = matrixColind[j] - 1;
                     val += matrixOffDiagonal[j] * x[colInd];
-                    y[colInd] += matrixOffDiagonal[j] * x[i];
+                    // lower is negative
+                    y[colInd] -= matrixOffDiagonal[j] * x[i];
                 }
                 y[i] += val;
             }
