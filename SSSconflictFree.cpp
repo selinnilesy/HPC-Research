@@ -187,27 +187,27 @@ int main(int argc, char **argv)
         if(row <= innerBandwith){
             neededCol = 1;
             diff=col-neededCol;
-            A[row][((int)innerBandwith) - row + (diff)] =  -val;
+            A[row][((int)innerBandwith) - row + (diff)] =  val;
             // for dbmv
             rowDiff=  row-diff ;
-            A[row-rowDiff][ (lda-1)  -  (((int)innerBandwith) - row + (diff))   ] =  val;
+            A[row-rowDiff][ (lda-1)  -  (((int)innerBandwith) - row + (diff))   ] =  -val;
             for(x=0; x<row-1; x++){
                 if( inner_rowVec[i + (x+1)]-1 != row) break;
                 val = inner_valVec[i + (x+1)];
                 diff =  (inner_colVec[i + (x+1)]) - neededCol;
                 rowDiff=  row-diff ;
-                A[row][((int)innerBandwith) - row + (diff)] =  -val;
+                A[row][((int)innerBandwith) - row + (diff)] =  val;
                 // for dbmv
-                A[row-rowDiff][(lda-1)  -  (((int)innerBandwith) - row + (diff))   ] =  val;
+                A[row-rowDiff][(lda-1)  -  (((int)innerBandwith) - row + (diff))   ] =  -val;
             }
             i+=x;
         }
         else{
             neededCol = (row+1) - innerBandwith;
             diff=col-neededCol;
-            A[row ][ diff] =  -val;
+            A[row ][ diff] =  val;
             // for dbmv
-            A[(row-((int)innerBandwith-diff))][ (lda-1)  - diff] =  val;
+            A[(row-((int)innerBandwith-diff))][ (lda-1)  - diff] =  -val;
         }
     }
     cout << "writing also diag onto inner-A..." << endl;
@@ -257,7 +257,7 @@ int main(int argc, char **argv)
 
     ofstream myfile;
     string output;
-    /*
+
 
        if(inner) output = "/home/selin/Split-Data/" + matrix_names[inputType] + "/inner/dgbmv-inner-banded-A"  + to_string(inputRatio) + ".txt";
        if(!inner) output =  "/home/selin/Split-Data/" + matrix_names[inputType] + "/middle-banded-A"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
@@ -265,14 +265,14 @@ int main(int argc, char **argv)
        cout << "writing A/A_middle ..." << endl;
        for( i=0; i<size_1; i++) {
            for( j=0 ; j<size_2; j++){
-               myfile << A[i*size_2 + j] << " " ;
+               myfile << A[i][ j] << " " ;
            }
            myfile <<  endl;
            myfile <<  endl;
        }
        cout << "written A/A_middle." << endl;
        myfile.close();
-       */
+
 
 
 
