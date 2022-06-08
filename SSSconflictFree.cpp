@@ -9,9 +9,12 @@
 //#include "rcmtest.cpp"
 //#include "geeks.cpp"
 
+int offd_size_inner_rowptr, offd_size_inner_col, offd_size_inner_val;
+vector<int> rowptr_csr;
+
 using namespace std;
 #define MATRIX_COUNT 6
-int readInnerSSSFormat(int z) {
+int readInnerSSSFormat(int z, double ratio) {
     fs::path matrixFolder;
     matrixFolder = "/home/selin/Split-Data/" + matrix_names[z] +"/inner/CSR-Data";
     for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
@@ -26,7 +29,17 @@ int readInnerSSSFormat(int z) {
             int *temp = rowptrPtrs[0];
             for(int i=0; i<tempVecInt.size(); i++) temp[i]=tempVecInt[i];
             rowptrSize.push_back(tempVecInt.size());
+
+            offd_size_inner_rowptr = tempVecInt.size();
             cout << dir_entry.path() << " has been read with size: " <<tempVecInt.size() << endl;
+            myfile.close();
+        }
+        else if(dir_entry.path().stem() == to_string(ratio) + "-row") {
+            int tempValInt;
+            while (myfile >> tempValInt) {
+                rowptr_csr.push_back(tempValInt);
+            }
+            cout << dir_entry.path() << " has been read with size: " <<rowptr_csr.size() << endl;
             myfile.close();
         }
         else if(dir_entry.path().stem() == "colind") {
@@ -39,22 +52,11 @@ int readInnerSSSFormat(int z) {
             int *temp = colindPtrs[0];
             for(int i=0; i<tempVecInt.size(); i++) temp[i]=tempVecInt[i];
             colindSize.push_back(tempVecInt.size());
+            offd_size_inner_col = tempVecInt.size();
             cout << dir_entry.path() << " has been read with size: " <<  tempVecInt.size() << endl;
             myfile.close();
         }
-        else if(dir_entry.path().stem() == "diag"){
-            double tempVal;
-            vector<double> tempVec;
-            while (myfile >> tempVal) {
-                tempVec.push_back(tempVal);
-            }
-            dvaluesPtrs.push_back(new double[tempVec.size()]);
-            double *temp = dvaluesPtrs[0];
-            for(int i=0; i<tempVec.size(); i++) temp[i]=tempVec[i];
-            dvaluesSize.push_back(tempVec.size());
-            cout << dir_entry.path() << " has been read with size: " <<  tempVec.size() << endl;
-            myfile.close();
-        }
+
         else if(dir_entry.path().stem() == "vals"){
             double tempVal;
             vector<double> tempVec;
@@ -65,6 +67,7 @@ int readInnerSSSFormat(int z) {
             double *temp = valuesPtrs[0];
             for(int i=0; i<tempVec.size(); i++) temp[i]=tempVec[i];
             valuesSize.push_back(tempVec.size());
+            offd_size_inner_val = tempVec.size();
             cout << dir_entry.path() << " has been read with size: " <<  tempVec.size() << endl;
             myfile.close();
         }
@@ -153,20 +156,27 @@ int main(int argc, char **argv){
         return -1;
     }
     if(!argv[3]){
+        cout << "please provide bool for banded" << endl;
+        return -1;
+    }
+    if(!argv[4]){
         cout << "please state if its openmp or serial" << endl;
         return -1;
     }
-    bool banded = atoi(argv[2]);
-    bool parallel = atoi(argv[3]);
-    //readSSSFormat(atoi(argv[1]) , banded);
-    readInnerSSSFormat(atoi(argv[1]));
-
+    bool banded = atoi(argv[3]);
+    bool parallel = atoi(argv[4]);
     n = matrixSize[atoi(argv[1])];
     int inputType = atoi(argv[1]);
 
+    //readSSSFormat(atoi(argv[1]) , banded);
+    readInnerSSSFormat(atoi(argv[1]), atof(argv[2]) );
+
+    if(offd_size_inner_rowptr != n+1 ) cout << "error-rowptr." << endl;
+    if(offd_size_inner_col != offd_size_inner_val) cout << "error-offd count." << endl;
+    if(offd_size_inner_rowptr != rowptr_csr.size()) cout << "error-rowptr_csr count: " << rowptr_csr.size() << " " << offd_size_inner_rowptr << endl;
+    //for()
 
     double *matrixOffDiagonal = valuesPtrs[0];
-    double *matrixDiagonal = dvaluesPtrs[0];
     int *matrixColind = colindPtrs[0];
     int *matrixRowptr= rowptrPtrs[0];
     double *x = new double[n];
@@ -174,6 +184,9 @@ int main(int argc, char **argv){
     for(int i=0; i<n; i++) x[i] = 1.0;
     for(int i=0; i<n; i++) y[i] = 0.0;
     ofstream myfile1;
+    cout << "checking...";
+    cout << matrixRowptr[offd_size_inner_rowptr-2] << " " << rowptr_csr[rowptr_csr.size()-1] << "checks ok" << endl;
+
 
     int colInd;
     if(!parallel){
@@ -183,9 +196,9 @@ int main(int argc, char **argv){
        // for (int run = 0; run < 1000; run++) {
             for (int i = 0; i < n; i++) {
                 val=0.0;
-                row_i = matrixRowptr[i] - 1;
-                row_e = matrixRowptr[i+1] - 1;
-                val += matrixDiagonal[i] * x[i];
+                row_i = rowptr_csr[i] - 1;
+                row_e = rowptr_csr[i+1] - 1;
+                row_e = rowptr_csr[i+1] - 1;
                 for (int j =row_i; j < row_e; j++) {
                     colInd = matrixColind[j] - 1;
                     val += matrixOffDiagonal[j] * x[colInd];
@@ -212,7 +225,7 @@ int main(int argc, char **argv){
                 val = 0.0;
                 row_i = matrixRowptr[i] - 1;
                 row_e = matrixRowptr[i + 1] - 1;
-                val += matrixDiagonal[i] * x[i];
+                //val += matrixDiagonal[i] * x[i];
                 for (int j = row_i; j < row_e; j++) {
                     colInd = matrixColind[j] - 1;
                     // lower part is going to be negated for DKEW SYMMETRIC.
@@ -244,6 +257,5 @@ int main(int argc, char **argv){
     delete [] matrixRowptr;
     delete [] matrixColind;
     delete [] matrixOffDiagonal;
-    delete [] matrixDiagonal;
     return 0;
 }
