@@ -315,6 +315,6 @@ int main(int argc, char **argv)
 
     delete [] X;
     delete [] Y;
-    //if(inner) delete [] A;
-    //else delete [] A_middle;
+    if(inner) delete [] B;
+    else delete [] A_middle;
 }
