@@ -134,7 +134,7 @@ int main(int argc, char **argv)
     int size= n;
     int size_1,size_2;
     int k,lda;
-    double* A, **A_middle;
+    double** A, **A_middle;
     int row, col, diff, neededCol, x;
     double val;
     int kl, ku;
@@ -147,15 +147,13 @@ int main(int argc, char **argv)
         //size= n+kl;
         size_1=n;
         size_2 = lda;
-        A = new double[size_1*size_2];
-        /*
+        A = new double*[size_1];
         for( i=0; i<size_1; i++) {
             A[i]  = new double[size_2];
         }
-         */
         for( i=0; i<size_1; i++) {
             for( j=0; j<size_2; j++) {
-                A[i*size_2 + j]  = 0.0;
+                A[i][j]  = 0.0;
             }
         }
     }
@@ -189,32 +187,32 @@ int main(int argc, char **argv)
         if(row <= innerBandwith){
             neededCol = 1;
             diff=col-neededCol;
-            A[row*size_2 + ((int)innerBandwith) - row + (diff)] =  -val;
+            A[row][((int)innerBandwith) - row + (diff)] =  -val;
             // for dbmv
             rowDiff=  row-diff ;
-            A[(row-rowDiff) * size_2 + (lda-1)  -  (((int)innerBandwith) - row + (diff))   ] =  val;
+            A[row-rowDiff][ (lda-1)  -  (((int)innerBandwith) - row + (diff))   ] =  val;
             for(x=0; x<row-1; x++){
                 if( inner_rowVec[i + (x+1)]-1 != row) break;
                 val = inner_valVec[i + (x+1)];
                 diff =  (inner_colVec[i + (x+1)]) - neededCol;
                 rowDiff=  row-diff ;
-                A[row* size_2  +  ((int)innerBandwith) - row + (diff)] =  -val;
+                A[row][((int)innerBandwith) - row + (diff)] =  -val;
                 // for dbmv
-                A[(row-rowDiff)*size_2 + (lda-1)  -  (((int)innerBandwith) - row + (diff))   ] =  val;
+                A[row-rowDiff][(lda-1)  -  (((int)innerBandwith) - row + (diff))   ] =  val;
             }
             i+=x;
         }
         else{
             neededCol = (row+1) - innerBandwith;
             diff=col-neededCol;
-            A[row * size_2 + diff] =  -val;
+            A[row ][ diff] =  -val;
             // for dbmv
-            A[(row-((int)innerBandwith-diff)) * size_2 + (lda-1)  - diff] =  val;
+            A[(row-((int)innerBandwith-diff))][ (lda-1)  - diff] =  val;
         }
     }
     cout << "writing also diag onto inner-A..." << endl;
     for(i=0; i<inner_diagVec.size(); i++){
-        A[i*size_2 + (int) innerBandwith] = inner_diagVec[i];
+        A[i][ (int) innerBandwith] = inner_diagVec[i];
     }
     cout << "completed band storage." << endl;
 
@@ -288,6 +286,17 @@ int main(int argc, char **argv)
     int incx = 1;
     int incy = 1;
 
+    vector<double> copy_banded;
+    for(int i=0; i<size; i++) {
+        for(int j=0; j<lda; j++) {
+            copy_banded.push_back(A[i][j]);
+        }
+    }
+    if(inner) delete [] A;
+    else delete [] A_middle;
+
+    double *B = new double[size*lda];
+    for(int i=0; i<size*lda; i++) B[i] = copy_banded[i];
 
     clock_t t;
     cout << "Call cblas_dgbmv... " << endl ;
@@ -297,7 +306,7 @@ int main(int argc, char **argv)
 
     // for dgbmv, A is already one dimensional anyway.
     //for(int i=0; i<1000; i++)
-    cblas_dgbmv(CblasColMajor, CblasNoTrans , n, n, kl, ku, alpha, A, lda, X, incx, beta, Y, incy);
+    cblas_dgbmv(CblasColMajor, CblasNoTrans , n, n, kl, ku, alpha, B, lda, X, incx, beta, Y, incy);
     t = clock() - t;
     printf ("It took me %f seconds.\n",((float)t)/CLOCKS_PER_SEC);
 
@@ -323,6 +332,6 @@ int main(int argc, char **argv)
         cout << "deleted Y." << endl;
     }
 
-    if(inner) delete [] A;
+    if(inner) delete [] B;
     else delete [] A_middle;
 }
