@@ -5,7 +5,10 @@
 #include <string>
 #include <cmath>
 #include "header.h"
+#include <iomanip>
 #include <time.h>
+#include <limits>
+typedef std::numeric_limits< double > dbl;
 
 using namespace std;
 vector<int> inner_colVec;
@@ -303,7 +306,7 @@ int main(int argc, char **argv)
     //cblas_dsbmv(CblasColMajor, CblasUpper, n, k, alpha, B, lda, X, incx, beta, Y, incy);
 
     // for dgbmv, A is already one dimensional anyway.
-    for(int i=0; i<10000; i++)
+    //for(int i=0; i<10000; i++)
     cblas_dgbmv(CblasColMajor, CblasNoTrans , n, n, kl, ku, alpha, B, lda, X, incx, beta, Y, incy);
     t = clock() - t;
     printf ("It took me %f seconds.\n",((float)t)/CLOCKS_PER_SEC);
@@ -312,9 +315,10 @@ int main(int argc, char **argv)
     if(!inner) output =  "/home/selin/Outputs/" + matrix_names[inputType] + "/middle-"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
     myfile.open(output, ios::out | ios::trunc);
 
+
     cout << "Writing Y: " << endl;
     for( i=0; i<n; i++) {
-        myfile << Y[i] << " " ;
+        myfile << std::fixed << std::setprecision(dbl::max_digits10) << Y[i] << " " ;
     }
     myfile.close();
     cout << "Output completed." << output << endl;
