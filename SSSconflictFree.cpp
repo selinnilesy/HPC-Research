@@ -162,16 +162,16 @@ int main(int argc, char **argv){
         cout << "please provide middle bandwith" << endl;
         return -1;
     }
-    if(!argv[5]){
+    if(!argv[4]){
         cout << "please provide a boolean for reversed (process only upper corresponding elements)" << endl;
         return -1;
     }
-    if(!argv[4]){
+    if(!argv[5]){
         cout << "please provide a boolean for inner-equal (1) or middle (0) directories" << endl;
         return -1;
     }
-    bool reversed = atoi(argv[5]);
-    bool inner_equal_middle = atoi(argv[4]);
+    bool reversed = atoi(argv[4]);
+    bool inner_equal_middle = atoi(argv[5]);
     double middleRatio = atof(argv[3]);
     n = matrixSize[atoi(argv[1])];
     int inputType = atoi(argv[1]);
