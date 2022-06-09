@@ -301,7 +301,7 @@ int main(int argc, char **argv)
     cout << "Call cblas_ssbmv. " << endl ;
     clock_t t = clock();
     // BE CAREFUL WITH K=LDA CASE WHEN USING MIDDLE = !INNER
-    for(int i=0; i<1000; i++)
+    for(int i=0; i<10000; i++)
     cblas_dsbmv(CblasColMajor, CblasUpper, n, k, alpha, B, lda, X, incx, beta, Y, incy);
     t = clock() -t;
     cout << "Passed time: " << (double) t/CLOCKS_PER_SEC << endl;
