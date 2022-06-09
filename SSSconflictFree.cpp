@@ -5,7 +5,10 @@
 #include <string>
 #include <cmath>
 #include <time.h>
+#include <limits>
+#include <iomanip>
 #include "header.h"
+typedef std::numeric_limits< double > dbl;
 
 using namespace std;
 vector<int> inner_colVec;
@@ -301,7 +304,7 @@ int main(int argc, char **argv)
     cout << "Call cblas_ssbmv. " << endl ;
     clock_t t = clock();
     // BE CAREFUL WITH K=LDA CASE WHEN USING MIDDLE = !INNER
-    for(int i=0; i<10000; i++)
+    //for(int i=0; i<10000; i++)
     cblas_dsbmv(CblasColMajor, CblasUpper, n, k, alpha, B, lda, X, incx, beta, Y, incy);
     t = clock() -t;
     cout << "Passed time: " << (double) t/CLOCKS_PER_SEC << endl;
@@ -310,9 +313,10 @@ int main(int argc, char **argv)
     if(!inner) output =  "/home/selin/Outputs/" + matrix_names[inputType] + "/middle-"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";
     myfile.open(output, ios::out | ios::trunc);
 
+    //cout.precision(dbl::max_digits10);
     cout << "Writing Y: " << endl;
     for( i=0; i<n; i++) {
-        myfile << Y[i] << " " ;
+        myfile << std::fixed << std::setprecision(dbl::max_digits10) << Y[i] << " " ;
     }
     myfile.close();
     cout << "Output completed." << output << endl;
