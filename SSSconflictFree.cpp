@@ -4,10 +4,14 @@
 
 #include <iostream>
 #include <omp.h>
+#include <limits>
+#include <iomanip>
 #include  "header.h"
 //#include <mpi.h>
 //#include "rcmtest.cpp"
 //#include "geeks.cpp"
+
+typedef std::numeric_limits< double > dbl;
 
 int offd_size_inner_rowptr, offd_size_inner_col, offd_size_inner_val;
 vector<int> rowptr_csr;
@@ -248,7 +252,7 @@ int main(int argc, char **argv){
 
     cout << "Writing to output... " << endl;
     for (int i=0; i<n; i++) {
-        myfile1 << y[i] << '\t';
+        myfile1 << std::fixed << std::setprecision(dbl::max_digits10) << y[i] << '\t';
     }
     myfile1.close();
     cout << "Completed output... " << endl;
