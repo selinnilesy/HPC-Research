@@ -303,7 +303,7 @@ int main(int argc, char **argv)
     //cblas_dsbmv(CblasColMajor, CblasUpper, n, k, alpha, B, lda, X, incx, beta, Y, incy);
 
     // for dgbmv, A is already one dimensional anyway.
-    for(int i=0; i<1000; i++)
+    for(int i=0; i<10000; i++)
     cblas_dgbmv(CblasColMajor, CblasNoTrans , n, n, kl, ku, alpha, B, lda, X, incx, beta, Y, incy);
     t = clock() - t;
     printf ("It took me %f seconds.\n",((float)t)/CLOCKS_PER_SEC);
