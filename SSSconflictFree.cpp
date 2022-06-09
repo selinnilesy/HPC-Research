@@ -3,9 +3,12 @@
 #include <string.h>
 #include <string>
 #include <cmath>
+#include <limits>
+#include <iomanip>
 #include "header.h"
 
 using namespace std;
+typedef std::numeric_limits< double > dbl;
 
 vector<double> val;
 vector<int> row,col;
@@ -157,7 +160,7 @@ int main(int argc, char **argv)
 
     cout << "Writing result: " << endl;
     for(int i=0; i<nrow; i++) {
-        myfile << Y[i] << " " ;
+        myfile << std::fixed << std::setprecision(dbl::max_digits10) << Y[i] << " " ;
     }
     myfile.close();
     cout << "Output completed." << endl;
