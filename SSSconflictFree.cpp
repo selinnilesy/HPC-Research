@@ -3,10 +3,13 @@
 #include <string.h>
 #include <string>
 #include <cmath>
+#include <limits>
+#include <iomanip>
 #include "header.h"
 
 using namespace std;
 
+typedef std::numeric_limits< double > dbl;
 vector<double> lowerRes,upperRes, dsbmvRes,diag, dgbmvRes, serialRes;
 vector<double> inner, inner_outer;
 int nnz;
@@ -151,27 +154,28 @@ int main(int argc, char **argv)
     double inputRatio = atof(argv[2]);
     cout << "input ratio: " << inputRatio << endl;
 
+    //std::cout.precision(dbl::max_digits10);
+
     readResult(inputType, inputRatio);
 
     cout << endl;
     cout << "-----------checking DSBMV by lower/upper AMUX: " << endl;
-    std::cout.precision(10);
     for(int i=0; i<dsbmvRes.size(); i++){
-        if(abs( (lowerRes[i] + upperRes[i] + diag[i] )- dsbmvRes[i]) > 0.1 ) {
+        if(abs( (lowerRes[i] + upperRes[i] + diag[i] )- dsbmvRes[i]) > 0.0001 ) {
             cout << "not equal - index: " << i << " correct result: " <<  (lowerRes[i] + upperRes[i] + diag[i] ) << " dsbmv computed: " << dsbmvRes[i] << " with difference: " << abs( (lowerRes[i] + upperRes[i] + diag[i] )- dsbmvRes[i]) << endl;
-            break;
+
         }
     }
     cout << "-----------checking DSBMV by Serial Multiplication: " << endl;
     for(int i=0; i<dsbmvRes.size(); i++){
-        if(abs( serialRes[i]+ diag[i]- dsbmvRes[i]) > 0.1 ) {
+        if(abs( serialRes[i]+ diag[i]- dsbmvRes[i]) > 0.0001 ) {
             cout << "not equal - index: " << i << " correct result: " <<  serialRes[i]+ diag[i] << " dsbmv computed: " << dsbmvRes[i] << " with difference: " << abs( serialRes[i]+ diag[i]- dsbmvRes[i]) << endl;
-            break;
+
         }
     }
     cout << "-----------checking DGBMV: " << endl;
     for(int i=0; i<dgbmvRes.size(); i++){
-        if(abs( (lowerRes[i] + upperRes[i] + diag[i] )- dgbmvRes[i]) > 0.1) {
+        if(abs( (lowerRes[i] + upperRes[i] + diag[i] )- dgbmvRes[i]) > 0.0001) {
             cout << "not equal - index: " << i << " correct result: " <<  (lowerRes[i] + upperRes[i] + diag[i] ) << " dgbmv computed: " << dgbmvRes[i] << " with difference: " << abs( (lowerRes[i] + upperRes[i] + diag[i] )- dgbmvRes[i]) << endl;
             break;
         }
