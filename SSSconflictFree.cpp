@@ -4,81 +4,18 @@
 
 #include <iostream>
 #include <omp.h>
+#include  "header.h"
 #include <limits>
 #include <iomanip>
-#include  "header.h"
 //#include <mpi.h>
 //#include "rcmtest.cpp"
 //#include "geeks.cpp"
 
-typedef std::numeric_limits< double > dbl;
-
-int offd_size_inner_rowptr, offd_size_inner_col, offd_size_inner_val;
-vector<int> rowptr_csr;
-
 using namespace std;
 #define MATRIX_COUNT 6
-int readInnerSSSFormat(int z, double ratio) {
-    fs::path matrixFolder;
-    matrixFolder = "/home/selin/Split-Data/" + matrix_names[z] +"/inner/CSR-Data";
-    for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
-        std::fstream myfile(dir_entry.path(), std::ios_base::in);
-        if(dir_entry.path().stem() == "rowptr") {
-            int tempValInt;
-            vector<int> tempVecInt;
-            while (myfile >> tempValInt) {
-                tempVecInt.push_back(tempValInt);
-            }
-            rowptrPtrs.push_back(new int[tempVecInt.size()]);
-            int *temp = rowptrPtrs[0];
-            for(int i=0; i<tempVecInt.size(); i++) temp[i]=tempVecInt[i];
-            rowptrSize.push_back(tempVecInt.size());
 
-            offd_size_inner_rowptr = tempVecInt.size();
-            cout << dir_entry.path() << " has been read with size: " <<tempVecInt.size() << endl;
-            myfile.close();
-        }
-        else if(dir_entry.path().stem() == to_string(ratio) + "-row") {
-            int tempValInt;
-            while (myfile >> tempValInt) {
-                rowptr_csr.push_back(tempValInt);
-            }
-            cout << dir_entry.path() << " has been read with size: " <<rowptr_csr.size() << endl;
-            myfile.close();
-        }
-        else if(dir_entry.path().stem() == "colind") {
-            int tempValInt;
-            vector<int> tempVecInt;
-            while (myfile >> tempValInt) {
-                tempVecInt.push_back(tempValInt);
-            }
-            colindPtrs.push_back(new int[tempVecInt.size()]);
-            int *temp = colindPtrs[0];
-            for(int i=0; i<tempVecInt.size(); i++) temp[i]=tempVecInt[i];
-            colindSize.push_back(tempVecInt.size());
-            offd_size_inner_col = tempVecInt.size();
-            cout << dir_entry.path() << " has been read with size: " <<  tempVecInt.size() << endl;
-            myfile.close();
-        }
+typedef std::numeric_limits< double > dbl;
 
-        else if(dir_entry.path().stem() == "vals"){
-            double tempVal;
-            vector<double> tempVec;
-            while (myfile >> tempVal) {
-                tempVec.push_back(tempVal);
-            }
-            valuesPtrs.push_back(new double[tempVec.size()]);
-            double *temp = valuesPtrs[0];
-            for(int i=0; i<tempVec.size(); i++) temp[i]=tempVec[i];
-            valuesSize.push_back(tempVec.size());
-            offd_size_inner_val = tempVec.size();
-            cout << dir_entry.path() << " has been read with size: " <<  tempVec.size() << endl;
-            myfile.close();
-        }
-        else cout << "unexpected file name: " << dir_entry.path() << endl;
-    }
-    return 0;
-}
 int readSSSFormat(int z, bool banded) {
     fs::path matrixFolder;
     if(!banded) matrixFolder = "/home/selin/SSS-Data/" + matrix_names[z] + "/unbanded" ;
@@ -156,31 +93,23 @@ int main(int argc, char **argv){
         return -1;
     }
     if(!argv[2]){
-        cout << "please provide middle bandwith ratio" << endl;
-        return -1;
-    }
-    if(!argv[3]){
         cout << "please provide bool for banded" << endl;
         return -1;
     }
-    if(!argv[4]){
+    if(!argv[3]){
         cout << "please state if its openmp or serial" << endl;
         return -1;
     }
-    bool banded = atoi(argv[3]);
-    bool parallel = atoi(argv[4]);
+    bool banded = atoi(argv[2]);
+    bool parallel = atoi(argv[3]);
+    readSSSFormat(atoi(argv[1]) , banded);
+
     n = matrixSize[atoi(argv[1])];
     int inputType = atoi(argv[1]);
 
-    //readSSSFormat(atoi(argv[1]) , banded);
-    readInnerSSSFormat(atoi(argv[1]), atof(argv[2]) );
-
-    if(offd_size_inner_rowptr != n+1 ) cout << "error-rowptr." << endl;
-    if(offd_size_inner_col != offd_size_inner_val) cout << "error-offd count." << endl;
-    if(offd_size_inner_rowptr != rowptr_csr.size()) cout << "error-rowptr_csr count: " << rowptr_csr.size() << " " << offd_size_inner_rowptr << endl;
-    //for()
 
     double *matrixOffDiagonal = valuesPtrs[0];
+    double *matrixDiagonal = dvaluesPtrs[0];
     int *matrixColind = colindPtrs[0];
     int *matrixRowptr= rowptrPtrs[0];
     double *x = new double[n];
@@ -188,79 +117,81 @@ int main(int argc, char **argv){
     for(int i=0; i<n; i++) x[i] = 1.0;
     for(int i=0; i<n; i++) y[i] = 0.0;
     ofstream myfile1;
-    cout << "checking...";
-    cout << matrixRowptr[offd_size_inner_rowptr-2] << " " << rowptr_csr[rowptr_csr.size()-1] << "checks ok" << endl;
-
 
     int colInd;
     if(!parallel){
         cout << "start computing serial SSS mv..." << endl;
         clock_t t = clock();
         double row_i,row_e, val;
-       // for (int run = 0; run < 1000; run++) {
-            for (int i = 0; i < n; i++) {
-                val=0.0;
-                row_i = rowptr_csr[i] - 1;
-                row_e = rowptr_csr[i+1] - 1;
-                //val += matrixDiagonal[i] * x[i];
-                for (int j =row_i; j < row_e; j++) {
-                    colInd = matrixColind[j] - 1;
-                    val += matrixOffDiagonal[j] * x[colInd];
-                    // lower is negative
-                    y[colInd] -= matrixOffDiagonal[j] * x[i];
-                }
-                y[i] += val;
+        //for (int run = 0; run < 1000; run++) {
+        for (int i = 0; i < n; i++) {
+            val=0.0;
+            row_i = matrixRowptr[i] - 1;
+            row_e = matrixRowptr[i+1] - 1;
+            val += matrixDiagonal[i] * x[i];
+            for (int j =row_i; j < row_e; j++) {
+                colInd = matrixColind[j] - 1;
+                val -= matrixOffDiagonal[j] * x[colInd];
+                y[colInd] += matrixOffDiagonal[j] * x[i];
             }
+            y[i] += val;
+        }
         //}
         t = clock() - t;
         printf ("It took me %f seconds for 1000-times serial run.\n", ((float)t)/CLOCKS_PER_SEC);
-        //if(!banded) myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/unbanded/result.txt", ios::out | ios::trunc);
-        //else myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/banded/result.txt", ios::out | ios::trunc);
-        myfile1.open ("/home/selin/Split-Data/" + matrix_names[inputType] + "/inner/CSR-Data/serial-result.txt", ios::out | ios::trunc);
+        if(!banded) myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/unbanded/result.txt", ios::out | ios::trunc);
+        else myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/banded/result.txt", ios::out | ios::trunc);
     }
     else{
-        int threadCount = n/2;
+        int threadCount = 128;
         cout << "start computing parallel SSS mv..." << endl;
         double itime, ftime, val, row_i,row_e;
-        itime = omp_get_wtime();
-        for (int run = 0; run < 1000; run++) {
-            #pragma omp parallel for private(val, colInd, row_i, row_e)
-            #pragma omp set_num_threads(threadCounts)
-            for (int i = 0; i < n; i++) {
-                val = 0.0;
-                row_i = matrixRowptr[i] - 1;
-                row_e = matrixRowptr[i + 1] - 1;
-                //val += matrixDiagonal[i] * x[i];
-                for (int j = row_i; j < row_e; j++) {
-                    colInd = matrixColind[j] - 1;
-                    // lower part is going to be negated for DKEW SYMMETRIC.
-                    val -= matrixOffDiagonal[j] * x[colInd];
-                    // upper part's sign will be kept
-                    #pragma omp atomic update
-                    y[colInd] += matrixOffDiagonal[j] * x[i];
+
+        //for (int tx = 0; tx < 7; tx++) {
+            //threadCount *= 2;
+            cout << "Threads: " << threadCount << endl;
+            itime = omp_get_wtime();
+            //for (int run = 0; run < 1000; run++) {
+                #pragma omp parallel for private(val, colInd, row_i, row_e)
+                #pragma omp set_num_threads(threadCount)
+                for (int i = 0; i < n; i++) {
+                    val = 0.0;
+                    row_i = matrixRowptr[i] - 1;
+                    row_e = matrixRowptr[i + 1] - 1;
+                    val += matrixDiagonal[i] * x[i];
+                    for (int j = row_i; j < row_e; j++) {
+                        colInd = matrixColind[j] - 1;
+                        // lower part is going to be negated for DKEW SYMMETRIC.
+                        val -= matrixOffDiagonal[j] * x[colInd];
+                        // upper part's sign will be kept
+                        #pragma omp atomic update
+                        y[colInd] += matrixOffDiagonal[j] * x[i];
+                    }
+#pragma omp atomic update
+                    y[i] += val;
                 }
-                #pragma omp atomic update
-                y[i] += val;
-            }
-        }
-        ftime = omp_get_wtime();
-        printf ("It took me %f seconds for omp-run.\n", ftime - itime);
+            //}
+            ftime = omp_get_wtime();
+            printf ("It took me %f seconds for 1000-times omp-run.\n", ftime - itime);
+        //}
         if(!banded) myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/unbanded/result_omp.txt", ios::out | ios::trunc);
         else myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/banded/result_omp.txt", ios::out | ios::trunc);
     }
 
-
+    /*
     cout << "Writing to output... " << endl;
     for (int i=0; i<n; i++) {
         myfile1 << std::fixed << std::setprecision(dbl::max_digits10) << y[i] << '\t';
     }
     myfile1.close();
     cout << "Completed output... " << endl;
+     */
 
     delete [] x;
     delete [] y;
     delete [] matrixRowptr;
     delete [] matrixColind;
     delete [] matrixOffDiagonal;
+    delete [] matrixDiagonal;
     return 0;
 }
