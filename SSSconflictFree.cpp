@@ -302,7 +302,7 @@ int main(int argc, char **argv)
     clock_t t;
     cout << "Call cblas_dgbmv... " << endl ;
     t = clock();
-    //for(int i=0; i<0000; i++)
+    //for(int i=0; i<10000; i++)
     //cblas_dsbmv(CblasColMajor, CblasUpper, n, k, alpha, B, lda, X, incx, beta, Y, incy);
 
     // for dgbmv, A is already one dimensional anyway.
