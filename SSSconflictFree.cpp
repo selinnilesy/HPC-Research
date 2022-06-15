@@ -143,22 +143,25 @@ int main(int argc, char **argv){
         else myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/banded/result.txt", ios::out | ios::trunc);
     }
     else{
-        int threadCount = 128;
+        int threadCount = 16, perThread=0;
         cout << "start computing parallel SSS mv..." << endl;
         double itime, ftime, val, row_i,row_e;
 
         //for (int tx = 0; tx < 7; tx++) {
             //threadCount *= 2;
             cout << "Threads: " << threadCount << endl;
+            //block = n/threadCount;
             itime = omp_get_wtime();
-            //for (int run = 0; run < 1000; run++) {
+            omp_set_dynamic(0);     // Explicitly disable dynamic teams
+            omp_set_num_threads(threadCount); // Use 4 threads for all consecutive parallel regions
+            for (int run = 0; run < 1000; run++) {
                 #pragma omp parallel for private(val, colInd, row_i, row_e)
-                #pragma omp set_num_threads(threadCount)
                 for (int i = 0; i < n; i++) {
-                    val = 0.0;
+                    //perThread++;
+                    //printf("Thread: %d\t iterates: %d\n", omp_get_thread_num(), perThread);
                     row_i = matrixRowptr[i] - 1;
                     row_e = matrixRowptr[i + 1] - 1;
-                    val += matrixDiagonal[i] * x[i];
+                    val = matrixDiagonal[i] * x[i];
                     for (int j = row_i; j < row_e; j++) {
                         colInd = matrixColind[j] - 1;
                         // lower part is going to be negated for DKEW SYMMETRIC.
@@ -167,25 +170,25 @@ int main(int argc, char **argv){
                         #pragma omp atomic update
                         y[colInd] += matrixOffDiagonal[j] * x[i];
                     }
-#pragma omp atomic update
+                    #pragma omp atomic update
                     y[i] += val;
                 }
-            //}
+            }
             ftime = omp_get_wtime();
             printf ("It took me %f seconds for 1000-times omp-run.\n", ftime - itime);
-        //}
+       // }
         if(!banded) myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/unbanded/result_omp.txt", ios::out | ios::trunc);
         else myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/banded/result_omp.txt", ios::out | ios::trunc);
     }
 
-    /*
+
     cout << "Writing to output... " << endl;
     for (int i=0; i<n; i++) {
         myfile1 << std::fixed << std::setprecision(dbl::max_digits10) << y[i] << '\t';
     }
     myfile1.close();
     cout << "Completed output... " << endl;
-     */
+
 
     delete [] x;
     delete [] y;
