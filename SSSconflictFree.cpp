@@ -143,7 +143,7 @@ int main(int argc, char **argv){
         else myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/banded/result.txt", ios::out | ios::trunc);
     }
     else{
-        int threadCount = 4, perThread=0, row_elm, conflictSize, col_elm, pieceSize, istart, imax, jmax;
+        int threadCount = 2, perThread=0, row_elm, conflictSize, col_elm, pieceSize, istart, imax, jmax;
         pieceSize = (n/threadCount);
         cout << "start computing parallel SSS mv..." << endl;
         double itime, ftime, val, row_i,row_e;
@@ -166,7 +166,7 @@ int main(int argc, char **argv){
             itime = omp_get_wtime();
             omp_set_dynamic(0);     // Explicitly disable dynamic teams
             omp_set_num_threads(threadCount); // Use 4 threads for all consecutive parallel regions
-            //for (int run = 0; run < 1000; run++) {
+            for (int run = 0; run < 1000; run++) {
                 #pragma omp parallel for private(val, colInd, row_i, row_e)
                 for (int i = 0; i < n; i++) {
                     //perThread++;
@@ -192,11 +192,11 @@ int main(int argc, char **argv){
                 #pragma omp parallel for
                 for (int px = 0; px < threadCount-1; px++) {
                     for (int nx = 0; nx < n; nx++) {
-                        y[nx] = conflicts[(omp_get_thread_num()*n) + nx];
-                        if(omp_get_thread_num()==1) cout << "Thread : " << omp_get_thread_num() << " ";
+                        y[nx] += conflicts[(omp_get_thread_num()*n) + nx];
+                        //cout << "y[" << nx << "]: " << y[nx] << " after conf: " << conflicts[(omp_get_thread_num()*n) + nx] << " \t\t";
                     }
                 }
-            //}
+            }
             ftime = omp_get_wtime();
             printf ("It took me %f seconds for 1000-times omp-run.\n", ftime - itime);
        // }
@@ -204,13 +204,14 @@ int main(int argc, char **argv){
         else myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/banded/result_omp.txt", ios::out | ios::trunc);
     }
 
-
+    /*
     cout << "Writing to output... " << endl;
     for (int i=0; i<n; i++) {
         myfile1 << std::fixed << std::setprecision(dbl::max_digits10) << y[i] << '\t';
     }
     myfile1.close();
     cout << "Completed output... " << endl;
+    */
 
 
     delete [] x;
