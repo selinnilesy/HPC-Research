@@ -151,9 +151,10 @@ int main(int argc, char **argv){
             //threadCount *= 2;
             cout << "Threads: " << threadCount << endl;
             itime = omp_get_wtime();
+            omp_set_dynamic(0);     // Explicitly disable dynamic teams
+            omp_set_num_threads(threadCount);
             for (int run = 0; run < 1000; run++) {
                 #pragma omp parallel for private(val, colInd, row_i, row_e)
-                #pragma omp set_num_threads(threadCount)
                 for (int i = 0; i < n; i++) {
                     row_i = matrixRowptr[i] - 1;
                     row_e = matrixRowptr[i + 1] - 1;
