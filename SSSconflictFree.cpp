@@ -143,7 +143,7 @@ int main(int argc, char **argv){
         else myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/banded/result.txt", ios::out | ios::trunc);
     }
     else{
-        int threadCount = 2;
+        int threadCount = 4;
         cout << "start computing parallel SSS mv..." << endl;
         double itime, ftime, val, row_i,row_e;
 
