@@ -7,8 +7,8 @@ CSR_encoder.o: CSR_encoder.cpp header.h
 	g++ -Wall -g -c CSR_encoder.cpp header.h
 
 SSSconflictFree: SSSconflictFree.cpp
-	cd ./xianyi-OpenBLAS-0b678b1 && make clean && make NUM_THREADS=8 &&  make PREFIX=/home/selin/HPC-Research/xianyi-OpenBLAS-0b678b1  install
-	g++ SSSconflictFree.cpp -o SSSconflictFree -I/home/selin/HPC-Research/xianyi-OpenBLAS-0b678b1/include/ -L/home/selin/HPC-Research/xianyi-OpenBLAS-0b678b1/lib -Wl,-rpath,/home/selin/HPC-Research/xianyi-OpenBLAS-0b678b1/lib -lopenblas -lstdc++fs -std=c++17
+	cd ./xianyi-OpenBLAS-0b678b1 && make USE_THREAD=1 USE_OPENMP=0 NUM_THREADS=4 &&  make PREFIX=/home/selin/HPC-Research/xianyi-OpenBLAS-0b678b1  install
+	g++ SSSconflictFree.cpp -o SSSconflictFree -I/home/selin/HPC-Research/xianyi-OpenBLAS-0b678b1/include/ -L/home/selin/HPC-Research/xianyi-OpenBLAS-0b678b1/lib -Wl,-rpath,/home/selin/HPC-Research/xianyi-OpenBLAS-0b678b1/lib -lopenblas -fopenmp -lstdc++fs -std=c++17
 
 
 clean:

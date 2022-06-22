@@ -228,15 +228,15 @@ void CNAME(enum CBLAS_ORDER order,
 
 #ifdef SMP
   nthreads = num_cpu_avail(2);
-//nthreads=4;
+  openblas_set_num_threads(nthreads);
   if (nthreads == 1) {
 #endif
-  //(gbmv[(int) trans])(m, n, kl, ku, alpha, a, lda, x, incx, y, incy, buffer);
+  (gbmv[(int) trans])(m, n, kl, ku, alpha, a, lda, x, incx, y, incy, buffer);
 
 #ifdef SMP
   }else {
 
-    //printf(" ");
+    //printf("nthreads: %D num_threads:%d physical processors:%d",nthreads,openblas_get_num_threads(), openblas_get_num_procs());
     (gbmv_thread[(int)trans])(m, n, kl, ku, alpha, a, lda, x, incx, y, incy, buffer, nthreads);
 
   }

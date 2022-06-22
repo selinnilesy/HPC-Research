@@ -4,6 +4,7 @@
 #include <string.h>
 #include <string>
 #include <cmath>
+#include <omp.h>
 #include "header.h"
 #include <iomanip>
 #include <time.h>
@@ -299,17 +300,20 @@ int main(int argc, char **argv)
     double *B = new double[size*lda];
     for(int i=0; i<size*lda; i++) B[i] = copy_banded[i];
 
-    clock_t t;
+    double seconds,timing=0.0;
     cout << "Call cblas_dgbmv... " << endl ;
-    t = clock();
+     
     //for(int i=0; i<10000; i++)
     //cblas_dsbmv(CblasColMajor, CblasUpper, n, k, alpha, B, lda, X, incx, beta, Y, incy);
 
     // for dgbmv, A is already one dimensional anyway.
-    for(int i=0; i<10000; i++)
-    cblas_dgbmv(CblasColMajor, CblasNoTrans , n, n, kl, ku, alpha, B, lda, X, incx, beta, Y, incy);
-    t = clock() - t;
-    printf ("It took me %f seconds.\n",((float)t)/CLOCKS_PER_SEC);
+    //for(int i=0; i<10000; i++){
+        seconds = omp_get_wtime ( );
+        cblas_dgbmv(CblasColMajor, CblasNoTrans , n, n, kl, ku, alpha, B, lda, X, incx, beta, Y, incy);
+        timing += omp_get_wtime ( ) - seconds;
+   // }
+    
+    printf("It took me %f seconds.\n", (float)timing);
 
     if(inner) output = "/home/selin/Outputs/" + matrix_names[inputType] + "/dgbmv-inner-"  + to_string(inputRatio) + ".txt";
     if(!inner) output =  "/home/selin/Outputs/" + matrix_names[inputType] + "/middle-"  + to_string(inputRatio) + "-" + to_string(middleRatio) + ".txt";

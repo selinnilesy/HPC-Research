@@ -204,7 +204,7 @@ void CNAME(enum CBLAS_ORDER order,
 
   if (nthreads == 1) {
 #endif
-  printf("called sbmv in sbmv.c\n");
+  //printf("called sbmv in sbmv.c\n");
   (sbmv[uplo])(n, k, alpha, a, lda, x, incx, y, incy, buffer);
 
 
