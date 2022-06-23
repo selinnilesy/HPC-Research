@@ -102,6 +102,7 @@ int main(int argc, char **argv){
     }
     bool banded = atoi(argv[2]);
     bool parallel = atoi(argv[3]);
+    
     readSSSFormat(atoi(argv[1]) , banded);
 
     n = matrixSize[atoi(argv[1])];
@@ -121,29 +122,33 @@ int main(int argc, char **argv){
     int colInd;
     if(!parallel){
         cout << "start computing serial SSS mv..." << endl;
-        clock_t t = clock();
-        double row_i,row_e, val;
-        //for (int run = 0; run < 1000; run++) {
-        for (int i = 0; i < n; i++) {
-            val=0.0;
-            row_i = matrixRowptr[i] - 1;
-            row_e = matrixRowptr[i+1] - 1;
-            val += matrixDiagonal[i] * x[i];
-            for (int j =row_i; j < row_e; j++) {
-                colInd = matrixColind[j] - 1;
-                val -= matrixOffDiagonal[j] * x[colInd];
-                y[colInd] += matrixOffDiagonal[j] * x[i];
+        double row_i,row_e, val, itime, ftime;
+        itime = omp_get_wtime();
+        for (int run = 0; run < 1000; run++) {
+            for (int i = 0; i < n; i++) {
+                val=0.0;
+                row_i = matrixRowptr[i] - 1;
+                row_e = matrixRowptr[i+1] - 1;
+                val += matrixDiagonal[i] * x[i];
+                for (int j =row_i; j < row_e; j++) {
+                    colInd = matrixColind[j] - 1;
+                    val -= matrixOffDiagonal[j] * x[colInd];
+                    y[colInd] += matrixOffDiagonal[j] * x[i];
+                }
+                y[i] += val;
             }
-            y[i] += val;
         }
-        //}
-        t = clock() - t;
-        printf ("It took me %f seconds for 1000-times serial run.\n", ((float)t)/CLOCKS_PER_SEC);
+        ftime=omp_get_wtime();
+        printf ("It took me %f seconds for 1000-times serial run.\n", ftime-itime);
+
         if(!banded) myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/unbanded/result.txt", ios::out | ios::trunc);
         else myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/banded/result.txt", ios::out | ios::trunc);
     }
     else{
-        int threadCount = 2, perThread=0, row_elm, conflictSize, col_elm, pieceSize, istart, imax, jmax;
+        int threadCount = atoi(argv[4]);
+        if(!banded) myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/unbanded/result_omp.txt", ios::out | ios::trunc);
+        else myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/banded/result_omp.txt", ios::out | ios::trunc);
+        int  perThread=0, row_elm, conflictSize, col_elm, pieceSize, istart, imax, jmax;
         pieceSize = (n/threadCount);
         cout << "start computing parallel SSS mv..." << endl;
         double itime, ftime, val, row_i,row_e;
@@ -160,49 +165,53 @@ int main(int argc, char **argv){
             conflicts[z] = 0.0;
         }
         //for (int tx = 0; tx < 7; tx++) {
-            //threadCount *= 2;
-            cout << "Threads: " << threadCount << endl;
-            //block = n/threadCount;
-            itime = omp_get_wtime();
-            omp_set_dynamic(0);     // Explicitly disable dynamic teams
-            omp_set_num_threads(threadCount); // Use 4 threads for all consecutive parallel regions
-            for (int run = 0; run < 1000; run++) {
-                #pragma omp parallel for private(val, colInd, row_i, row_e)
-                for (int i = 0; i < n; i++) {
-                    //perThread++;
-                    row_i = matrixRowptr[i] - 1;
-                    row_e = matrixRowptr[i + 1] - 1;
-                    val = matrixDiagonal[i] * x[i];
-                    for (int j = row_i; j < row_e; j++) {
-                        colInd = matrixColind[j] - 1;
-                        // lower part is going to be negated for DKEW SYMMETRIC.
-                        val -= matrixOffDiagonal[j] * x[colInd];
-                        // upper part's sign will be kept
-                        if(colInd < rowStart[omp_get_thread_num()]){
-                            conflicts[((omp_get_thread_num()-1)*n) + colInd] += matrixOffDiagonal[j] * x[i];
-                        }
+        //threadCount *= 2;
+        cout << "Threads: " << threadCount << endl;
+        //block = n/threadCount;
+        double x_time = omp_get_wtime();
+        omp_set_dynamic(0);     // Explicitly disable dynamic teams
+        omp_set_num_threads(threadCount); // Use 4 threads for all consecutive parallel regions
+        for (int run = 0; run < 1000; run++) {
+            //itime = omp_get_wtime();
+            #pragma omp parallel for private(val, colInd, row_i, row_e)
+            for (int i = 0; i < n; i++) {
+                //perThread++;
+                row_i = matrixRowptr[i] - 1;
+                row_e = matrixRowptr[i + 1] - 1;
+                val = matrixDiagonal[i] * x[i];
+                for (int j = row_i; j < row_e; j++) {
+                    colInd = matrixColind[j] - 1;
+                    // lower part is going to be negated for DKEW SYMMETRIC.
+                    val -= matrixOffDiagonal[j] * x[colInd];
+                    // upper part's sign will be kept
+                    if(colInd < rowStart[omp_get_thread_num()]){
+                        conflicts[((omp_get_thread_num()-1)*n) + colInd] += matrixOffDiagonal[j] * x[i];
+                    }
                         //#pragma omp atomic update
-                        else y[colInd] += matrixOffDiagonal[j] * x[i];
-                    }
-                    //#pragma omp atomic update
-                    y[i] += val;
+                    else y[colInd] += matrixOffDiagonal[j] * x[i];
                 }
-                #pragma omp barrier
-                omp_set_num_threads(threadCount-1); // Use 3 threads for below
-                #pragma omp parallel for
-                for (int px = 0; px < threadCount-1; px++) {
-                    for (int nx = 0; nx < n; nx++) {
-                        y[nx] += conflicts[(omp_get_thread_num()*n) + nx];
-                        //cout << "y[" << nx << "]: " << y[nx] << " after conf: " << conflicts[(omp_get_thread_num()*n) + nx] << " \t\t";
-                    }
+                //#pragma omp atomic update
+                y[i] += val;
+            }
+            #pragma omp barrier
+            omp_set_num_threads(threadCount-1); // Use 3 threads for below
+            #pragma omp parallel for
+            for (int px = 0; px < threadCount-1; px++) {
+                for (int nx = 0; nx < n; nx++) {
+                    y[nx] += conflicts[(omp_get_thread_num()*n) + nx];
+                    //cout << "y[" << nx << "]: " << y[nx] << " after conf: " << conflicts[(omp_get_thread_num()*n) + nx] << " \t\t";
                 }
             }
-            ftime = omp_get_wtime();
-            printf ("It took me %f seconds for 1000-times omp-run.\n", ftime - itime);
-       // }
-        if(!banded) myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/unbanded/result_omp.txt", ios::out | ios::trunc);
-        else myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/banded/result_omp.txt", ios::out | ios::trunc);
-    }
+            //ftime = omp_get_wtime();
+            //myfile1 << ftime - itime << " ";
+        }
+        ftime = omp_get_wtime();
+        printf ("It took me %f seconds for 1000-times serial run.\n", ftime-x_time);
+        // }
+
+        myfile1.close();
+        cout << "Completed output... " << endl;
+        }
 
     /*
     cout << "Writing to output... " << endl;
@@ -212,6 +221,7 @@ int main(int argc, char **argv){
     myfile1.close();
     cout << "Completed output... " << endl;
     */
+
 
 
     delete [] x;
