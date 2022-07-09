@@ -62,7 +62,6 @@ int readSSSFormat(int z) {
 
             cout << dir_entry.path() << " has been read." << endl;
             myfile.close();
-            continue;
         }
         else if(dir_entry.path().stem() == "colind") {
             int tempValInt;
@@ -76,30 +75,34 @@ int readSSSFormat(int z) {
             colindSize.push_back(tempVecInt.size());
             cout << dir_entry.path() << " has been read." << endl;
             myfile.close();
-            continue;
-        }
-        // else, start reading doubles.
-        while (myfile >> tempVal) {
-            tempVec.push_back(tempVal);
         }
 
-        if(dir_entry.path().stem() == "diag"){
+        else if(dir_entry.path().stem() == "diag"){
+            while (myfile >> tempVal) {
+                tempVec.push_back(tempVal);
+            }
             dvaluesPtrs.push_back(new double[tempVec.size()]);
             double *temp = dvaluesPtrs[0];
             for(int i=0; i<tempVec.size(); i++) temp[i]=tempVec[i];
             dvaluesSize.push_back(tempVec.size());
+            cout << dir_entry.path() << " has been read." << endl;
+            tempVec.clear();
+            myfile.close();
         }
         else if(dir_entry.path().stem() == "vals"){
+            while (myfile >> tempVal) {
+                tempVec.push_back(tempVal);
+            }
             valuesPtrs.push_back(new double[tempVec.size()]);
             double *temp = valuesPtrs[0];
             for(int i=0; i<tempVec.size(); i++) temp[i]=tempVec[i];
             valuesSize.push_back(tempVec.size());
+            cout << dir_entry.path() << " has been read." << endl;
+            tempVec.clear();
+            myfile.close();
         }
         else cout << "unexpected file name: " << dir_entry.path() << endl;
-        cout << dir_entry.path() << " has been read." << endl;
 
-        tempVec.clear();
-        myfile.close();
     }
     return 0;
 }
@@ -185,11 +188,15 @@ int main(int argc, char **argv){
     int *matrixRowptr= rowptrPtrs[0];
 
     int elmCountPerRow, colInd, rowBegin;
-    double innerBandwith, middleBandwith;
+    double innerBandwith, middleBandwith, outerBandwith;
     innerBandwith = (int) (nnz_n_Ratios[inputType]*bandwithProportions[inputType] * inputRatio);
     // for only inner-outer equality :
    // middleBandwith = bandwithSize[inputType] - innerBandwith;
     middleBandwith = (int) ((bandwithSize[inputType] - innerBandwith) * restRatio);
+
+    innerBandwith = 0;
+    middleBandwith = bandwithSize[inputType]-3;
+    outerBandwith=3;
     cout << "inner bandwith: " << innerBandwith << endl;
     cout << "middle bandwith: " << middleBandwith << endl;
     cout << "total bandwith: " << bandwithSize[inputType] << endl;
@@ -220,16 +227,18 @@ int main(int argc, char **argv){
 
             if(colInd > maxJ) maxJ=colInd;
             else cout << "ON THE SAME ROW, COL INDEX HAS BEEN SMALLED. NOT IN ASCENDING ORDER: maxj, colInd " << maxJ <<" " << colInd << endl;
-            // inner Dense Region
+            // inner Dense Region = diagonal now.
+            /*
             if(colInd >= i - innerBandwith){
                 row_inner.push_back(i+1);
                 col_inner.push_back(colInd+1);
                 vals_inner.push_back(val);
             }
+             */
             // middle Region
             // for inner-outer equality case:
             //else if(colInd >= i-middleBandwith){
-            else if(colInd >= i-innerBandwith-middleBandwith){
+            if(colInd >= i-innerBandwith-middleBandwith){
                 row_middle.push_back(i+1);
                 col_middle.push_back(colInd+1);
                 vals_middle.push_back(val);
@@ -243,7 +252,8 @@ int main(int argc, char **argv){
         }
     }
     cout << "write grouped 3way bandwiths in coo formats" << endl;
-    writeCooFormat(inputType, inputRatio, restRatio);
+    // MODIFIED FOR NEW SOLUTION!!! :
+    writeCooFormat(inputType, 1, middleBandwith);
 
 
 
