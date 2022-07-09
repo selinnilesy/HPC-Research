@@ -37,7 +37,7 @@ int readSSSFormat(int z) {
             cout << dir_entry.path() << " has been read with size: " <<  tempVec.size() << endl;
             myfile.close();
         }
-        else cout << "unused file name: " << dir_entry.path() << endl;
+        //else cout << "unused file name: " << dir_entry.path() << endl;
     }
     return 0;
 }
@@ -85,7 +85,7 @@ int readCSRFormat(int z) {
             cout << dir_entry.path() << " has been read with size: " <<  tempVec.size() << endl;
             myfile.close();
         }
-        else cout << "unexpected file name: " << dir_entry.path() << endl;
+        //else cout << "unexpected file name: " << dir_entry.path() << endl;
     }
     matrixFolder = "/home/selin/Split-Data/" + matrix_names[z] + "/middle/CSR-Data/upper";
     for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
@@ -114,7 +114,7 @@ int readCSRFormat(int z) {
             cout << dir_entry.path() << " has been read with size: " <<  offdiag_up.size() << endl;
             myfile.close();
         }
-        else cout << "unexpected file name: " << dir_entry.path() << endl;
+        //else cout << "unexpected file name: " << dir_entry.path() << endl;
     }
     return 0;
 }
@@ -183,14 +183,14 @@ int main(int argc, char **argv){
     printf ("It took me %f seconds for 1000-times serial run.\n", t);
     myfile1.open ("/home/selin/3way-Seq-Results/" + matrix_names[inputType] + "/result.txt", ios::out | ios::trunc);
 
-    /*
+
     cout << "Writing to output... " << endl;
     for (int i=0; i<n; i++) {
         myfile1 << std::fixed << std::setprecision(dbl::max_digits10) << y[i] << '\t';
     }
     myfile1.close();
     cout << "Completed output... " << endl;
-     */
+
 
     delete [] x;
     delete [] y;
