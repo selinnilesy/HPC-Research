@@ -211,7 +211,7 @@ int main(int argc, char **argv){
     // two new SSS storage for inner and outer regions
 
     int counter_inner, counter_middle, counter_outer;
-
+    int nnz_extracted=0;
     for (int i = 0; i < rowptrSize[0] - 1; i++) {
         // row ptrs start from 1 !!!
         rowBegin = matrixRowptr[i] - 1;
@@ -248,12 +248,13 @@ int main(int argc, char **argv){
                 row_outer.push_back(i+1);
                 col_outer.push_back(colInd+1);
                 vals_outer.push_back(val);
+                nnz_extracted++;
             }
         }
     }
-    cout << "write grouped 3way bandwiths in coo formats" << endl;
+    cout << "write grouped 3way bandwiths in coo formats : " << nnz_extracted << endl;
     // MODIFIED FOR NEW SOLUTION!!! :
-    writeCooFormat(inputType, 1, middleBandwith);
+    //writeCooFormat(inputType, 1, middleBandwith);
 
 
 
