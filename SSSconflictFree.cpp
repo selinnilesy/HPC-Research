@@ -177,6 +177,9 @@ int main(int argc, char **argv){
     int inputType = atoi(argv[1]);
     double inputRatio =  atof(argv[2]);
 
+    inputRatio = 1;
+    middleRatio = bandwithSize[inputType]-3;
+
     std::cout  <<  "reversed ?: " << reversed << endl;
     std::cout  <<  "inner_equal_middle ?: " << inner_equal_middle << endl;
     if(!inner_equal_middle) readCooFormatNotEqual(inputType,   inputRatio, middleRatio ,reversed);
@@ -190,8 +193,8 @@ int main(int argc, char **argv){
     int *banded_coordCol = coord_col;
     double *banded_coordval = coord_val;
 
-    int nnz = nonzeroSize_row;
     int nrow=matrixSize[inputType];
+    int nnz = nonzeroSize_row ;
 
     int *banded_csrRow = new int[matrixSize[inputType]+1];
     int *banded_csrCol = new int[nnz];
