@@ -15,10 +15,10 @@ int p;
 vector<int> x;
 vector<int> y;
 vector<int> elm_row; // use this to find out row_ptr values
-int *coord_row, *coord_col;
-double *coord_val;
-int nonzeroSize_row, nonzeroSize_col, nonzeroSize_val;
+int *csr_row, *csr_col;
+double *csr_val;
 
+int offd_count_innerbandw;
 
 
 void init(){
@@ -38,229 +38,136 @@ void init(){
 }*/
 
 extern "C" {
-extern void coocsr_(int *nrow, int *nnz, double* a, int* ir,int* jc, double* ao, int* jao, int* iao);
+//extern void coocsr_(int *nrow, int *nnz, double* a, int* ir,int* jc, double* ao, int* jao, int* iao);
+extern void csrsss_(int *nrow, int *nnz, double* a, int *ja, int *ia, bool* sorted, double *diag, double* al, int *jal, int *ial, double* au);
 }
 
-int readCooFormatEqual(int z, double inputRatio, double middleRatio, bool reversed) {
+int readCSRFormat(int z, double ratio) {
     double tempVal;
-    int tempValInt;
     vector<double> tempVec;
-    fstream myfile;
-    const fs::path matrixFolder{"/home/selin/Split-Data/" + matrix_names[z] + "/inner"};
+    const fs::path matrixFolder{"/home/selin/Split-Data/" + matrix_names[z] +"/middle/CSR-Data"};
     for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
-        if(dir_entry.path().stem() == ("coordinate-"+ to_string(inputRatio)+"-" + to_string(middleRatio) + "-row")) {
-            myfile.open(dir_entry.path(), std::ios_base::in);
+        std::fstream myfile(dir_entry.path(), std::ios_base::in);
+        if(dir_entry.path().stem() == "1.000000-" + to_string(ratio) + "-row") {
+            int tempValInt;
             vector<int> tempVecInt;
             while (myfile >> tempValInt) {
                 tempVecInt.push_back(tempValInt);
             }
-            coord_row = new int[tempVecInt.size()];
-            for(int i=0; i<tempVecInt.size(); i++) coord_row[i]=tempVecInt[i];
-            nonzeroSize_row=tempVecInt.size();
+            csr_row = new int[tempVecInt.size()];
+            for(int i=0; i<tempVecInt.size(); i++) csr_row[i]=tempVecInt[i];
+
             cout << dir_entry.path() << " has been read." << endl;
-            myfile.close();
         }
-        else if(dir_entry.path().stem() == ("coordinate-"+ to_string(inputRatio)+"-" + to_string(middleRatio) + "-col")) {
-            myfile.open(dir_entry.path(), std::ios_base::in);
+        else if(dir_entry.path().stem() == "1.000000-" + to_string(ratio) +"-col") {
+            int tempValInt;
             vector<int> tempVecInt;
             while (myfile >> tempValInt) {
                 tempVecInt.push_back(tempValInt);
             }
-            coord_col = new int[tempVecInt.size()];
-            for(int i=0; i<tempVecInt.size(); i++) coord_col[i]=tempVecInt[i];
-            nonzeroSize_col=tempVecInt.size();
+            csr_col = new int[tempVecInt.size()];
+            for(int i=0; i<tempVecInt.size(); i++) csr_col[i]=tempVecInt[i];
+            offd_count_innerbandw = tempVecInt.size();
             cout << dir_entry.path() << " has been read." << endl;
-            myfile.close();
         }
-        else if(dir_entry.path().stem() == ("coordinate-"+ to_string(inputRatio)+ "-" + to_string(middleRatio) + "-val")){
-            myfile.open(dir_entry.path(), std::ios_base::in);
-            while (myfile >> tempVal) {
-                tempVec.push_back(tempVal);
+        else if(dir_entry.path().stem() == "1.000000-" + to_string(ratio) +"-val") {
+            double tempVall;
+            vector<double> tempVec;
+            while (myfile >> tempVall) {
+                tempVec.push_back(tempVall);
             }
-            coord_val = new double[tempVec.size()];
-            // !reversed means lower and reverse means upper.
-            if(!reversed){
-                for(int i=0; i<tempVec.size(); i++) coord_val[i] = -tempVec[i];
-            }
-            else if(reversed){
-                // use neg for skew-symmetric part !!!
-                for(int i=0; i<tempVec.size(); i++) coord_val[i] = tempVec[i];
-            }
-            nonzeroSize_val=tempVec.size();
+            csr_val = new double[tempVec.size()];
+            for(int i=0; i<tempVec.size(); i++) csr_val[i]=tempVec[i];
+
             cout << dir_entry.path() << " has been read." << endl;
-            myfile.close();
         }
-    }
-    return 0;
-}
-int readCooFormatNotEqual(int z, double inputRatio,double middleRatio,  bool reversed) {
-    double tempVal;
-    int tempValInt;
-    vector<double> tempVec;
-    fstream myfile;
-    const fs::path matrixFolder{"/home/selin/Split-Data/" + matrix_names[z] + "/middle/"};
-    for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
-        if(dir_entry.path().stem() == ("coordinate-"+ to_string(inputRatio)+ "-" + to_string(middleRatio)+ "-row")) {
-            myfile.open(dir_entry.path(), std::ios_base::in);
-            vector<int> tempVecInt;
-            while (myfile >> tempValInt) {
-                tempVecInt.push_back(tempValInt);
-            }
-            coord_row = new int[tempVecInt.size()];
-            for(int i=0; i<tempVecInt.size(); i++) coord_row[i]=tempVecInt[i];
-            nonzeroSize_row=tempVecInt.size();
-            cout << dir_entry.path() << " has been read." << endl;
-            myfile.close();
-        }
-        else if(dir_entry.path().stem() == ("coordinate-"+ to_string(inputRatio) + "-" + to_string(middleRatio) + "-col")) {
-            myfile.open(dir_entry.path(), std::ios_base::in);
-            vector<int> tempVecInt;
-            while (myfile >> tempValInt) {
-                tempVecInt.push_back(tempValInt);
-            }
-            coord_col = new int[tempVecInt.size()];
-            for(int i=0; i<tempVecInt.size(); i++) coord_col[i]=tempVecInt[i];
-            nonzeroSize_col=tempVecInt.size();
-            cout << dir_entry.path() << " has been read." << endl;
-            myfile.close();
-        }
-        else if(dir_entry.path().stem() == ("coordinate-"+ to_string(inputRatio) + "-" + to_string(middleRatio) + "-val")){
-            myfile.open(dir_entry.path(), std::ios_base::in);
-            while (myfile >> tempVal) {
-                tempVec.push_back(tempVal);
-            }
-            coord_val = new double[tempVec.size()];
-            // !reversed means lower and reverse means upper.
-            if(!reversed){
-                for(int i=0; i<tempVec.size(); i++) coord_val[i] = -tempVec[i];
-            }
-            else if(reversed){
-                // use neg for skew-symmetric part !!!
-                for(int i=0; i<tempVec.size(); i++) coord_val[i] = tempVec[i];
-            }
-            nonzeroSize_val=tempVec.size();
-            cout << dir_entry.path() << " has been read." << endl;
-            myfile.close();
-        }
+        myfile.close();
     }
     return 0;
 }
 
 int main(int argc, char **argv){
-
     int n, rowLimit;
+    cout << "i call readSSSFormat. " << endl;
     //init();
     if(!argv[1]){
         cout << "please provide input matrix index (int): boneS10, Emilia_923, ldoor, af_5_k101, Serena, audikw_1" << endl;
         return -1;
     }
-    if(!argv[2]){
-        cout << "please provide input ratio for inner bandwith" << endl;
-        return -1;
-    }
-    if(!argv[3]){
-        cout << "please provide middle bandwith" << endl;
-        return -1;
-    }
-    if(!argv[4]){
-        cout << "please provide a boolean for reversed (process only upper corresponding elements)" << endl;
-        return -1;
-    }
-    if(!argv[5]){
-        cout << "please provide a boolean for inner-equal (1) or middle (0) directories" << endl;
-        return -1;
-    }
-    bool reversed = atoi(argv[4]);
-    bool inner_equal_middle = atoi(argv[5]);
-    double middleRatio = atof(argv[3]);
-    n = matrixSize[atoi(argv[1])];
     int inputType = atoi(argv[1]);
-    double inputRatio =  atof(argv[2]);
+    readCSRFormat(inputType, bandwithSize[inputType]-3);
+    n = matrixSize[atoi(argv[1])];
 
-    inputRatio = 1;
-    middleRatio = bandwithSize[inputType]-3;
+    std::cout  <<  " starts computing csrsss... " << endl;
 
-    std::cout  <<  "reversed ?: " << reversed << endl;
-    std::cout  <<  "inner_equal_middle ?: " << inner_equal_middle << endl;
-    if(!inner_equal_middle) readCooFormatNotEqual(inputType,   inputRatio, middleRatio ,reversed);
-    else if(inner_equal_middle)  readCooFormatEqual(inputType,  inputRatio,middleRatio,  reversed);
-
-    if(nonzeroSize_row != nonzeroSize_col) std::cout  <<  " nonzeroSize_row and nonzeroSize_col not equal"  << endl;
-    if(nonzeroSize_row != nonzeroSize_val) std::cout  <<  " nonzeroSize_row and nonzeroSize_val not equal"  << endl;
-    if(nonzeroSize_col != nonzeroSize_val) std::cout  <<  " nonzeroSize_col and nonzeroSize_val not equal"  << endl;
-
-    int *banded_coordRow = coord_row;
-    int *banded_coordCol = coord_col;
-    double *banded_coordval = coord_val;
-
+    int nnz = offd_count_innerbandw;
     int nrow=matrixSize[inputType];
-    int nnz = nonzeroSize_row ;
 
-    int *banded_csrRow = new int[matrixSize[inputType]+1];
-    int *banded_csrCol = new int[nnz];
-    double *banded_csrval = new double[nnz];
+    double *diag = new double[nrow];
+    int *rowptr = new int[nrow+1];
+    // strict lower part
+    int *colinds_lower = new int[nnz];
+    double *vals_lower = new double[nnz];
+    double *vals_upper = new double[nnz];
 
 
-    std::cout  <<  " starts computing coocsr... " << endl;
-    // to be able to compare results with cblas_ssbmv, lower part values are negative.
-    if(!reversed) coocsr_(&nrow,  &nnz, banded_coordval, banded_coordRow, banded_coordCol, banded_csrval, banded_csrCol, banded_csrRow);
-    else if(reversed)  coocsr_(&nrow,  &nnz, banded_coordval, banded_coordCol, banded_coordRow, banded_csrval, banded_csrCol, banded_csrRow);
-    std::cout  <<  " finished computing coocsr... :" << banded_csrval[10] << " " << banded_csrCol[10] << " " << banded_csrRow[10] << endl;
-
-    ofstream myfile1, myfile2, myfile3;
-    if(inner_equal_middle) {
-        if (reversed) {
-            myfile1.open(
-                    "/home/selin/Split-Data/" + matrix_names[inputType] + "/inner/CSR-Data/upper/" +
-                    to_string(inputRatio) + "-row.txt", ios::out | ios::trunc);
-            myfile2.open(
-                    "/home/selin/Split-Data/" + matrix_names[inputType] + "/inner/CSR-Data/upper/" +
-                    to_string(inputRatio) + "-col.txt", ios::out | ios::trunc);
-            myfile3.open(
-                    "/home/selin/Split-Data/" + matrix_names[inputType] + "/inner/CSR-Data/upper/" +
-                    to_string(inputRatio) + "-val.txt", ios::out | ios::trunc);
-        } else if (!reversed) {
-            myfile1.open("/home/selin/Split-Data/" + matrix_names[inputType] + "/inner/CSR-Data/" +
-                         to_string(inputRatio) + "-row.txt", ios::out | ios::trunc);
-            myfile2.open("/home/selin/Split-Data/" + matrix_names[inputType] + "/inner/CSR-Data/" +
-                         to_string(inputRatio) + "-col.txt", ios::out | ios::trunc);
-            myfile3.open("/home/selin/Split-Data/" + matrix_names[inputType] + "/inner/CSR-Data/" +
-                         to_string(inputRatio) + "-val.txt", ios::out | ios::trunc);
+    bool sorted = 0;
+    /*
+    vector<double> test;
+    cout << "test diag" << endl;
+    int z_count=0;
+    for(int i=0; i<923136+1; i++){
+        int rowptr = csr_row[i]-1;
+        int n_rowptr = csr_row[i+1]-1;
+        for(int x=rowptr; x<n_rowptr; x++){
+            int col = csr_col[rowptr+x] - 1;
+            if(col==i){
+                if(csr_val[rowptr+x]==0) z_count++;
+                test.push_back(csr_val[rowptr+x]);
+            }
         }
     }
-    else{
-        if (reversed) {
-            myfile1.open(
-                    "/home/selin/Split-Data/" + matrix_names[inputType] + "/middle/CSR-Data/upper/" +
-                    to_string(inputRatio)+ "-" + to_string(middleRatio) + "-row.txt", ios::out | ios::trunc);
-            myfile2.open(
-                    "/home/selin/Split-Data/" + matrix_names[inputType] + "/middle/CSR-Data/upper/" +
-                    to_string(inputRatio)+ "-" + to_string(middleRatio) + "-col.txt", ios::out | ios::trunc);
-            myfile3.open(
-                    "/home/selin/Split-Data/" + matrix_names[inputType] + "/middle/CSR-Data/upper/" +
-                    to_string(inputRatio)+ "-" + to_string(middleRatio) + "-val.txt", ios::out | ios::trunc);
-        } else if (!reversed) {
-            myfile1.open("/home/selin/Split-Data/" + matrix_names[inputType] + "/middle/CSR-Data/" +
-                         to_string(inputRatio)+ "-" + to_string(middleRatio) + "-row.txt", ios::out | ios::trunc);
-            myfile2.open("/home/selin/Split-Data/" + matrix_names[inputType] + "/middle/CSR-Data/" +
-                         to_string(inputRatio)+ "-" + to_string(middleRatio) + "-col.txt", ios::out | ios::trunc);
-            myfile3.open("/home/selin/Split-Data/" + matrix_names[inputType] + "/middle/CSR-Data/" +
-                         to_string(inputRatio)+ "-" + to_string(middleRatio) + "-val.txt", ios::out | ios::trunc);
-        }
+    cout << "found: " << z_count ;
+    ofstream test_f;
+    test_f.open ("/home/selin/Split-Data/" + matrix_names[inputType] + "/inner/CSR-Data/test_diag.txt", ios::out | ios::trunc);
+    for (int i=0; i<test.size(); i++) {
+        test_f << test[i] << '\t';
     }
-    cout << "Writing to " << "-CSR row.txt"  << endl;
+    test_f.close();
+     */
+
+
+    cout << "starts computing csrsss_..." << endl;
+    csrsss_(&nrow,&nnz, csr_val, csr_col, csr_row, &sorted, diag, vals_lower, colinds_lower, rowptr, vals_upper);
+    std::cout  <<  " finished computing csrsss... " << diag[10] << " " << vals_lower[10] << " " << colinds_lower[10]<< " " << rowptr[10] << endl;
+
+    ofstream myfile1, myfile2, myfile3,myfile4;
+    myfile1.open ("/home/selin/Split-Data/" + matrix_names[inputType] + "/middle/CSR-Data/rowptr.txt", ios::out | ios::trunc);
+    myfile2.open ("/home/selin/Split-Data/" + matrix_names[inputType] + "/middle/CSR-Data/colind.txt", ios::out | ios::trunc);
+    myfile3.open ("/home/selin/Split-Data/" + matrix_names[inputType] + "/middle/CSR-Data/vals.txt", ios::out | ios::trunc);
+    myfile4.open ("/home/selin/Split-Data/" + matrix_names[inputType] + "/middle/CSR-Data/diag.txt", ios::out | ios::trunc);
+
+    cout << "Writing to " << "-SSSout_rowptr.txt"  << endl;
     for (int i=0; i<nrow+1; i++) {
-        myfile1 << banded_csrRow[i] << '\t';
+        myfile1 << rowptr[i] << '\t';
     }
-    cout << "Writing to " << "-CSR col.txt"  << endl;
+    cout << "Writing to " << "-SSSout_colind.txt"  << endl;
     for (int i=0; i<nnz; i++) {
-        myfile2 << banded_csrCol[i] << '\t';
+        myfile2 << colinds_lower[i] << '\t';
     }
-    cout << "Writing to " << "-CSR val.txt"  << endl;
+    cout << "Writing to " << "-SSSout_vals.txt"  << endl;
     for (int i=0; i<nnz; i++){
-        myfile3 << banded_csrval[i] << '\t';
+        myfile3 << vals_lower[i] << '\t';
     }
+    /*
+    cout << "Writing to " << "-SSSout_diag.txt"  << endl;
+    for (int i=0; i<nrow; i++){
+        myfile4 << diag[i] << '\t';
+    }
+     */
     myfile1.close();
     myfile2.close();
     myfile3.close();
+    myfile4.close();
+
 }
