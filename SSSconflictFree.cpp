@@ -14,6 +14,9 @@
 using namespace std;
 #define MATRIX_COUNT 6
 
+vector<int> colind_up, rowptr_up;
+vector<double> offdiag_up;
+
 typedef std::numeric_limits< double > dbl;
 
 int readSSSFormat(int z) {
@@ -84,6 +87,35 @@ int readCSRFormat(int z) {
         }
         else cout << "unexpected file name: " << dir_entry.path() << endl;
     }
+    matrixFolder = "/home/selin/Split-Data/" + matrix_names[z] + "/middle/CSR-Data/upper";
+    for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
+        std::fstream myfile(dir_entry.path(), std::ios_base::in);
+        if(dir_entry.path().stem() == ("1.000000-" + to_string((double) bandwithSize[z]-3) + "-row")) {
+            int tempValInt;
+            while (myfile >> tempValInt) {
+                rowptr_up.push_back(tempValInt);
+            }
+            cout << dir_entry.path() << " has been read with size: " <<rowptr_up.size() << endl;
+            myfile.close();
+        }
+        else if(dir_entry.path().stem() == ("1.000000-" + to_string( (double) bandwithSize[z]-3) + "-col")) {
+            int tempValInt;
+            while (myfile >> tempValInt) {
+                colind_up.push_back(tempValInt);
+            }
+            cout << dir_entry.path() << " has been read with size: " <<  colind_up.size() << endl;
+            myfile.close();
+        }
+        else if(dir_entry.path().stem() == ("1.000000-" + to_string((double) bandwithSize[z]-3) + "-val")){
+            double tempVal;
+            while (myfile >> tempVal) {
+                offdiag_up.push_back(tempVal);
+            }
+            cout << dir_entry.path() << " has been read with size: " <<  offdiag_up.size() << endl;
+            myfile.close();
+        }
+        else cout << "unexpected file name: " << dir_entry.path() << endl;
+    }
     return 0;
 }
 /*
@@ -119,26 +151,37 @@ int main(int argc, char **argv){
     ofstream myfile1;
 
     int colInd;
-        cout << "start computing serial SSS mv..." << endl;
-        double row_i,row_e, val;
-        double t = omp_get_wtime();
-        //for (int run = 0; run < 1000; run++) {
-        for (int i = 0; i < n; i++) {
-            val=0.0;
-            row_i = matrixRowptr[i] - 1;
-            row_e = matrixRowptr[i+1] - 1;
-            val += matrixDiagonal[i] * x[i];
-            for (int j =row_i; j < row_e; j++) {
-                colInd = matrixColind[j] - 1;
-                val -= matrixOffDiagonal[j] * x[colInd];
-                y[colInd] += matrixOffDiagonal[j] * x[i];
-            }
-            y[i] += val;
+    cout << "start computing serial SSS mv..." << endl;
+    double row_i,row_e, val;
+    double t = omp_get_wtime();
+    //for (int run = 0; run < 1000; run++) {
+    for (int i = 0; i < n; i++) {
+        y[i] = matrixDiagonal[i] * x[i];
+    }
+    for (int i = 0; i < n; i++) {
+        val=0.0;
+        row_i = matrixRowptr[i] - 1;
+        row_e = matrixRowptr[i+1] - 1;
+        for (int j =row_i; j < row_e; j++) {
+            colInd = matrixColind[j] - 1;
+            val -= matrixOffDiagonal[j] * x[colInd];
         }
-        //}
-        t = omp_get_wtime() - t;
-        printf ("It took me %f seconds for 1000-times serial run.\n", t);
-        myfile1.open ("/home/selin/Seq-Results/" + matrix_names[inputType] + "/banded/result.txt", ios::out | ios::trunc);
+        y[i] += val;
+    }
+    for (int i = 0; i < n; i++) {
+        val=0.0;
+        row_i = rowptr_up[i] - 1;
+        row_e = rowptr_up[i+1] - 1;
+        for (int j =row_i; j < row_e; j++) {
+            colInd = colind_up[j] - 1;
+            val += offdiag_up[j] * x[colInd];
+        }
+        y[i] += val;
+    }
+    //}
+    t = omp_get_wtime() - t;
+    printf ("It took me %f seconds for 1000-times serial run.\n", t);
+    myfile1.open ("/home/selin/3way-Seq-Results/" + matrix_names[inputType] + "/result.txt", ios::out | ios::trunc);
 
     /*
     cout << "Writing to output... " << endl;
