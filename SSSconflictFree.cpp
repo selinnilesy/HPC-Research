@@ -98,7 +98,7 @@ int readCooFormatNotEqual(int z, double inputRatio,double middleRatio,  bool rev
     int tempValInt;
     vector<double> tempVec;
     fstream myfile;
-    const fs::path matrixFolder{"/home/selin/Split-Data/" + matrix_names[z] + "/outer/"};
+    const fs::path matrixFolder{"/home/selin/Split-Data/" + matrix_names[z] + "/middle/"};
     for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
         if(dir_entry.path().stem() == ("coordinate-"+ to_string(inputRatio)+ "-" + to_string(middleRatio)+ "-row")) {
             myfile.open(dir_entry.path(), std::ios_base::in);
@@ -124,7 +124,7 @@ int readCooFormatNotEqual(int z, double inputRatio,double middleRatio,  bool rev
             cout << dir_entry.path() << " has been read." << endl;
             myfile.close();
         }
-        else if(dir_entry.path().stem() == ("coordinate-"+ to_string(inputRatio) + "-" + to_string(middleRatio) + "val")){
+        else if(dir_entry.path().stem() == ("coordinate-"+ to_string(inputRatio) + "-" + to_string(middleRatio) + "-val")){
             myfile.open(dir_entry.path(), std::ios_base::in);
             while (myfile >> tempVal) {
                 tempVec.push_back(tempVal);
@@ -185,9 +185,9 @@ int main(int argc, char **argv){
     if(!inner_equal_middle) readCooFormatNotEqual(inputType,   inputRatio, middleRatio ,reversed);
     else if(inner_equal_middle)  readCooFormatEqual(inputType,  inputRatio,middleRatio,  reversed);
 
-    if(nonzeroSize_row != nonzeroSize_col) std::cout  <<  " nonzeroSize_row and nonzeroSize_col not equal"  << nonzeroSize_row << endl;
-    if(nonzeroSize_row != nonzeroSize_val) std::cout  <<  " nonzeroSize_row and nonzeroSize_val not equal"  << nonzeroSize_val << endl;
-    if(nonzeroSize_col != nonzeroSize_val) std::cout  <<  " nonzeroSize_col and nonzeroSize_val not equal"  << nonzeroSize_col << endl;
+    if(nonzeroSize_row != nonzeroSize_col) std::cout  <<  " nonzeroSize_row and nonzeroSize_col not equal"  << endl;
+    if(nonzeroSize_row != nonzeroSize_val) std::cout  <<  " nonzeroSize_row and nonzeroSize_val not equal"  << endl;
+    if(nonzeroSize_col != nonzeroSize_val) std::cout  <<  " nonzeroSize_col and nonzeroSize_val not equal"  << endl;
 
     int *banded_coordRow = coord_row;
     int *banded_coordCol = coord_col;
@@ -231,20 +231,20 @@ int main(int argc, char **argv){
     else{
         if (reversed) {
             myfile1.open(
-                    "/home/selin/Split-Data/" + matrix_names[inputType] + "/outer/CSR-Data/upper/" +
+                    "/home/selin/Split-Data/" + matrix_names[inputType] + "/middle/CSR-Data/upper/" +
                     to_string(inputRatio)+ "-" + to_string(middleRatio) + "-row.txt", ios::out | ios::trunc);
             myfile2.open(
-                    "/home/selin/Split-Data/" + matrix_names[inputType] + "/outer/CSR-Data/upper/" +
+                    "/home/selin/Split-Data/" + matrix_names[inputType] + "/middle/CSR-Data/upper/" +
                     to_string(inputRatio)+ "-" + to_string(middleRatio) + "-col.txt", ios::out | ios::trunc);
             myfile3.open(
-                    "/home/selin/Split-Data/" + matrix_names[inputType] + "/outer/CSR-Data/upper/" +
+                    "/home/selin/Split-Data/" + matrix_names[inputType] + "/middle/CSR-Data/upper/" +
                     to_string(inputRatio)+ "-" + to_string(middleRatio) + "-val.txt", ios::out | ios::trunc);
         } else if (!reversed) {
-            myfile1.open("/home/selin/Split-Data/" + matrix_names[inputType] + "/outer/CSR-Data/" +
+            myfile1.open("/home/selin/Split-Data/" + matrix_names[inputType] + "/middle/CSR-Data/" +
                          to_string(inputRatio)+ "-" + to_string(middleRatio) + "-row.txt", ios::out | ios::trunc);
-            myfile2.open("/home/selin/Split-Data/" + matrix_names[inputType] + "/outer/CSR-Data/" +
+            myfile2.open("/home/selin/Split-Data/" + matrix_names[inputType] + "/middle/CSR-Data/" +
                          to_string(inputRatio)+ "-" + to_string(middleRatio) + "-col.txt", ios::out | ios::trunc);
-            myfile3.open("/home/selin/Split-Data/" + matrix_names[inputType] + "/outer/CSR-Data/" +
+            myfile3.open("/home/selin/Split-Data/" + matrix_names[inputType] + "/middle/CSR-Data/" +
                          to_string(inputRatio)+ "-" + to_string(middleRatio) + "-val.txt", ios::out | ios::trunc);
         }
     }
