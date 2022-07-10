@@ -17,6 +17,9 @@ using namespace std;
 vector<int> colind_up, rowptr_up;
 vector<double> offdiag_up;
 
+vector<int> outer_col, outer_row;
+vector<double> outer_val;
+
 typedef std::numeric_limits< double > dbl;
 
 int readSSSFormat(int z) {
@@ -87,35 +90,34 @@ int readCSRFormat(int z) {
         }
         //else cout << "unexpected file name: " << dir_entry.path() << endl;
     }
-    matrixFolder = "/home/selin/Split-Data/" + matrix_names[z] + "/middle/CSR-Data/upper";
-    for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
-        std::fstream myfile(dir_entry.path(), std::ios_base::in);
-        if(dir_entry.path().stem() == ("1.000000-" + to_string((double) bandwithSize[z]-3) + "-row")) {
-            int tempValInt;
-            while (myfile >> tempValInt) {
-                rowptr_up.push_back(tempValInt);
-            }
-            cout << dir_entry.path() << " has been read with size: " <<rowptr_up.size() << endl;
-            myfile.close();
-        }
-        else if(dir_entry.path().stem() == ("1.000000-" + to_string( (double) bandwithSize[z]-3) + "-col")) {
-            int tempValInt;
-            while (myfile >> tempValInt) {
-                colind_up.push_back(tempValInt);
-            }
-            cout << dir_entry.path() << " has been read with size: " <<  colind_up.size() << endl;
-            myfile.close();
-        }
-        else if(dir_entry.path().stem() == ("1.000000-" + to_string((double) bandwithSize[z]-3) + "-val")){
-            double tempVal;
-            while (myfile >> tempVal) {
-                offdiag_up.push_back(tempVal);
-            }
-            cout << dir_entry.path() << " has been read with size: " <<  offdiag_up.size() << endl;
-            myfile.close();
-        }
+
         //else cout << "unexpected file name: " << dir_entry.path() << endl;
-    }
+        matrixFolder = "/home/selin/Split-Data/" + matrix_names[z] + "/outer/";
+        for(auto const& dir_entry: fs::directory_iterator{matrixFolder}) {
+            std::fstream myfile(dir_entry.path(), std::ios_base::in);
+            if (dir_entry.path().stem() == ("1.000000-" + to_string((double) bandwithSize[z] - 3) + "-row")) {
+                int tempValInt;
+                while (myfile >> tempValInt) {
+                    outer_row.push_back(tempValInt);
+                }
+                cout << dir_entry.path() << " has been read with size: " << outer_row.size() << endl;
+                myfile.close();
+            } else if (dir_entry.path().stem() == ("1.000000-" + to_string((double) bandwithSize[z] - 3) + "-col")) {
+                int tempValInt;
+                while (myfile >> tempValInt) {
+                    outer_col.push_back(tempValInt);
+                }
+                cout << dir_entry.path() << " has been read with size: " << outer_col.size() << endl;
+                myfile.close();
+            } else if (dir_entry.path().stem() == ("1.000000-" + to_string((double) bandwithSize[z] - 3) + "val")) {
+                double tempVal;
+                while (myfile >> tempVal) {
+                    outer_val.push_back(tempVal);
+                }
+                cout << dir_entry.path() << " has been read with size: " << outer_val.size() << endl;
+                myfile.close();
+            }
+        }
     return 0;
 }
 /*
@@ -157,7 +159,9 @@ int main(int argc, char **argv){
     //for (int run = 0; run < 1000; run++) {
     for (int i = 0; i < n; i++) {
         y[i] = matrixDiagonal[i] * x[i];
+        if(i==0)  cout << "adding diag" << endl;
     }
+    // middle -  lower
     for (int i = 0; i < n; i++) {
         val=0.0;
         row_i = matrixRowptr[i] - 1;
@@ -165,18 +169,20 @@ int main(int argc, char **argv){
         for (int j =row_i; j < row_e; j++) {
             colInd = matrixColind[j] - 1;
             val -= matrixOffDiagonal[j] * x[colInd];
+            // middle -  upper
+            y[colInd] += matrixOffDiagonal[j] * x[i];
+            if(colInd==0)  cout << "adding colInd: " <<  matrixOffDiagonal[j] * x[i] << endl;
         }
         y[i] += val;
+        if(i==0)  cout << "adding i: " <<  val << endl;
     }
-    for (int i = 0; i < n; i++) {
-        val=0.0;
-        row_i = rowptr_up[i] - 1;
-        row_e = rowptr_up[i+1] - 1;
-        for (int j =row_i; j < row_e; j++) {
-            colInd = colind_up[j] - 1;
-            val += offdiag_up[j] * x[colInd];
-        }
-        y[i] += val;
+    for (int i = 0; i < outer_row.size(); i++) {
+        // outer - lower
+        y[outer_row[i]-1] -=  outer_val[i] * x[outer_col[i]-1];
+        if(outer_row[i]-1==0)  cout << "adding outer_row[i]-1: " <<  outer_val[i] * x[outer_col[i]-1] << endl;
+        // outer - upper
+        y[outer_col[i]-1] +=  outer_val[i] * x[outer_row[i]-1];
+        if(outer_col[i]-1==0)  cout << "adding outer_col[i]-1: " <<  outer_val[i] * x[outer_row[i]-1] << endl;
     }
     //}
     t = omp_get_wtime() - t;
