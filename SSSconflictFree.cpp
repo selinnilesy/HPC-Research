@@ -157,18 +157,17 @@ int main(int argc, char **argv){
     double row_i,row_e, val;
     double t = omp_get_wtime();
     //for (int run = 0; run < 1000; run++) {
-    for (int i = 0; i < n; i++) {
-        y[i] = matrixDiagonal[i] * x[i];
-        if(i==1)  cout << "adding diag" << endl;
-    }
     // middle -  lower
     for (int i = 0; i < n; i++) {
-        val=0.0;
+        val = matrixDiagonal[i] * x[i];
+        if(i==1)  cout << "adding diag: " << val << endl;
         row_i = matrixRowptr[i] - 1;
         row_e = matrixRowptr[i+1] - 1;
         for (int j =row_i; j < row_e; j++) {
             colInd = matrixColind[j] - 1;
-            val -= matrixOffDiagonal[j] * x[colInd];
+            // skew-symm
+            val += matrixOffDiagonal[j] * x[colInd];
+            if(i==1)  cout << "adding matrixOffDiagonal: " << matrixOffDiagonal[j] << endl;
             // middle -  upper
             y[colInd] -= matrixOffDiagonal[j] * x[i];
             if(colInd==1)  cout << "adding colInd: " <<  matrixOffDiagonal[j] * x[i] << endl;
@@ -178,7 +177,7 @@ int main(int argc, char **argv){
     }
     for (int i = 0; i < outer_row.size(); i++) {
         // outer - lower
-        y[outer_row[i]-1] -=  outer_val[i] * x[outer_col[i]-1];
+        y[outer_row[i]-1] +=  outer_val[i] * x[outer_col[i]-1];
         if(outer_row[i]-1==1)  cout << "adding outer_row[i]-1: " <<  outer_val[i] * x[outer_col[i]-1] << endl;
         // outer - upper
         y[outer_col[i]-1] -=  outer_val[i] * x[outer_row[i]-1];
