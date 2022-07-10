@@ -159,7 +159,7 @@ int main(int argc, char **argv){
     //for (int run = 0; run < 1000; run++) {
     for (int i = 0; i < n; i++) {
         y[i] = matrixDiagonal[i] * x[i];
-        if(i==0)  cout << "adding diag" << endl;
+        if(i==1)  cout << "adding diag" << endl;
     }
     // middle -  lower
     for (int i = 0; i < n; i++) {
@@ -170,19 +170,19 @@ int main(int argc, char **argv){
             colInd = matrixColind[j] - 1;
             val -= matrixOffDiagonal[j] * x[colInd];
             // middle -  upper
-            y[colInd] += matrixOffDiagonal[j] * x[i];
-            if(colInd==0)  cout << "adding colInd: " <<  matrixOffDiagonal[j] * x[i] << endl;
+            y[colInd] -= matrixOffDiagonal[j] * x[i];
+            if(colInd==1)  cout << "adding colInd: " <<  matrixOffDiagonal[j] * x[i] << endl;
         }
         y[i] += val;
-        if(i==0)  cout << "adding i: " <<  val << endl;
+        if(i==1)  cout << "adding i: " <<  val << endl;
     }
     for (int i = 0; i < outer_row.size(); i++) {
         // outer - lower
         y[outer_row[i]-1] -=  outer_val[i] * x[outer_col[i]-1];
-        if(outer_row[i]-1==0)  cout << "adding outer_row[i]-1: " <<  outer_val[i] * x[outer_col[i]-1] << endl;
+        if(outer_row[i]-1==1)  cout << "adding outer_row[i]-1: " <<  outer_val[i] * x[outer_col[i]-1] << endl;
         // outer - upper
-        y[outer_col[i]-1] +=  outer_val[i] * x[outer_row[i]-1];
-        if(outer_col[i]-1==0)  cout << "adding outer_col[i]-1: " <<  outer_val[i] * x[outer_row[i]-1] << endl;
+        y[outer_col[i]-1] -=  outer_val[i] * x[outer_row[i]-1];
+        if(outer_col[i]-1==1)  cout << "adding outer_col[i]-1: " <<  outer_val[i] * x[outer_row[i]-1] << endl;
     }
     //}
     t = omp_get_wtime() - t;
