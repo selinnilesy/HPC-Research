@@ -3,11 +3,12 @@
 //
 
 #include <iostream>
-#include <omp.h>
+//#include <omp.h>
 #include  "header.h"
 #include <limits>
+#include <assert.h>
 #include <iomanip>
-//#include <mpi.h>
+#include <mpi.h>
 //#include "rcmtest.cpp"
 //#include "geeks.cpp"
 
@@ -127,81 +128,118 @@ int readCSRFormat(int z) {
 
  */
 
-int main(int argc, char **argv){
-    int n;
-    //init();
-    if(!argv[1]){
-        cout << "please provide input matrix index (int): boneS10, Emilia_923, ldoor, af_5_k101, Serena, audikw_1" << endl;
-        return -1;
-    }
+int main(int argc, char **argv) {
+    int my_rank,  world_size=atoi(argv[2]);
 
-    readSSSFormat(atoi(argv[1]));
-    readCSRFormat(atoi(argv[1]));
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-    n = matrixSize[atoi(argv[1])];
-    int inputType = atoi(argv[1]);
-
-
-    double *matrixOffDiagonal = valuesPtrs[0];
-    double *matrixDiagonal = dvaluesPtrs[0];
-    int *matrixColind = colindPtrs[0];
-    int *matrixRowptr= rowptrPtrs[0];
-    double *x = new double[n];
-    double *y = new double[n];
-    for(int i=0; i<n; i++) x[i] = 1.0;
-    for(int i=0; i<n; i++) y[i] = 0.0;
-    ofstream myfile1;
-
-    int colInd;
-    cout << "start computing serial SSS mv..." << endl;
-    double row_i,row_e, val;
-    double t = omp_get_wtime();
-    //for (int run = 0; run < 1000; run++) {
-    // middle -  lower
-    for (int i = 0; i < n; i++) {
-        val = matrixDiagonal[i] * x[i];
-        if(i==1)  cout << "adding diag: " << val << endl;
-        row_i = matrixRowptr[i] - 1;
-        row_e = matrixRowptr[i+1] - 1;
-        for (int j =row_i; j < row_e; j++) {
-            colInd = matrixColind[j] - 1;
-            // skew-symm
-            val += matrixOffDiagonal[j] * x[colInd];
-            if(i==1)  cout << "adding matrixOffDiagonal: " << matrixOffDiagonal[j] << endl;
-            // middle -  upper
-            y[colInd] -= matrixOffDiagonal[j] * x[i];
-            if(colInd==1)  cout << "adding colInd: " <<  matrixOffDiagonal[j] * x[i] << endl;
+    int num_process, n, inputType, pieceSize, nnz;
+    num_process = atoi(argv[2]);
+    double *matrixOffDiagonal, *matrixDiagonal;
+    double *x, *y;
+    int *matrixColind, *matrixRowDiff, *matrixRowptr;
+    int *pieceSizeArr, *NNZs;
+    int myPieceSize, myNNZ;
+    int *myRowDiff, *myColInd;
+    double *myX, *myOffDiags, *myDiags;
+    int *displs;
+    if(my_rank==0) {
+        if (!argv[1]) {
+            cout << "please provide input matrix index (int): boneS10, Emilia_923, ldoor, af_5_k101, Serena, audikw_1"
+                 << endl;
+            return -1;
         }
-        y[i] += val;
-        if(i==1)  cout << "adding i: " <<  val << endl;
+        readSSSFormat(atoi(argv[1]));
+        readCSRFormat(atoi(argv[1]));
+
+        num_process = atoi(argv[2]);
+        n = matrixSize[atoi(argv[1])];
+        inputType = atoi(argv[1]);
+        pieceSize = n / num_process;
+        nnz = colindSize[inputType];
+
+        MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&inputType, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+        matrixOffDiagonal = valuesPtrs[0];
+        matrixDiagonal = dvaluesPtrs[0];
+        matrixColind = colindPtrs[0];
+        matrixRowptr = rowptrPtrs[0];
+        x = new double[n];
+        for (int i = 0; i < n; i++) x[i] = 1.0;
+
+        pieceSizeArr = new int[num_process];
+        for (int i = 0; i < num_process - 1; i++) pieceSizeArr[i] = pieceSize;
+        pieceSizeArr[num_process - 1] = n - (num_process - 1) * pieceSize;
+
+        matrixRowDiff = new int[n];
+        for (int i = 0; i < n; i++) matrixRowDiff[i] = matrixRowptr[i+1] - matrixRowptr[i];
+
+        displs = pieceSizeArr;
     }
-    for (int i = 0; i < outer_row.size(); i++) {
-        // outer - lower
-        y[outer_row[i]-1] +=  outer_val[i] * x[outer_col[i]-1];
-        if(outer_row[i]-1==1)  cout << "adding outer_row[i]-1: " <<  outer_val[i] * x[outer_col[i]-1] << endl;
-        // outer - upper
-        y[outer_col[i]-1] -=  outer_val[i] * x[outer_row[i]-1];
-        if(outer_col[i]-1==1)  cout << "adding outer_col[i]-1: " <<  outer_val[i] * x[outer_row[i]-1] << endl;
+
+    // scatter pieceSizeArr.
+    MPI_Scatter(pieceSizeArr, 1, MPI_INT, &myPieceSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    assert (myPieceSize!=0);
+    myX = new double[myPieceSize];
+    myRowDiff = new int[myPieceSize];
+    myDiags = new double[myPieceSize];
+    // scatter x.
+    MPI_Scatterv(x, pieceSizeArr, displs, MPI_DOUBLE, myX, myPieceSize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    // scatter matrixRowptr.
+    MPI_Scatterv(matrixRowDiff, pieceSizeArr, displs, MPI_INT, myRowDiff, myPieceSize, MPI_INT, 0, MPI_COMM_WORLD);
+    // scatter matrixDiagonal.
+    MPI_Scatterv(matrixDiagonal, pieceSizeArr, displs, MPI_DOUBLE, myDiags, myPieceSize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+    if(my_rank==0) {
+        int offset_i, offset_e;
+        NNZs = new int[num_process];
+        for (int i = 1; i < num_process; i++) {
+            offset_i = matrixRowptr[i * pieceSize];
+            offset_e = matrixRowptr[(i + 1) * pieceSize - 1];
+            if (i == 1) NNZs[0] = offset_i;
+            NNZs[i] = offset_e - offset_i;
+        }
+        displs = NNZs;
     }
-    //}
-    t = omp_get_wtime() - t;
-    printf ("It took me %f seconds for 1000-times serial run.\n", t);
-    myfile1.open ("/home/selin/3way-Seq-Results/" + matrix_names[inputType] + "/result.txt", ios::out | ios::trunc);
 
+    MPI_Scatter(NNZs, 1, MPI_INT, &myNNZ, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    assert (myNNZ!=0);
+    myColInd = new int[myNNZ];
+    myOffDiags = new double[myNNZ];
+    // scatter matrixColind.
+    MPI_Scatterv(matrixColind, NNZs, displs, MPI_INT, myColInd, myNNZ, MPI_INT, 0, MPI_COMM_WORLD);
+    // scatter matrixOffDiagonal.
+    MPI_Scatterv(matrixOffDiagonal, NNZs, displs, MPI_DOUBLE, myOffDiags, myNNZ, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-    cout << "Writing to output... " << endl;
-    for (int i=0; i<n; i++) {
-        myfile1 << std::fixed << std::setprecision(dbl::max_digits10) << y[i] << '\t';
+    y = new double[myPieceSize];
+    for (int i = 0; i < myPieceSize; i++) y[i] = 0.0;
+
+    if(my_rank==0) {
+        delete [] x;
+        delete [] matrixRowptr;
+        delete [] matrixRowDiff;
+        delete [] matrixColind;
+        delete [] matrixOffDiagonal;
+        delete [] matrixDiagonal;
+        delete [] NNZs;
+        delete [] pieceSizeArr;
+        cout << my_rank << ": Bitti." << endl;
     }
-    myfile1.close();
-    cout << "Completed output... " << endl;
+    else{
+        cout << my_rank << ": Bitti." << endl;
+    }
 
+    // Finalize MPI
+    // This must always be called after all other MPI functions
+    delete [] myX;
+    delete [] myColInd;
+    delete [] myOffDiags;
+    delete [] myDiags;
+    delete [] myRowDiff;
+    MPI_Finalize();
 
-    delete [] x;
-    delete [] y;
-    delete [] matrixRowptr;
-    delete [] matrixColind;
-    delete [] matrixOffDiagonal;
-    delete [] matrixDiagonal;
     return 0;
 }
