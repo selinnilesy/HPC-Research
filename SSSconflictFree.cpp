@@ -129,14 +129,14 @@ int readCSRFormat(int z) {
  */
 
 int main(int argc, char **argv) {
-    int my_rank,  world_size=atoi(argv[2]);
+    int my_rank,  world_size;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-    int num_process, n, inputType, pieceSize, nnz;
-    num_process = atoi(argv[2]);
+    int n, inputType, pieceSize, local_pieceSize, nnz;
+    cout <<"World size: "  << world_size  << endl;
     double *matrixOffDiagonal, *matrixDiagonal;
     double *x, *y;
     int *matrixColind, *matrixRowDiff, *matrixRowptr;
@@ -154,10 +154,9 @@ int main(int argc, char **argv) {
         readSSSFormat(atoi(argv[1]));
         readCSRFormat(atoi(argv[1]));
 
-        num_process = atoi(argv[2]);
         n = matrixSize[atoi(argv[1])];
         inputType = atoi(argv[1]);
-        pieceSize = n / num_process;
+        pieceSize = n / world_size;
         nnz = colindSize[inputType];
 
         MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -170,9 +169,9 @@ int main(int argc, char **argv) {
         x = new double[n];
         for (int i = 0; i < n; i++) x[i] = 1.0;
 
-        pieceSizeArr = new int[num_process];
-        for (int i = 0; i < num_process - 1; i++) pieceSizeArr[i] = pieceSize;
-        pieceSizeArr[num_process - 1] = n - (num_process - 1) * pieceSize;
+        pieceSizeArr = new int[world_size];
+        for (int i = 0; i < world_size - 1; i++) pieceSizeArr[i] = pieceSize;
+        pieceSizeArr[world_size - 1] = n - (world_size - 1) * pieceSize;
 
         matrixRowDiff = new int[n];
         for (int i = 0; i < n; i++) matrixRowDiff[i] = matrixRowptr[i+1] - matrixRowptr[i];
@@ -182,6 +181,17 @@ int main(int argc, char **argv) {
 
     // scatter pieceSizeArr.
     MPI_Scatter(pieceSizeArr, 1, MPI_INT, &myPieceSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    cout << my_rank << " : myPieceSize " << myPieceSize << endl;
+    // broadcast expected global piece size.
+    if(my_rank==0) {
+        MPI_Bcast(&pieceSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        cout << my_rank << " : local_pieceSize " << local_pieceSize << endl;
+    }
+    else{
+        MPI_Bcast(&local_pieceSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        cout << my_rank << " : local_pieceSize " << local_pieceSize << endl;
+    }
+
     assert (myPieceSize!=0);
     myX = new double[myPieceSize];
     myRowDiff = new int[myPieceSize];
@@ -194,13 +204,10 @@ int main(int argc, char **argv) {
     MPI_Scatterv(matrixDiagonal, pieceSizeArr, displs, MPI_DOUBLE, myDiags, myPieceSize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
     if(my_rank==0) {
-        int offset_i, offset_e;
-        NNZs = new int[num_process];
-        for (int i = 1; i < num_process; i++) {
-            offset_i = matrixRowptr[i * pieceSize];
-            offset_e = matrixRowptr[(i + 1) * pieceSize - 1];
-            if (i == 1) NNZs[0] = offset_i;
-            NNZs[i] = offset_e - offset_i;
+        NNZs = new int[world_size];
+        for (int i = 0; i < world_size; i++) {
+            if(i==world_size-1) NNZs[i] = matrixRowptr[n] - matrixRowptr[(world_size-1) * local_pieceSize];
+            else NNZs[i] = matrixRowptr[(i+1) * local_pieceSize];
         }
         displs = NNZs;
     }
@@ -216,6 +223,16 @@ int main(int argc, char **argv) {
 
     y = new double[myPieceSize];
     for (int i = 0; i < myPieceSize; i++) y[i] = 0.0;
+
+    cout << "Conflict: " << my_rank << " my nnzs : " << myNNZ << " " << myColInd[10] << myColInd[50] << endl;
+    int accum_colInd=0, colInd;
+    for (int i = 0; i < myPieceSize; i++) {
+        for (int j =accum_colInd ; j< accum_colInd + myRowDiff[i]; j++) {
+            colInd = myColInd[j] - 1;
+            //if(colInd < my_rank*pieceSize) cout << "Conflict: " << my_rank << " in square: " << colInd/pieceSize << endl;
+        }
+        accum_colInd+=myRowDiff[i];
+    }
 
     if(my_rank==0) {
         delete [] x;
