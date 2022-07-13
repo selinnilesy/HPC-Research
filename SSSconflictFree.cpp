@@ -234,7 +234,7 @@ int main(int argc, char **argv) {
         for (int j =accum_colInd ; j< accum_colInd + myRowDiff[i]; j++) {
             colInd = myColInd[j] - 1;
             if(colInd < my_rank*pieceSize) {
-                if(lastConfSquare!=colInd/pieceSize && find(confSquares.begin(), confSquares.end(), lastConfSquare) == confSquares.end() ) {
+                if(lastConfSquare!=colInd/pieceSize && find(confSquares.begin(), confSquares.end(), colInd/pieceSize) == confSquares.end() ) {
                     lastConfSquare = colInd/pieceSize;
                     confSquares.push_back(lastConfSquare);
                 }
