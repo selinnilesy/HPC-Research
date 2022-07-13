@@ -24,6 +24,10 @@ vector<double> outer_val;
 
 typedef std::numeric_limits< double > dbl;
 
+extern "C" {
+    extern void submat_(int* job, int*i1, int* i2, int* j1,int* j2, double* a,int* ja,int* ia,int* nr,int* nc,double* ao,int* jao,int* iao);
+}
+
 int readSSSFormat(int z) {
     fs::path matrixFolder;
      matrixFolder = "/home/selin/SSS-Data/" + matrix_names[z];
@@ -245,6 +249,9 @@ int main(int argc, char **argv) {
     for (int i = 0; i < confSquares.size(); i++) cout << "Rank: " << my_rank << " confs in squares: " << confSquares[i] << endl;
 
     if(my_rank==0) {
+
+        //submat_(1 int* i1, int* i2, int* j1,int* j2, double* a,int* ja,int* ia,int* nr,int* nc,double* ao,int* jao,int* iao);
+
         delete [] x;
         delete [] matrixRowptr;
         delete [] matrixRowDiff;
@@ -253,10 +260,11 @@ int main(int argc, char **argv) {
         delete [] matrixDiagonal;
         delete [] NNZs;
         delete [] pieceSizeArr;
-        cout << "Rank: " << my_rank << "Bitti." << endl;
+
+        cout << "Rank: " << my_rank << " Bitti." << endl;
     }
     else{
-        cout <<"Rank: " << my_rank << "Bitti." << endl;
+        cout <<"Rank: " << my_rank << " Bitti." << endl;
     }
 
     // Finalize MPI
