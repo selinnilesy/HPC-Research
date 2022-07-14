@@ -248,7 +248,8 @@ int main(int argc, char **argv) {
     }
     for (int i = 0; i < confSquares.size(); i++) cout << "Rank: " << my_rank << " confs in squares: " << confSquares[i] << endl;
 
-    int neighbourSize, *neighbourX;
+    int neighbourSize;
+    double *neighbourX;
     MPI_Status status;
     if(my_rank==0){
         MPI_Send(&myPieceSize, 1, MPI_INT, my_rank+1, 0, MPI_COMM_WORLD);
@@ -257,7 +258,7 @@ int main(int argc, char **argv) {
     }
     else if(my_rank && my_rank < world_size-1){
         MPI_Recv(&neighbourSize, 1, MPI_INT, my_rank-1, 0, MPI_COMM_WORLD, &status);
-        neighbourX = new int[neighbourSize];
+        neighbourX = new double[neighbourSize];
         MPI_Recv(neighbourX, neighbourSize, MPI_INT, my_rank-1, 0, MPI_COMM_WORLD, &status);
         cout << "Rank: " << my_rank << " received X[" << my_rank-1 << "]" << endl;
         MPI_Send(&myPieceSize, 1, MPI_INT, my_rank+1, 0, MPI_COMM_WORLD);
@@ -266,13 +267,17 @@ int main(int argc, char **argv) {
     }
     else if(my_rank==world_size-1){
         MPI_Recv(&neighbourSize, 1, MPI_INT, my_rank-1, 0, MPI_COMM_WORLD, &status);
-        neighbourX = new int[neighbourSize];
+        neighbourX = new double[neighbourSize];
         MPI_Recv(neighbourX, neighbourSize, MPI_INT, my_rank-1, 0, MPI_COMM_WORLD, &status);
         cout << "Rank: " << my_rank << " received X[" << my_rank-1 << "]" << endl;
     }
     // send info of remaining confs to root.
     int tobesent, temp_tobesent;
-    int* Xsquares_in_process;
+    vector<double*> Xsquares_in_process;
+    for(int i=0; i<world_size; i++){
+        double *ptr = nullptr;
+        Xsquares_in_process.push_back(ptr);
+    }
     // store first process id then needed square id.
     vector<int> send_Xids;
     if(my_rank){
@@ -285,12 +290,13 @@ int main(int argc, char **argv) {
                     MPI_Send(&(confSquares[i]), 1, MPI_INT, 0, my_rank, MPI_COMM_WORLD);
                 }
             }
-            Xsquares_in_process = new int[tobesent*pieceSize];
             for (int i = 0; i < confSquares.size(); i++) {
                 if (confSquares[i] == my_rank - 1) continue;
                 else {
-                    MPI_Recv(Xsquares_in_process+confSquares[i]*pieceSize, pieceSize, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &status);
+                    double *temp = new double[pieceSize];
+                    MPI_Recv(temp, pieceSize, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &status);
                     cout << "Rank: " << my_rank << " received X[" << confSquares[i] << "]" << endl;
+                    Xsquares_in_process[confSquares[i]]=temp;
                 }
             }
         }
@@ -310,22 +316,53 @@ int main(int argc, char **argv) {
         }
     }
 
+
+    double val;
+    int accumIndex=0;
+    vector<double*> Ysquares_in_process;
+    if(my_rank) {
+        for (int i = 0; i < world_size; i++) {
+            double *ptr = nullptr;
+            Ysquares_in_process.push_back(ptr);
+        }
+        for (int i = 0; i < confSquares.size(); i++) {
+            Ysquares_in_process[confSquares[i]] = new double[pieceSize];
+            for (int j = 0; j < pieceSize; j++) Ysquares_in_process[confSquares[i]][j] = 0.0;
+        }
+    }
+    for (int i = 0; i < myPieceSize; i++) {
+        val=0.0;
+        //val += matrixDiagonal[i] * x[i];
+        for (int j = accumIndex; j < accumIndex+myRowDiff[i]; j++) {
+            colInd = myColInd[j] - 1;
+            if(colInd < my_rank*pieceSize) {
+                if(colInd / pieceSize == my_rank-1) val -= myOffDiags[j] * neighbourX[colInd%pieceSize];
+                else{
+                    val -= myOffDiags[j] * (Xsquares_in_process[colInd / pieceSize])[colInd%pieceSize];
+                }
+                (Ysquares_in_process[colInd / pieceSize])[colInd % pieceSize] += myOffDiags[j] * myX[i];
+            }
+            else y[colInd % pieceSize] += myOffDiags[j] * myX[i];
+        }
+        y[i] += val;
+        accumIndex+=myRowDiff[i];
+    }
+
+
+    // termination
     if(my_rank==0) {
         //submat_(1 int* i1, int* i2, int* j1,int* j2, double* a,int* ja,int* ia,int* nr,int* nc,double* ao,int* jao,int* iao);
-        delete [] x;
-        delete [] matrixRowptr;
-        delete [] matrixRowDiff;
-        delete [] matrixColind;
-        delete [] matrixOffDiagonal;
-        delete [] matrixDiagonal;
-        delete [] NNZs;
-        delete [] pieceSizeArr;
+        delete[] x;
+        delete[] matrixRowptr;
+        delete[] matrixRowDiff;
+        delete[] matrixColind;
+        delete[] matrixOffDiagonal;
+        delete[] matrixDiagonal;
+        delete[] NNZs;
+        delete[] pieceSizeArr;
+    }
 
-        cout << "Rank: " << my_rank << " Bitti." << endl;
-    }
-    else{
-        cout <<"Rank: " << my_rank << " Bitti." << endl;
-    }
+    cout << "Rank: " << my_rank << " Bitti." << endl;
 
     // Finalize MPI
     // This must always be called after all other MPI functions
