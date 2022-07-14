@@ -248,10 +248,58 @@ int main(int argc, char **argv) {
     }
     for (int i = 0; i < confSquares.size(); i++) cout << "Rank: " << my_rank << " confs in squares: " << confSquares[i] << endl;
 
+    int neighbourSize, *neighbourX;
+    MPI_Status status;
+    if(my_rank==0){
+        MPI_Send(&myPieceSize, 1, MPI_INT, my_rank+1, 0, MPI_COMM_WORLD);
+        MPI_Send(myX, myPieceSize, MPI_INT, my_rank+1, 0, MPI_COMM_WORLD);
+        cout << "Rank: " << my_rank << " sent X[0]" << endl;
+    }
+    else if(my_rank && my_rank < world_size-1){
+        MPI_Recv(&neighbourSize, 1, MPI_INT, my_rank-1, 0, MPI_COMM_WORLD, &status);
+        neighbourX = new int[neighbourSize];
+        MPI_Recv(neighbourX, neighbourSize, MPI_INT, my_rank-1, 0, MPI_COMM_WORLD, &status);
+        cout << "Rank: " << my_rank << " received X[" << my_rank-1 << "]" << endl;
+        MPI_Send(&myPieceSize, 1, MPI_INT, my_rank+1, 0, MPI_COMM_WORLD);
+        MPI_Send(myX, myPieceSize, MPI_INT, my_rank+1, 0, MPI_COMM_WORLD);
+        cout << "Rank: " << my_rank << " sent X[" << my_rank << "]" << endl;
+    }
+    else if(my_rank==world_size-1){
+        MPI_Recv(&neighbourSize, 1, MPI_INT, my_rank-1, 0, MPI_COMM_WORLD, &status);
+        neighbourX = new int[neighbourSize];
+        MPI_Recv(neighbourX, neighbourSize, MPI_INT, my_rank-1, 0, MPI_COMM_WORLD, &status);
+        cout << "Rank: " << my_rank << " received X[" << my_rank-1 << "]" << endl;
+    }
+    // send info of remaining confs to root.
+    int tobesent, temp_tobesent;
+    // store first process id then needed square id.
+    vector<int> send_Xids;
+    if(my_rank){
+        tobesent = confSquares.size() -1 ;
+        MPI_Send(&tobesent, 1, MPI_INT, 0, my_rank, MPI_COMM_WORLD);
+        if(tobesent) {
+            for (int i = 0; i < confSquares.size(); i++) {
+                if (confSquares[i] == my_rank - 1) continue;
+                else {
+                    MPI_Send(&(confSquares[i]), 1, MPI_INT, 0, my_rank, MPI_COMM_WORLD);
+                }
+            }
+        }
+    }
+    else{
+        for(int i=1; i<world_size; i++){
+            MPI_Recv(&tobesent, 1, MPI_INT, i, i, MPI_COMM_WORLD, &status);
+            while(tobesent--){
+                send_Xids.push_back(i);
+                MPI_Recv(&temp_tobesent, 1, MPI_INT, i, i, MPI_COMM_WORLD, &status);
+                send_Xids.push_back(temp_tobesent);
+            }
+        }
+        for (int i = 0; i < send_Xids.size(); i++) cout << "Rank: " << my_rank << " confs in root to be sent: " << send_Xids[i] << endl;
+    }
+
     if(my_rank==0) {
-
         //submat_(1 int* i1, int* i2, int* j1,int* j2, double* a,int* ja,int* ia,int* nr,int* nc,double* ao,int* jao,int* iao);
-
         delete [] x;
         delete [] matrixRowptr;
         delete [] matrixRowDiff;
