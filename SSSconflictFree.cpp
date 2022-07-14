@@ -272,6 +272,7 @@ int main(int argc, char **argv) {
     }
     // send info of remaining confs to root.
     int tobesent, temp_tobesent;
+    int* Xsquares_in_process;
     // store first process id then needed square id.
     vector<int> send_Xids;
     if(my_rank){
@@ -282,6 +283,14 @@ int main(int argc, char **argv) {
                 if (confSquares[i] == my_rank - 1) continue;
                 else {
                     MPI_Send(&(confSquares[i]), 1, MPI_INT, 0, my_rank, MPI_COMM_WORLD);
+                }
+            }
+            Xsquares_in_process = new int[tobesent*pieceSize];
+            for (int i = 0; i < confSquares.size(); i++) {
+                if (confSquares[i] == my_rank - 1) continue;
+                else {
+                    MPI_Recv(Xsquares_in_process+confSquares[i]*pieceSize, pieceSize, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &status);
+                    cout << "Rank: " << my_rank << " received X[" << confSquares[i] << "]" << endl;
                 }
             }
         }
@@ -295,7 +304,10 @@ int main(int argc, char **argv) {
                 send_Xids.push_back(temp_tobesent);
             }
         }
-        for (int i = 0; i < send_Xids.size(); i++) cout << "Rank: " << my_rank << " confs in root to be sent: " << send_Xids[i] << endl;
+        for (int i = 0; i < send_Xids.size(); i+=2){
+            MPI_Send(x+send_Xids[i+1]*pieceSize, pieceSize, MPI_DOUBLE, send_Xids[i], 0, MPI_COMM_WORLD);
+            cout << "Rank: " << my_rank << " sent X[" << send_Xids[i+1] << "] to process: " << send_Xids[i] << endl;
+        }
     }
 
     if(my_rank==0) {
