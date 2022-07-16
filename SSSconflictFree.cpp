@@ -338,25 +338,41 @@ int main(int argc, char **argv) {
         }
     }
     for (int i = 0; i < myPieceSize; i++) {
-        val=0.0;
-        //val += matrixDiagonal[i] * x[i];
+        val = myDiags[i] * myX[i];
         for (int j = accumIndex; j < accumIndex+myRowDiff[i]; j++) {
             colInd = myColInd[j] - 1;
             if(colInd < my_rank*pieceSize) {
-                if(colInd / pieceSize == my_rank-1) val -= myOffDiags[j] * neighbourX[colInd%pieceSize];
+                if(colInd / pieceSize == my_rank-1) val += myOffDiags[j] * neighbourX[colInd%pieceSize];
                 else{
-                    val -= myOffDiags[j] * (Xsquares_in_process[colInd / pieceSize])[colInd%pieceSize];
+                    val += myOffDiags[j] * (Xsquares_in_process[colInd / pieceSize])[colInd%pieceSize];
                 }
-                (Ysquares_in_process[colInd / pieceSize])[colInd % pieceSize] += myOffDiags[j] * myX[i];
+                (Ysquares_in_process[colInd / pieceSize])[colInd % pieceSize] -= myOffDiags[j] * myX[i];
             }
             else{
-                y[colInd % pieceSize] += myOffDiags[j] * myX[i];
-                val -= myOffDiags[j] * myX[colInd % pieceSize];
+                y[colInd % pieceSize] -= myOffDiags[j] * myX[i];
+                val += myOffDiags[j] * myX[colInd % pieceSize];
             }
         }
         y[i] += val;
         accumIndex+=myRowDiff[i];
     }
+
+    MPI_Win window;
+    MPI_Win_create(y, sizeof(int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &window);
+
+    MPI_Win_fence(0, window);
+    if(!my_rank) {
+        int temp;
+        for (int i = 0; i < outer_col.size(); i++) {
+            temp = -outer_val[i] * x[outer_row[i] -1];
+            MPI_Accumulate(&temp, 1, MPI_DOUBLE, (outer_col[i]-1)/pieceSize, (outer_col[i]-1)%pieceSize, 1, MPI_DOUBLE, MPI_SUM, window);
+            temp = outer_val[i] * x[outer_col[i] -1];
+            MPI_Accumulate(&temp, 1, MPI_DOUBLE, (outer_row[i]-1)/pieceSize, (outer_row[i]-1)%pieceSize, 1, MPI_DOUBLE, MPI_SUM, window);
+        }
+    }
+    MPI_Win_fence(0, window);
+    // Destroy the window
+    MPI_Win_free(&window);
 
     double *dummy, *dummy2;
     for(int z=0; z<world_size; z++) {
