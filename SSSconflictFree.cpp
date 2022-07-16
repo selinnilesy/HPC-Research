@@ -342,10 +342,61 @@ int main(int argc, char **argv) {
                 }
                 (Ysquares_in_process[colInd / pieceSize])[colInd % pieceSize] += myOffDiags[j] * myX[i];
             }
-            else y[colInd % pieceSize] += myOffDiags[j] * myX[i];
+            else{
+                y[colInd % pieceSize] += myOffDiags[j] * myX[i];
+                val -= myOffDiags[j] * myX[colInd % pieceSize];
+            }
         }
         y[i] += val;
         accumIndex+=myRowDiff[i];
+    }
+
+    double *dummy, *dummy2;
+    for(int z=0; z<world_size; z++) {
+        if (my_rank != z && my_rank) {
+            if (Ysquares_in_process[z] != nullptr){
+                cout << "Rank: " << my_rank << " starting. " <<endl;
+                MPI_Send(Ysquares_in_process[z], pieceSize, MPI_DOUBLE, z, 0, MPI_COMM_WORLD);
+                cout << "Rank: " << my_rank << " sent its Y[" << z << "] to process: " << z << endl;
+            }
+            else {
+                cout << "Rank: " << my_rank << " else - starting. " <<endl;
+                dummy = new double[pieceSize];
+                for (int i = 0; i < pieceSize; i++) dummy[i] = 0.0;
+                MPI_Send(dummy, pieceSize, MPI_DOUBLE, z, 0, MPI_COMM_WORLD);
+                cout << "Rank: " << my_rank << " sent its dummy Y[" << z << "] to process: " << z << endl;
+            }
+        }
+        else if(my_rank == z ){
+            cout << "Rank: " << my_rank << " as the receiving process, starting. " <<endl;
+            for (int i = 1; i < world_size; i++) {
+                if(i==z) continue;
+                dummy2 = new double[pieceSize];
+                MPI_Recv(dummy2, pieceSize, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, &status);
+                cout << "Rank: " << my_rank << " received its Y[" << z << "] from process: " << i << endl;
+                for (int j = 0; j < pieceSize; j++) {
+                   y[j] += dummy2[j];
+                }
+                delete [] dummy2;
+            }
+        }
+    }
+
+    if(my_rank==0) {
+        displs = pieceSizeArr;
+        delete [] x;
+        x = new double[n];
+    }
+    ofstream myfile;
+    MPI_Gatherv(y, myPieceSize, MPI_DOUBLE, x, pieceSizeArr, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    if(my_rank==0){
+        myfile.open ("/home/selin/3way-Par-Results/" + matrix_names[inputType] + "/result.txt", ios::out | ios::trunc);
+        cout << "Writing to output... " << endl;
+        for (int i=0; i<n; i++) {
+            myfile << std::fixed << std::setprecision(dbl::max_digits10) << x[i] << '\t';
+        }
+        myfile.close();
+        cout << "Completed output... " << endl;
     }
 
 
