@@ -180,7 +180,11 @@ int main(int argc, char **argv) {
         pieceSizeArr = new int[world_size];
         for (int i = 0; i < world_size - 1; i++) pieceSizeArr[i] = pieceSize;
         pieceSizeArr[world_size - 1] = n - (world_size - 1) * pieceSize;
-        displs = pieceSizeArr;
+
+        displs = new int[world_size];
+        displs[0] = 0;
+        for (int i=1; i<world_size; i++)
+            displs[i] = displs[i-1] + pieceSizeArr[i-1];
 
         matrixRowDiff = new int[n];
         for (int i = 0; i < n; i++) {
@@ -216,7 +220,10 @@ int main(int argc, char **argv) {
     }
     MPI_Gather(&myNNZ, 1, MPI_INT, NNZs, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-    if(my_rank==0)  displs = NNZs;
+    if(my_rank==0) {
+        for (int i=1; i<world_size; i++)
+            displs[i] = displs[i-1] + NNZs[i-1];
+    }
 
     //cout << my_rank << " : myNNZ " << myNNZ << endl;
     assert (myNNZ!=0);
@@ -355,25 +362,25 @@ int main(int argc, char **argv) {
     for(int z=0; z<world_size; z++) {
         if (my_rank != z && my_rank) {
             if (Ysquares_in_process[z] != nullptr){
-                cout << "Rank: " << my_rank << " starting. " <<endl;
+               // cout << "Rank: " << my_rank << " starting. " <<endl;
                 MPI_Send(Ysquares_in_process[z], pieceSize, MPI_DOUBLE, z, 0, MPI_COMM_WORLD);
-                cout << "Rank: " << my_rank << " sent its Y[" << z << "] to process: " << z << endl;
+                //cout << "Rank: " << my_rank << " sent its Y[" << z << "] to process: " << z << endl;
             }
             else {
-                cout << "Rank: " << my_rank << " else - starting. " <<endl;
+                //cout << "Rank: " << my_rank << " else - starting. " <<endl;
                 dummy = new double[pieceSize];
                 for (int i = 0; i < pieceSize; i++) dummy[i] = 0.0;
                 MPI_Send(dummy, pieceSize, MPI_DOUBLE, z, 0, MPI_COMM_WORLD);
-                cout << "Rank: " << my_rank << " sent its dummy Y[" << z << "] to process: " << z << endl;
+                //cout << "Rank: " << my_rank << " sent its dummy Y[" << z << "] to process: " << z << endl;
             }
         }
         else if(my_rank == z ){
-            cout << "Rank: " << my_rank << " as the receiving process, starting. " <<endl;
+            //cout << "Rank: " << my_rank << " as the receiving process, starting. " <<endl;
             for (int i = 1; i < world_size; i++) {
                 if(i==z) continue;
                 dummy2 = new double[pieceSize];
                 MPI_Recv(dummy2, pieceSize, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, &status);
-                cout << "Rank: " << my_rank << " received its Y[" << z << "] from process: " << i << endl;
+                //cout << "Rank: " << my_rank << " received its Y[" << z << "] from process: " << i << endl;
                 for (int j = 0; j < pieceSize; j++) {
                    y[j] += dummy2[j];
                 }
@@ -382,18 +389,26 @@ int main(int argc, char **argv) {
         }
     }
 
+    //cout << "Rank: " << my_rank << " the first two y : "  << y[0] << " and " << y[1] << endl;
+
+    double *output;
     if(my_rank==0) {
-        displs = pieceSizeArr;
         delete [] x;
-        x = new double[n];
+        output = new double[n];
+        displs[0] = 0;
+        for (int i=1; i<world_size; i++)
+            displs[i] = displs[i-1] + pieceSizeArr[i-1];
     }
-    ofstream myfile;
-    MPI_Gatherv(y, myPieceSize, MPI_DOUBLE, x, pieceSizeArr, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+    //cout << "Rank: " << my_rank << " calling gatherv with "  << y[0] << " and " << y[1] << " and " << y[2] << endl << flush;
+    MPI_Gatherv(y, myPieceSize, MPI_DOUBLE, output, pieceSizeArr, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
     if(my_rank==0){
+        ofstream myfile;
         myfile.open ("/home/selin/3way-Par-Results/" + matrix_names[inputType] + "/result.txt", ios::out | ios::trunc);
         cout << "Writing to output... " << endl;
         for (int i=0; i<n; i++) {
-            myfile << std::fixed << std::setprecision(dbl::max_digits10) << x[i] << '\t';
+            myfile << std::fixed << std::setprecision(dbl::max_digits10) << output[i] << '\t';
         }
         myfile.close();
         cout << "Completed output... " << endl;
@@ -403,7 +418,7 @@ int main(int argc, char **argv) {
     // termination
     if(my_rank==0) {
         //submat_(1 int* i1, int* i2, int* j1,int* j2, double* a,int* ja,int* ia,int* nr,int* nc,double* ao,int* jao,int* iao);
-        delete[] x;
+        //delete[] x;
         delete[] matrixRowptr;
         delete[] matrixRowDiff;
         delete[] matrixColind;
@@ -413,7 +428,6 @@ int main(int argc, char **argv) {
         delete[] pieceSizeArr;
     }
 
-    cout << "Rank: " << my_rank << " Bitti." << endl;
 
     // Finalize MPI
     // This must always be called after all other MPI functions
@@ -422,6 +436,9 @@ int main(int argc, char **argv) {
     delete [] myOffDiags;
     delete [] myDiags;
     delete [] myRowDiff;
+
+    cout << "Rank: " << my_rank << " Bitti." << endl << flush;
+
     MPI_Finalize();
 
     return 0;
