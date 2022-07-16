@@ -3,26 +3,19 @@
 //
 
 #include <iostream>
-//#include <omp.h>
 #include  "header.h"
 #include <limits>
 #include <assert.h>
 #include <iomanip>
 #include <mpi.h>
+#include <math.h>
 #include <algorithm>
-//#include "rcmtest.cpp"
-//#include "geeks.cpp"
 
 using namespace std;
-#define MATRIX_COUNT 6
-
-vector<int> colind_up, rowptr_up;
-vector<double> offdiag_up;
+typedef std::numeric_limits< double > dbl;
 
 vector<int> outer_col, outer_row;
 vector<double> outer_val;
-
-typedef std::numeric_limits< double > dbl;
 
 extern "C" {
     extern void submat_(int* job, int*i1, int* i2, int* j1,int* j2, double* a,int* ja,int* ia,int* nr,int* nc,double* ao,int* jao,int* iao);
@@ -94,10 +87,7 @@ int readCSRFormat(int z) {
             cout << dir_entry.path() << " has been read with size: " <<  tempVec.size() << endl;
             myfile.close();
         }
-        //else cout << "unexpected file name: " << dir_entry.path() << endl;
     }
-
-        //else cout << "unexpected file name: " << dir_entry.path() << endl;
         matrixFolder = "/home/selin/Split-Data/" + matrix_names[z] + "/outer/";
         for(auto const& dir_entry: fs::directory_iterator{matrixFolder}) {
             std::fstream myfile(dir_entry.path(), std::ios_base::in);
@@ -126,12 +116,6 @@ int readCSRFormat(int z) {
         }
     return 0;
 }
-/*
-    A RNxN : matrix in SSS format
-    x RN : input vector
-    y RN : output vector
-
- */
 
 int main(int argc, char **argv) {
     int my_rank,  world_size;
@@ -166,8 +150,8 @@ int main(int argc, char **argv) {
         //cout << my_rank << " : nnz " << nnz << endl;
     }
 
-        MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Bcast(&inputType, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&inputType, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
     if(my_rank==0) {
         matrixOffDiagonal = valuesPtrs[0];
@@ -194,10 +178,8 @@ int main(int argc, char **argv) {
 
     // scatter pieceSizeArr.
     MPI_Scatter(pieceSizeArr, 1, MPI_INT, &myPieceSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    //cout << my_rank << " : myPieceSize " << myPieceSize << endl;
     // broadcast expected global piece size.
     MPI_Bcast(&pieceSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    //cout << my_rank << " : pieceSize " << pieceSize << endl;
 
     assert (myPieceSize!=0);
     myX = new double[myPieceSize];
@@ -205,7 +187,6 @@ int main(int argc, char **argv) {
     myDiags = new double[myPieceSize];
     // scatter x.
     MPI_Scatterv(x, pieceSizeArr, displs, MPI_DOUBLE, myX, myPieceSize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    //cout << my_rank << " : X " << myX[10] <<  " " << myX[50] << endl;
     // scatter matrixRowptr.
     MPI_Scatterv(matrixRowDiff, pieceSizeArr, displs, MPI_INT, myRowDiff, myPieceSize, MPI_INT, 0, MPI_COMM_WORLD);
     // scatter matrixDiagonal.
@@ -225,7 +206,6 @@ int main(int argc, char **argv) {
             displs[i] = displs[i-1] + NNZs[i-1];
     }
 
-    //cout << my_rank << " : myNNZ " << myNNZ << endl;
     assert (myNNZ!=0);
     myColInd = new int[myNNZ];
     myOffDiags = new double[myNNZ];
@@ -233,12 +213,10 @@ int main(int argc, char **argv) {
     MPI_Scatterv(matrixColind, NNZs, displs, MPI_INT, myColInd, myNNZ, MPI_INT, 0, MPI_COMM_WORLD);
     // scatter matrixOffDiagonal.
     MPI_Scatterv(matrixOffDiagonal, NNZs, displs, MPI_DOUBLE, myOffDiags, myNNZ, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    //cout << my_rank << " : myColInd " << myColInd[10] << " " << myColInd[50] << endl;
 
     y = new double[myPieceSize];
     for (int i = 0; i < myPieceSize; i++) y[i] = 0.0;
 
-    //int *confSquares = new int[world_size];
     vector<int> confSquares;
     int accum_colInd=0, colInd, lastConfSquare=-1;
     for (int i = 0; i < myPieceSize; i++) {
@@ -258,27 +236,24 @@ int main(int argc, char **argv) {
     int neighbourSize;
     double *neighbourX;
     MPI_Status status;
+    // send X pieces between neighbours.
     if(my_rank==0){
         MPI_Send(&myPieceSize, 1, MPI_INT, my_rank+1, 0, MPI_COMM_WORLD);
         MPI_Send(myX, myPieceSize, MPI_INT, my_rank+1, 0, MPI_COMM_WORLD);
-        cout << "Rank: " << my_rank << " sent X[0]" << endl;
     }
     else if(my_rank && my_rank < world_size-1){
         MPI_Recv(&neighbourSize, 1, MPI_INT, my_rank-1, 0, MPI_COMM_WORLD, &status);
         neighbourX = new double[neighbourSize];
         MPI_Recv(neighbourX, neighbourSize, MPI_INT, my_rank-1, 0, MPI_COMM_WORLD, &status);
-        cout << "Rank: " << my_rank << " received X[" << my_rank-1 << "]" << endl;
         MPI_Send(&myPieceSize, 1, MPI_INT, my_rank+1, 0, MPI_COMM_WORLD);
         MPI_Send(myX, myPieceSize, MPI_INT, my_rank+1, 0, MPI_COMM_WORLD);
-        cout << "Rank: " << my_rank << " sent X[" << my_rank << "]" << endl;
     }
     else if(my_rank==world_size-1){
         MPI_Recv(&neighbourSize, 1, MPI_INT, my_rank-1, 0, MPI_COMM_WORLD, &status);
         neighbourX = new double[neighbourSize];
         MPI_Recv(neighbourX, neighbourSize, MPI_INT, my_rank-1, 0, MPI_COMM_WORLD, &status);
-        cout << "Rank: " << my_rank << " received X[" << my_rank-1 << "]" << endl;
     }
-    // send info of remaining confs to root.
+    // send info of X pieces of remaining confs to root.
     int tobesent, temp_tobesent;
     vector<double*> Xsquares_in_process;
     for(int i=0; i<world_size; i++){
@@ -337,20 +312,23 @@ int main(int argc, char **argv) {
             for (int j = 0; j < pieceSize; j++) Ysquares_in_process[confSquares[i]][j] = 0.0;
         }
     }
+    int colIndModulo;
+    double start_time = MPI_Wtime();
     for (int i = 0; i < myPieceSize; i++) {
         val = myDiags[i] * myX[i];
         for (int j = accumIndex; j < accumIndex+myRowDiff[i]; j++) {
             colInd = myColInd[j] - 1;
+            colIndModulo = fmod(colInd,pieceSize);
             if(colInd < my_rank*pieceSize) {
-                if(colInd / pieceSize == my_rank-1) val += myOffDiags[j] * neighbourX[colInd%pieceSize];
+                if(colInd / pieceSize == my_rank-1) val += myOffDiags[j] * neighbourX[colIndModulo];
                 else{
-                    val += myOffDiags[j] * (Xsquares_in_process[colInd / pieceSize])[colInd%pieceSize];
+                    val += myOffDiags[j] * (Xsquares_in_process[colInd / pieceSize])[colIndModulo];
                 }
-                (Ysquares_in_process[colInd / pieceSize])[colInd % pieceSize] -= myOffDiags[j] * myX[i];
+                (Ysquares_in_process[colInd / pieceSize])[colIndModulo] -= myOffDiags[j] * myX[i];
             }
             else{
-                y[colInd % pieceSize] -= myOffDiags[j] * myX[i];
-                val += myOffDiags[j] * myX[colInd % pieceSize];
+                y[colIndModulo] -= myOffDiags[j] * myX[i];
+                val += myOffDiags[j] * myX[colIndModulo];
             }
         }
         y[i] += val;
@@ -359,53 +337,32 @@ int main(int argc, char **argv) {
 
     MPI_Win window;
     MPI_Win_create(y, sizeof(int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &window);
-
     MPI_Win_fence(0, window);
+    // process outer region.
     if(!my_rank) {
         int temp;
         for (int i = 0; i < outer_col.size(); i++) {
             temp = -outer_val[i] * x[outer_row[i] -1];
-            MPI_Accumulate(&temp, 1, MPI_DOUBLE, (outer_col[i]-1)/pieceSize, (outer_col[i]-1)%pieceSize, 1, MPI_DOUBLE, MPI_SUM, window);
+            MPI_Accumulate(&temp, 1, MPI_DOUBLE, (outer_col[i]-1)/pieceSize, fmod((outer_col[i]-1),pieceSize), 1, MPI_DOUBLE, MPI_SUM, window);
             temp = outer_val[i] * x[outer_col[i] -1];
-            MPI_Accumulate(&temp, 1, MPI_DOUBLE, (outer_row[i]-1)/pieceSize, (outer_row[i]-1)%pieceSize, 1, MPI_DOUBLE, MPI_SUM, window);
+            MPI_Accumulate(&temp, 1, MPI_DOUBLE, (outer_row[i]-1)/pieceSize, fmod((outer_row[i]-1),pieceSize), 1, MPI_DOUBLE, MPI_SUM, window);
         }
     }
     MPI_Win_fence(0, window);
+    // accumulate y results.
+    MPI_Win_fence(0, window);
+    if(my_rank) {
+        for (int i = 0; i < confSquares.size(); i++) {
+            MPI_Accumulate(Ysquares_in_process[confSquares[i]], pieceSize, MPI_DOUBLE, confSquares[i], 0, pieceSize,
+                           MPI_DOUBLE, MPI_SUM, window);
+        }
+    }
+    MPI_Win_fence(0, window);
+    double end_time = MPI_Wtime();
+    if(!my_rank) printf("It took me %f seconds for parallel run.\n", end_time-start_time);
     // Destroy the window
     MPI_Win_free(&window);
 
-    double *dummy, *dummy2;
-    for(int z=0; z<world_size; z++) {
-        if (my_rank != z && my_rank) {
-            if (Ysquares_in_process[z] != nullptr){
-               // cout << "Rank: " << my_rank << " starting. " <<endl;
-                MPI_Send(Ysquares_in_process[z], pieceSize, MPI_DOUBLE, z, 0, MPI_COMM_WORLD);
-                //cout << "Rank: " << my_rank << " sent its Y[" << z << "] to process: " << z << endl;
-            }
-            else {
-                //cout << "Rank: " << my_rank << " else - starting. " <<endl;
-                dummy = new double[pieceSize];
-                for (int i = 0; i < pieceSize; i++) dummy[i] = 0.0;
-                MPI_Send(dummy, pieceSize, MPI_DOUBLE, z, 0, MPI_COMM_WORLD);
-                //cout << "Rank: " << my_rank << " sent its dummy Y[" << z << "] to process: " << z << endl;
-            }
-        }
-        else if(my_rank == z ){
-            //cout << "Rank: " << my_rank << " as the receiving process, starting. " <<endl;
-            for (int i = 1; i < world_size; i++) {
-                if(i==z) continue;
-                dummy2 = new double[pieceSize];
-                MPI_Recv(dummy2, pieceSize, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, &status);
-                //cout << "Rank: " << my_rank << " received its Y[" << z << "] from process: " << i << endl;
-                for (int j = 0; j < pieceSize; j++) {
-                   y[j] += dummy2[j];
-                }
-                delete [] dummy2;
-            }
-        }
-    }
-
-    //cout << "Rank: " << my_rank << " the first two y : "  << y[0] << " and " << y[1] << endl;
 
     double *output;
     if(my_rank==0) {
@@ -416,7 +373,6 @@ int main(int argc, char **argv) {
             displs[i] = displs[i-1] + pieceSizeArr[i-1];
     }
 
-    //cout << "Rank: " << my_rank << " calling gatherv with "  << y[0] << " and " << y[1] << " and " << y[2] << endl << flush;
     MPI_Gatherv(y, myPieceSize, MPI_DOUBLE, output, pieceSizeArr, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
     if(my_rank==0){
