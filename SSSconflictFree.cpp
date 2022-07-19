@@ -125,8 +125,9 @@ int main(int argc, char **argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
     // Obtain the group of processes in the world communicator
-    MPI_Group world_group;
+    MPI_Group world_group, new_group;
     MPI_Comm_group(MPI_COMM_WORLD, &world_group);
+    MPI_Comm newworld;
 
     int n, inputType, pieceSize, nnz;
     cout <<"World size: "  << world_size  << endl;
@@ -216,23 +217,23 @@ int main(int argc, char **argv) {
     }
     MPI_Bcast(&firstEmptyProcess, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-    // Remove all unnecessary ranks
-    int my_newrank;
-    MPI_Group new_group;
-    int ranges[1][3] = {{ firstEmptyProcess, world_size-1, 1}};
-    MPI_Group_range_excl(world_group, 1, ranges, &new_group);
 
-    // Create a new communicator
-    MPI_Comm newworld;
-    MPI_Comm_create(MPI_COMM_WORLD, new_group, &newworld);
-    if (newworld == MPI_COMM_NULL)
-    {
-        MPI_Finalize();
-        exit(0);
+    if(firstEmptyProcess < world_size) {
+        int ranges[1][3] = {{firstEmptyProcess, world_size - 1, 1}};
+        MPI_Group_range_excl(world_group, 1, ranges, &new_group);
+
+        // Create a new communicator
+        MPI_Comm_create(MPI_COMM_WORLD, new_group, &newworld);
+        if (newworld == MPI_COMM_NULL) {
+            MPI_Finalize();
+            exit(0);
+        }
     }
-    cout << "my old rank: " << my_rank << endl;
-    MPI_Comm_rank(newworld, &my_newrank);
-    cout << "my new rank: " << my_newrank << endl;
+    else{
+        MPI_Comm_create(MPI_COMM_WORLD, world_group, &newworld);
+    }
+    MPI_Comm_rank(newworld, &my_rank);
+    cout << "my rank: " << my_rank << endl;
     //assert (myNNZ!=0);
     myColInd = new int[myNNZ];
     myOffDiags = new double[myNNZ];
@@ -361,6 +362,8 @@ int main(int argc, char **argv) {
         y[i] += val;
         accumIndex+=myRowDiff[i];
     }
+    double end_time = MPI_Wtime();
+    if(!my_rank) printf("It took me %f seconds for parallel run.\n", end_time-start_time);
 
     MPI_Win window;
     MPI_Win_create(y, sizeof(double), sizeof(double), MPI_INFO_NULL, newworld, &window);
@@ -375,6 +378,7 @@ int main(int argc, char **argv) {
             MPI_Accumulate(&temp, 1, MPI_DOUBLE, (outer_row[i]-1)/pieceSize, fmod((outer_row[i]-1),pieceSize), 1, MPI_DOUBLE, MPI_SUM, window);
         }
     }
+
     // accumulate y results.
     if(my_rank) {
         for (int i = 0; i < confSquares.size(); i++) {
@@ -383,8 +387,7 @@ int main(int argc, char **argv) {
         }
     }
     MPI_Win_fence(0, window);
-    double end_time = MPI_Wtime();
-    if(!my_rank) printf("It took me %f seconds for parallel run.\n", end_time-start_time);
+
     // Destroy the window
     MPI_Win_free(&window);
 
