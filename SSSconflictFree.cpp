@@ -350,29 +350,30 @@ int main(int argc, char **argv) {
             if(colInd < my_rank*pieceSize) {
                 if(colInd / pieceSize == my_rank-1) {
                     val += myOffDiags[j] * neighbourX[colIndModulo];
-                    if(my_rank==1 && i==0)cout << "my rank: " << my_rank << " - accumulating for y[238050] " << myOffDiags[j] << " by " << neighbourX[colIndModulo]  << endl;}
+                    if(my_rank==3 && i==0)cout << "my rank: " << my_rank << " - accumulating for y[238050] " << myOffDiags[j] << " by " << neighbourX[colIndModulo]  << endl;
+                }
                 else{
                     val += myOffDiags[j] * (Xsquares_in_process[colInd / pieceSize])[colIndModulo];
-                    if(my_rank==1 && i==0) cout << "my rank: " << my_rank << " -- accumulating for y[238050] "  << myOffDiags[j] << " by " << (Xsquares_in_process[colInd / pieceSize])[colIndModulo] << endl;
+                    if(my_rank==3 && i==0) cout << "my rank: " << my_rank << " -- accumulating for y[238050] "  << myOffDiags[j] << " by " << (Xsquares_in_process[colInd / pieceSize])[colIndModulo] << endl;
                 }
                 (Ysquares_in_process[colInd / pieceSize])[colIndModulo] -= myOffDiags[j] * myX[i];
-                if(my_rank==2 && colInd / pieceSize==1 && colInd%pieceSize==0) cout << "my rank: " << my_rank << " computed transposed y " << colInd / pieceSize << " at " << colIndModulo << " " <<  myOffDiags[j] * myX[i] << " by: " << myOffDiags[j]  << " x " <<  myX[i] << endl;
+                //if(my_rank==3 &&  colInd==0) cout << "my rank: " << my_rank << " computed transposed y " << colInd / pieceSize << " at " << colIndModulo << " " <<  myOffDiags[j] * myX[i] << " by: " << myOffDiags[j]  << " x " <<  myX[i] << endl;
             }
             else{
                 y[colIndModulo] -= myOffDiags[j] * myX[i];
                 val += myOffDiags[j] * myX[colIndModulo];
-                if(my_rank==1 && i==0) cout << "my rank: " << my_rank << " --- accumulating for y[238050] " << myOffDiags[j] << " by " << myX[colIndModulo] << endl;
+                if(my_rank==3 && i==0) cout << "my rank: " << my_rank << " --- accumulating for y[238050] " << myOffDiags[j] << " by " << myX[colIndModulo] << endl;
             }
         }
         y[i] += val;
-        if(my_rank==1 && i==0){
+        if(my_rank==3 && i==0){
             cout << "my rank: " << my_rank << " result for y[238050] " << val << endl;
         }
         accumIndex+=myRowDiff[i];
     }
     double end_time = MPI_Wtime();
-    if(!my_rank) printf("It took me %f seconds for parallel run.\n", end_time-start_time);
-    if(my_rank==1) cout << "my rank: " << my_rank << " computed : " << y[0]<< endl;
+    //if(!my_rank) printf("It took me %f seconds for parallel run.\n", end_time-start_time);
+    //if(my_rank==1) cout << "my rank: " << my_rank << " computed : " << y[0]<< endl;
 
     MPI_Win window;
     MPI_Win_create(y, pieceSize*sizeof(double), sizeof(double), MPI_INFO_NULL, newworld, &window);
@@ -383,7 +384,7 @@ int main(int argc, char **argv) {
             {
                 MPI_Accumulate(Ysquares_in_process[confSquares[i]], pieceSize, MPI_DOUBLE, confSquares[i], 0, pieceSize,
                                MPI_DOUBLE, MPI_SUM, window);
-                if(confSquares[i]==1) cout << "my rank: " << my_rank << " is sending : " << Ysquares_in_process[confSquares[i]][0]<< endl;
+                //if(confSquares[i]==1) cout << "my rank: " << my_rank << " is sending : " << Ysquares_in_process[confSquares[i]][0]<< endl;
             }
         }
     }
@@ -409,8 +410,8 @@ int main(int argc, char **argv) {
         for (int i = 0; i < outer_col.size(); i++) {
             output[outer_col[i]-1] -= outer_val[i] * x[outer_row[i] -1];
             output[outer_row[i]-1] += outer_val[i] * x[outer_col[i] -1];
-            if(outer_col[i]-1 == (n/4)) cout << "outer val:" << -outer_val[i] * x[outer_row[i] -1]<< " added. " << endl;
-            else if(outer_row[i]-1 == (n/4)) cout << "outer val:" << outer_val[i] * x[outer_col[i] -1] << " added." << endl;
+            if(outer_col[i]-1 == 686171) cout << "outer val:" << -outer_val[i] * x[outer_row[i] -1]<< " added. " << endl;
+            else if(outer_row[i]-1 == 686171) cout << "outer val:" << outer_val[i] * x[outer_col[i] -1] << " added." << endl;
 
         }
 
