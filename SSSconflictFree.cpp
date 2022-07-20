@@ -347,12 +347,16 @@ int main(int argc, char **argv) {
         for (int j = accumIndex; j < accumIndex+myRowDiff[i]; j++) {
             colInd = myColInd[j] - 1;
             colIndModulo = fmod(colInd,pieceSize);
+            if(colInd==238050){
+                cout << "my rank: " << my_rank << " offidag " << myOffDiags[j] << " at " << colInd / pieceSize << " and " <<  colIndModulo  << " with x " <<  myX[i] << endl;
+            }
             if(colInd < my_rank*pieceSize) {
                 if(colInd / pieceSize == my_rank-1) val += myOffDiags[j] * neighbourX[colIndModulo];
                 else{
                     val += myOffDiags[j] * (Xsquares_in_process[colInd / pieceSize])[colIndModulo];
                 }
                 (Ysquares_in_process[colInd / pieceSize])[colIndModulo] -= myOffDiags[j] * myX[i];
+                if(my_rank==2 && colInd / pieceSize==1 && colInd%pieceSize==0) cout << "my rank: " << my_rank << " computed for y " << colInd / pieceSize << " at " << colIndModulo << " " <<  myOffDiags[j] * myX[i] << " by: " << myOffDiags[j]  << " x " <<  myX[i] << endl;
             }
             else{
                 y[colIndModulo] -= myOffDiags[j] * myX[i];
@@ -364,26 +368,19 @@ int main(int argc, char **argv) {
     }
     double end_time = MPI_Wtime();
     if(!my_rank) printf("It took me %f seconds for parallel run.\n", end_time-start_time);
+    if(my_rank==1) cout << "my rank: " << my_rank << " computed : " << y[0]<< endl;
 
     MPI_Win window;
-    MPI_Win_create(y, sizeof(double), sizeof(double), MPI_INFO_NULL, newworld, &window);
+    MPI_Win_create(y, pieceSize*sizeof(double), sizeof(double), MPI_INFO_NULL, newworld, &window);
     MPI_Win_fence(0, window);
-    // process outer region.
-    if(!my_rank) {
-        int temp;
-        for (int i = 0; i < outer_col.size(); i++) {
-            temp = -outer_val[i] * x[outer_row[i] -1];
-            MPI_Accumulate(&temp, 1, MPI_DOUBLE, (outer_col[i]-1)/pieceSize, fmod((outer_col[i]-1),pieceSize), 1, MPI_DOUBLE, MPI_SUM, window);
-            temp = outer_val[i] * x[outer_col[i] -1];
-            MPI_Accumulate(&temp, 1, MPI_DOUBLE, (outer_row[i]-1)/pieceSize, fmod((outer_row[i]-1),pieceSize), 1, MPI_DOUBLE, MPI_SUM, window);
-        }
-    }
-
     // accumulate y results.
     if(my_rank) {
         for (int i = 0; i < confSquares.size(); i++) {
-            MPI_Accumulate(Ysquares_in_process[confSquares[i]], pieceSize, MPI_DOUBLE, confSquares[i], 0, pieceSize,
-                           MPI_DOUBLE, MPI_SUM, window);
+            {
+                MPI_Accumulate(Ysquares_in_process[confSquares[i]], pieceSize, MPI_DOUBLE, confSquares[i], 0, pieceSize,
+                               MPI_DOUBLE, MPI_SUM, window);
+                if(confSquares[i]==1) cout << "my rank: " << my_rank << " is sending : " << Ysquares_in_process[confSquares[i]][0]<< endl;
+            }
         }
     }
     MPI_Win_fence(0, window);
@@ -394,7 +391,6 @@ int main(int argc, char **argv) {
 
     double *output;
     if(my_rank==0) {
-        delete [] x;
         output = new double[n];
         displs[0] = 0;
         for (int i=1; i<firstEmptyProcess; i++)
@@ -403,7 +399,17 @@ int main(int argc, char **argv) {
 
     MPI_Gatherv(y, myPieceSize, MPI_DOUBLE, output, pieceSizeArr, displs, MPI_DOUBLE, 0, newworld);
 
-    if(my_rank==0){
+    // termination
+    if(my_rank==0) {
+        // process outer region
+        for (int i = 0; i < outer_col.size(); i++) {
+            output[outer_col[i]-1] -= outer_val[i] * x[outer_row[i] -1];
+            output[outer_row[i]-1] += outer_val[i] * x[outer_col[i] -1];
+            if(outer_col[i]-1 == (n/4)) cout << "outer val:" << -outer_val[i] * x[outer_row[i] -1]<< " added. " << endl;
+            else if(outer_row[i]-1 == (n/4)) cout << "outer val:" << outer_val[i] * x[outer_col[i] -1] << " added." << endl;
+
+        }
+
         ofstream myfile;
         myfile.open ("/home/selin/3way-Par-Results/" + matrix_names[inputType] + "/result.txt", ios::out | ios::trunc);
         cout << "Writing to output... " << endl;
@@ -412,13 +418,8 @@ int main(int argc, char **argv) {
         }
         myfile.close();
         cout << "Completed output... " << endl;
-    }
 
-
-    // termination
-    if(my_rank==0) {
-        //submat_(1 int* i1, int* i2, int* j1,int* j2, double* a,int* ja,int* ia,int* nr,int* nc,double* ao,int* jao,int* iao);
-        //delete[] x;
+        delete [] x;
         delete[] matrixRowptr;
         delete[] matrixRowDiff;
         delete[] matrixColind;
