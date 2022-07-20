@@ -167,13 +167,16 @@ int main(int argc, char **argv){
             colInd = matrixColind[j] - 1;
             // skew-symm
             val += matrixOffDiagonal[j] * x[colInd];
+            if(i==238050) cout << "accumulating on 238050 - offdiag: " << matrixOffDiagonal[j] << " x: " << x[colInd] << endl;
             if(i==1)  cout << "adding matrixOffDiagonal: " << matrixOffDiagonal[j] << endl;
             // middle -  upper
             y[colInd] -= matrixOffDiagonal[j] * x[i];
             if(colInd==1)  cout << "adding colInd: " <<  matrixOffDiagonal[j] * x[i] << endl;
         }
         y[i] += val;
-        if(i==1)  cout << "adding i: " <<  val << endl;
+        if(i==238050){
+            cout << " resulting val "  << val << endl;
+        }
     }
     for (int i = 0; i < outer_row.size(); i++) {
         // outer - lower
