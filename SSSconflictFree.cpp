@@ -267,19 +267,19 @@ int main(int argc, char **argv) {
     // send X pieces between neighbours.
     if(my_rank==0){
         MPI_Send(&myPieceSize, 1, MPI_INT, my_rank+1, 0, newworld);
-        MPI_Send(myX, myPieceSize, MPI_INT, my_rank+1, 0, newworld);
+        MPI_Send(myX, myPieceSize, MPI_DOUBLE, my_rank+1, 0, newworld);
     }
     else if(my_rank && my_rank < firstEmptyProcess-1){
         MPI_Recv(&neighbourSize, 1, MPI_INT, my_rank-1, 0, newworld, &status);
         neighbourX = new double[neighbourSize];
-        MPI_Recv(neighbourX, neighbourSize, MPI_INT, my_rank-1, 0, newworld, &status);
+        MPI_Recv(neighbourX, neighbourSize, MPI_DOUBLE, my_rank-1, 0, newworld, &status);
         MPI_Send(&myPieceSize, 1, MPI_INT, my_rank+1, 0, newworld);
-        MPI_Send(myX, myPieceSize, MPI_INT, my_rank+1, 0, newworld);
+        MPI_Send(myX, myPieceSize, MPI_DOUBLE, my_rank+1, 0, newworld);
     }
     else if(my_rank==firstEmptyProcess-1){
         MPI_Recv(&neighbourSize, 1, MPI_INT, my_rank-1, 0, newworld, &status);
         neighbourX = new double[neighbourSize];
-        MPI_Recv(neighbourX, neighbourSize, MPI_INT, my_rank-1, 0, newworld, &status);
+        MPI_Recv(neighbourX, neighbourSize, MPI_DOUBLE, my_rank-1, 0, newworld, &status);
     }
     // send info of X pieces of remaining confs to root.
     int tobesent, temp_tobesent;
@@ -347,23 +347,27 @@ int main(int argc, char **argv) {
         for (int j = accumIndex; j < accumIndex+myRowDiff[i]; j++) {
             colInd = myColInd[j] - 1;
             colIndModulo = fmod(colInd,pieceSize);
-            if(colInd==238050){
-                cout << "my rank: " << my_rank << " offidag " << myOffDiags[j] << " at " << colInd / pieceSize << " and " <<  colIndModulo  << " with x " <<  myX[i] << endl;
-            }
             if(colInd < my_rank*pieceSize) {
-                if(colInd / pieceSize == my_rank-1) val += myOffDiags[j] * neighbourX[colIndModulo];
+                if(colInd / pieceSize == my_rank-1) {
+                    val += myOffDiags[j] * neighbourX[colIndModulo];
+                    if(my_rank==1 && i==0)cout << "my rank: " << my_rank << " - accumulating for y[238050] " << myOffDiags[j] << " by " << neighbourX[colIndModulo]  << endl;}
                 else{
                     val += myOffDiags[j] * (Xsquares_in_process[colInd / pieceSize])[colIndModulo];
+                    if(my_rank==1 && i==0) cout << "my rank: " << my_rank << " -- accumulating for y[238050] "  << myOffDiags[j] << " by " << (Xsquares_in_process[colInd / pieceSize])[colIndModulo] << endl;
                 }
                 (Ysquares_in_process[colInd / pieceSize])[colIndModulo] -= myOffDiags[j] * myX[i];
-                if(my_rank==2 && colInd / pieceSize==1 && colInd%pieceSize==0) cout << "my rank: " << my_rank << " computed for y " << colInd / pieceSize << " at " << colIndModulo << " " <<  myOffDiags[j] * myX[i] << " by: " << myOffDiags[j]  << " x " <<  myX[i] << endl;
+                if(my_rank==2 && colInd / pieceSize==1 && colInd%pieceSize==0) cout << "my rank: " << my_rank << " computed transposed y " << colInd / pieceSize << " at " << colIndModulo << " " <<  myOffDiags[j] * myX[i] << " by: " << myOffDiags[j]  << " x " <<  myX[i] << endl;
             }
             else{
                 y[colIndModulo] -= myOffDiags[j] * myX[i];
                 val += myOffDiags[j] * myX[colIndModulo];
+                if(my_rank==1 && i==0) cout << "my rank: " << my_rank << " --- accumulating for y[238050] " << myOffDiags[j] << " by " << myX[colIndModulo] << endl;
             }
         }
         y[i] += val;
+        if(my_rank==1 && i==0){
+            cout << "my rank: " << my_rank << " result for y[238050] " << val << endl;
+        }
         accumIndex+=myRowDiff[i];
     }
     double end_time = MPI_Wtime();
