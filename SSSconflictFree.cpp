@@ -167,13 +167,13 @@ int main(int argc, char **argv){
             colInd = matrixColind[j] - 1;
             // skew-symm
             val += matrixOffDiagonal[j] * x[colInd];
-            if(i==686171) cout << "accumulating on 238050 - offdiag: " << matrixOffDiagonal[j] << " x: " << x[colInd] << endl;
+            if(i==686172) cout << "accumulating on 238050 - offdiag: " << matrixOffDiagonal[j] << " x: " << x[colInd] << endl;
             // middle -  upper
             y[colInd] -= matrixOffDiagonal[j] * x[i];
-            if(colInd==686171)  cout << "adding colInd to 686171: " <<  -matrixOffDiagonal[j] * x[i] << endl;
+            if(colInd==686172)  cout << "adding colInd to 686171: " <<  -matrixOffDiagonal[j] * x[i] << endl;
         }
         y[i] += val;
-        if(i==686171){
+        if(i==686172){
             cout << " resulting val "  << val << endl;
         }
     }
@@ -186,6 +186,7 @@ int main(int argc, char **argv){
         if(outer_col[i]-1==1)  cout << "adding outer_col[i]-1: " <<  outer_val[i] * x[outer_row[i]-1] << endl;
     }
     //}
+    cout << " resulting val "  << y[686172] << endl;
     t = omp_get_wtime() - t;
     printf ("It took me %f seconds for 1000-times serial run.\n", t);
     myfile1.open ("/home/selin/3way-Seq-Results/" + matrix_names[inputType] + "/result.txt", ios::out | ios::trunc);
