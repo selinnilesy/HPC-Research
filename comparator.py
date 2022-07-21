@@ -21,12 +21,12 @@ if(len(data) != len(data2))  :
 for i in range(len(data)):
     # matching line1 from both files
     try:
-        if abs(float(data[i]) - float(data2[i])) > 0.000001:
+        if abs(float(data[i]) - float(data2[i])) > 0.01:
             print("\tLine-", i, end='')
             print("\tPar:", float(data[i]), end='')
             print("\tSeq:", float(data2[i]), end='')
             print("\n")
-            break
+
     except ValueError:
         print("\tLine-", i, end='')
         print(data[i])

@@ -150,7 +150,7 @@ int main(int argc, char **argv) {
 
         n = matrixSize[atoi(argv[1])];
         inputType = atoi(argv[1]);
-        pieceSize = n / world_size;
+        pieceSize = floor(n / world_size);
         nnz = colindSize[inputType];
         //cout << my_rank << " : nnz " << nnz << endl;
     }
@@ -209,7 +209,6 @@ int main(int argc, char **argv) {
     int firstEmptyProcess = world_size;
     if(my_rank==0) {
         for (int i=1; i<world_size; i++) {
-            displs[i] = displs[i - 1] + NNZs[i - 1];
             if( NNZs[i] == 0) {
                 if(firstEmptyProcess > i) firstEmptyProcess = i;
             }
@@ -237,10 +236,25 @@ int main(int argc, char **argv) {
     //assert (myNNZ!=0);
     myColInd = new int[myNNZ];
     myOffDiags = new double[myNNZ];
+    int *NNZs2;
     // scatter matrixColind.
-    MPI_Scatterv(matrixColind, NNZs, displs, MPI_INT, myColInd, myNNZ, MPI_INT, 0, newworld);
+    if(my_rank==0){
+        NNZs2 = new int[firstEmptyProcess];
+        for (int i=0; i<firstEmptyProcess; i++) {
+            NNZs2[i] = NNZs[i];
+        }
+        delete [] displs;
+        displs= new int[firstEmptyProcess];
+        displs[0] = 0;
+        for (int i=1; i<firstEmptyProcess; i++) {
+            displs[i] = displs[i - 1] + NNZs[i - 1];
+        }
+    }
+    MPI_Scatterv(matrixColind, NNZs2, displs, MPI_INT, myColInd, myNNZ, MPI_INT, 0, newworld);
     // scatter matrixOffDiagonal.
-    MPI_Scatterv(matrixOffDiagonal, NNZs, displs, MPI_DOUBLE, myOffDiags, myNNZ, MPI_DOUBLE, 0, newworld);
+    MPI_Scatterv(matrixOffDiagonal, NNZs2, displs, MPI_DOUBLE, myOffDiags, myNNZ, MPI_DOUBLE, 0, newworld);
+
+    //cout << "unused file name: " << myOffDiags[0] << endl;
 
     y = new double[myPieceSize];
     for (int i = 0; i < myPieceSize; i++) y[i] = 0.0;
@@ -350,30 +364,31 @@ int main(int argc, char **argv) {
             if(colInd < my_rank*pieceSize) {
                 if(colInd / pieceSize == my_rank-1) {
                     val += myOffDiags[j] * neighbourX[colIndModulo];
-                    if(my_rank==3 && i==0)cout << "my rank: " << my_rank << " - accumulating for y[238050] " << myOffDiags[j] << " by " << neighbourX[colIndModulo]  << endl;
+                    if(my_rank==3 && i==0)cout << "my rank: " << my_rank << " - accumulating for y[686172] " << myOffDiags[j] << " by " << neighbourX[colIndModulo]  << " and val: " << val << endl;
                 }
                 else{
                     val += myOffDiags[j] * (Xsquares_in_process[colInd / pieceSize])[colIndModulo];
-                    if(my_rank==3 && i==0) cout << "my rank: " << my_rank << " -- accumulating for y[238050] "  << myOffDiags[j] << " by " << (Xsquares_in_process[colInd / pieceSize])[colIndModulo] << endl;
+                    if(my_rank==3 && i==0) cout << "my rank: " << my_rank << " -- accumulating for y[686172] "  << myOffDiags[j] << " by " << (Xsquares_in_process[colInd / pieceSize])[colIndModulo] << endl;
                 }
                 (Ysquares_in_process[colInd / pieceSize])[colIndModulo] -= myOffDiags[j] * myX[i];
-                //if(my_rank==3 &&  colInd==0) cout << "my rank: " << my_rank << " computed transposed y " << colInd / pieceSize << " at " << colIndModulo << " " <<  myOffDiags[j] * myX[i] << " by: " << myOffDiags[j]  << " x " <<  myX[i] << endl;
+                //if(my_rank==3 &&  i==0) cout << "my rank: " << my_rank << " computed transposed y " << colInd / pieceSize << " at " << colIndModulo << " " <<  myOffDiags[j] * myX[i] << " by: " << myOffDiags[j]  << " x " <<  myX[i] << endl;
             }
             else{
                 y[colIndModulo] -= myOffDiags[j] * myX[i];
                 val += myOffDiags[j] * myX[colIndModulo];
-                if(my_rank==3 && i==0) cout << "my rank: " << my_rank << " --- accumulating for y[238050] " << myOffDiags[j] << " by " << myX[colIndModulo] << endl;
+                //if(my_rank==3 && i==0) cout << "my rank: " << my_rank << " --- accumulating for y[238050] " << myOffDiags[j] << " by " << myX[colIndModulo] << endl;
+                if(my_rank==3 && i==0) cout << "my rank: " << my_rank << " --- accumulating for y[686172] " << -myOffDiags[j] << " by " << myX[i] << " with colIndModulo "<< colIndModulo << endl;
             }
         }
         y[i] += val;
         if(my_rank==3 && i==0){
-            cout << "my rank: " << my_rank << " result for y[238050] " << val << endl;
+            cout << "my rank: " << my_rank << " result for y[686172] " << val << " " << y[i] << endl;
         }
         accumIndex+=myRowDiff[i];
     }
     double end_time = MPI_Wtime();
     //if(!my_rank) printf("It took me %f seconds for parallel run.\n", end_time-start_time);
-    //if(my_rank==1) cout << "my rank: " << my_rank << " computed : " << y[0]<< endl;
+    if(my_rank==3 ) cout << "my rank: " << my_rank << " computed : " << y[0]<< endl;
 
     MPI_Win window;
     MPI_Win_create(y, pieceSize*sizeof(double), sizeof(double), MPI_INFO_NULL, newworld, &window);
@@ -410,8 +425,8 @@ int main(int argc, char **argv) {
         for (int i = 0; i < outer_col.size(); i++) {
             output[outer_col[i]-1] -= outer_val[i] * x[outer_row[i] -1];
             output[outer_row[i]-1] += outer_val[i] * x[outer_col[i] -1];
-            if(outer_col[i]-1 == 686171) cout << "outer val:" << -outer_val[i] * x[outer_row[i] -1]<< " added. " << endl;
-            else if(outer_row[i]-1 == 686171) cout << "outer val:" << outer_val[i] * x[outer_col[i] -1] << " added." << endl;
+            if(outer_col[i]-1 == 686172) cout << "outer val:" << -outer_val[i] * x[outer_row[i] -1]<< " added. " << endl;
+            else if(outer_row[i]-1 == 686172) cout << "outer val:" << outer_val[i] * x[outer_col[i] -1] << " added." << endl;
 
         }
 
@@ -430,7 +445,7 @@ int main(int argc, char **argv) {
         delete[] matrixColind;
         delete[] matrixOffDiagonal;
         delete[] matrixDiagonal;
-        delete[] NNZs;
+        delete[] NNZs2;
         delete[] pieceSizeArr;
     }
 
