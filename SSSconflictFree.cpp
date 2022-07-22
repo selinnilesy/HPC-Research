@@ -364,26 +364,23 @@ int main(int argc, char **argv) {
             if(colInd < my_rank*pieceSize) {
                 if(colInd / pieceSize == my_rank-1) {
                     val += myOffDiags[j] * neighbourX[colIndModulo];
-                    if(my_rank==3 && i==0)cout << "my rank: " << my_rank << " - accumulating for y[686172] " << myOffDiags[j] << " by " << neighbourX[colIndModulo]  << " and val: " << val << endl;
+                    //if(my_rank==3 && i==0)cout << "my rank: " << my_rank << " - accumulating for y[686172] " << myOffDiags[j] << " by " << neighbourX[colIndModulo]  << " and val: " << val << endl;
                 }
                 else{
                     val += myOffDiags[j] * (Xsquares_in_process[colInd / pieceSize])[colIndModulo];
-                    if(my_rank==3 && i==0) cout << "my rank: " << my_rank << " -- accumulating for y[686172] "  << myOffDiags[j] << " by " << (Xsquares_in_process[colInd / pieceSize])[colIndModulo] << endl;
+                    //if(my_rank==3 && i==0) cout << "my rank: " << my_rank << " -- accumulating for y[686172] "  << myOffDiags[j] << " by " << (Xsquares_in_process[colInd / pieceSize])[colIndModulo] << endl;
                 }
                 (Ysquares_in_process[colInd / pieceSize])[colIndModulo] -= myOffDiags[j] * myX[i];
                 //if(my_rank==3 &&  i==0) cout << "my rank: " << my_rank << " computed transposed y " << colInd / pieceSize << " at " << colIndModulo << " " <<  myOffDiags[j] * myX[i] << " by: " << myOffDiags[j]  << " x " <<  myX[i] << endl;
             }
             else{
-                y[colIndModulo] -= myOffDiags[j] * myX[i];
-                val += myOffDiags[j] * myX[colIndModulo];
+                y[ (int) fmod(colInd-my_rank*pieceSize,myPieceSize)] -= myOffDiags[j] * myX[i];
+                val += myOffDiags[j] * myX[(int) fmod(colInd-my_rank*pieceSize,myPieceSize)];
                 //if(my_rank==3 && i==0) cout << "my rank: " << my_rank << " --- accumulating for y[238050] " << myOffDiags[j] << " by " << myX[colIndModulo] << endl;
-                if(my_rank==3 && i==0) cout << "my rank: " << my_rank << " --- accumulating for y[686172] " << -myOffDiags[j] << " by " << myX[i] << " with colIndModulo "<< colIndModulo << endl;
+                 //if(my_rank==3 && (int) fmod(colInd-my_rank*pieceSize,myPieceSize)==0) cout << "my rank: " << my_rank << " --- accumulating for y[686172] " << -myOffDiags[j] << " by " << myX[i] << " with colInd "<< colInd << endl;
             }
         }
         y[i] += val;
-        if(my_rank==3 && i==0){
-            cout << "my rank: " << my_rank << " result for y[686172] " << val << " " << y[i] << endl;
-        }
         accumIndex+=myRowDiff[i];
     }
     double end_time = MPI_Wtime();
