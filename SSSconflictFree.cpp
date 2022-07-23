@@ -130,7 +130,6 @@ int main(int argc, char **argv) {
     MPI_Comm newworld;
 
     int n, inputType, pieceSize, nnz;
-    cout <<"World size: "  << world_size  << endl;
     double *matrixOffDiagonal, *matrixDiagonal;
     double *x, *y;
     int *matrixColind, *matrixRowDiff, *matrixRowptr;
@@ -262,7 +261,7 @@ int main(int argc, char **argv) {
         MPI_Comm_create(MPI_COMM_WORLD, world_group, &newworld);
     }
     MPI_Comm_rank(newworld, &my_rank);
-    cout << "my new rank: " << my_rank << endl;
+   // cout << "my new rank: " << my_rank << endl;
     //assert (myNNZ!=0);
     myColInd = new int[myNNZ];
     myOffDiags = new double[myNNZ];
@@ -298,7 +297,7 @@ int main(int argc, char **argv) {
         }
         accum_colInd+=myRowDiff[i];
     }
-    for (int i = 0; i < confSquares.size(); i++) cout << "Rank: " << my_rank << " confs in squares: " << confSquares[i] << endl;
+    //for (int i = 0; i < confSquares.size(); i++) cout << "Rank: " << my_rank << " confs in squares: " << confSquares[i] << endl;
 
     double *neighbourX;
     // send X pieces between neighbours.
@@ -342,7 +341,7 @@ int main(int argc, char **argv) {
                 else {
                     double *temp = new double[pieceSize];
                     MPI_Recv(temp, pieceSize, MPI_DOUBLE, 0, 0, newworld, &status);
-                    cout << "Rank: " << my_rank << " received X[" << confSquares[i] << "]" << endl;
+                   // cout << "Rank: " << my_rank << " received X[" << confSquares[i] << "]" << endl;
                     Xsquares_in_process[confSquares[i]]=temp;
                 }
             }
@@ -359,7 +358,7 @@ int main(int argc, char **argv) {
         }
         for (int i = 0; i < send_Xids.size(); i+=2){
             MPI_Send(x+send_Xids[i+1]*pieceSize, pieceSize, MPI_DOUBLE, send_Xids[i], 0, newworld);
-            cout << "Rank: " << my_rank << " sent X[" << send_Xids[i+1] << "] to process: " << send_Xids[i] << endl;
+          //  cout << "Rank: " << my_rank << " sent X[" << send_Xids[i+1] << "] to process: " << send_Xids[i] << endl;
         }
     }
 
@@ -393,8 +392,8 @@ int main(int argc, char **argv) {
         accumIndex+=myRowDiff[i];
     }
     accumIndex=0;
-    cout << my_rank << " completed colind modulo." << endl;
-    double start_time = MPI_Wtime();
+    double time=0.0, end_time, start_time;
+    start_time = MPI_Wtime();
     for (int i = 0; i < myPieceSize; i++) {
         val = myDiags[i] * myX[i];
         for (int j = accumIndex; j < accumIndex+myRowDiff[i]; j++) {
@@ -424,12 +423,14 @@ int main(int argc, char **argv) {
         y[i] += val;
         accumIndex+=myRowDiff[i];
     }
-    double end_time = MPI_Wtime();
+    time += MPI_Wtime() - start_time;
+    if(my_rank==0)  cout << "Time for 1st part: " << time << endl << flush;
 
     MPI_Win window;
     MPI_Win_create(y, pieceSize*sizeof(double), sizeof(double), MPI_INFO_NULL, newworld, &window);
     MPI_Win_fence(0, window);
     // accumulate y results.
+    start_time = MPI_Wtime();
     if(my_rank) {
         for (int i = 0; i < confSquares.size(); i++) {
             {
@@ -439,6 +440,9 @@ int main(int argc, char **argv) {
             }
         }
     }
+    end_time = MPI_Wtime();
+    time += end_time-start_time;
+    if(my_rank==0)  cout << "Time for 2nd part: " << end_time-start_time << endl << flush;
     MPI_Win_fence(0, window);
 
     // Destroy the window
@@ -461,10 +465,15 @@ int main(int argc, char **argv) {
         for (int i = 0; i < totalSize; i++) {
             output[firstEmptyProcess*pieceSize + i ] = closingYs[i];
         }
+        start_time = MPI_Wtime();
         for (int i = 0; i < outer_col.size(); i++) {
             output[outer_col[i]-1] -= outer_val[i] * x[outer_row[i] -1];
             output[outer_row[i]-1] += outer_val[i] * x[outer_col[i] -1];
         }
+        end_time = MPI_Wtime();
+        time += end_time-start_time;
+        if(my_rank==0)  cout << "Time for 3rd part: " << end_time-start_time << endl << flush;
+        if(my_rank==0)  cout << "Total time: " << time << endl << flush;
 
         ofstream myfile;
         myfile.open ("/home/selin/3way-Par-Results/" + matrix_names[inputType] + "/result.txt", ios::out | ios::trunc);
@@ -494,7 +503,7 @@ int main(int argc, char **argv) {
     delete [] myDiags;
     delete [] myRowDiff;
 
-    cout << "Rank: " << my_rank << " Bitti." << endl << flush;
+    //cout << "Rank: " << my_rank << " Bitti." << endl << flush;
 
     MPI_Finalize();
 

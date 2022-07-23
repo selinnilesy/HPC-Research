@@ -1,7 +1,9 @@
-#! /bin/sh
-mpiexec -np 4  -mca btl ^openib SSSconflictFree 0
-mpiexec -np 4  -mca btl ^openib SSSconflictFree 1
-mpiexec -np 4  -mca btl ^openib SSSconflictFree 2
-mpiexec -np 4  -mca btl ^openib SSSconflictFree 3
-mpiexec -np 4  -mca btl ^openib SSSconflictFree 4
-mpiexec -np 4  -mca btl ^openib SSSconflictFree 5
+#!/bin/bash
+
+for i in  0 1 2 3 4 5
+do
+	for nthread  in 2 3 4 5 6
+	do
+		 mpiexec -n $((2 **nthread))  ./SSSconflictFree $i $((2 **nthread))
+	done
+done
