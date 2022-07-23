@@ -1,12 +1,5 @@
 import sys
 
-def determine(lstELM) :
-    if(lstELM == 'Remove' or  lstELM == 'Follow' or lstELM == 'Hashtags' or lstELM=='People' or lstELM=="·" or lstELM=='Following') :
-        return True
-    elif(lstELM.find(" ") != -1) :
-        return True
-    return False
-
 names = ["boneS10", "Emilia_923", "ldoor", "af_5_k101", "Serena", "audikw_1"]
 z=int(sys.argv[1])
 file1 = open('/home/selin/3way-Par-Results/' + names[z] + '/result.txt')
@@ -26,6 +19,7 @@ for i in range(len(data)):
             print("\tPar:", float(data[i]), end='')
             print("\tSeq:", float(data2[i]), end='')
             print("\n")
+            break
 
     except ValueError:
         print("\tLine-", i, end='')
