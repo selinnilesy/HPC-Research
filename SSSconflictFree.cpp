@@ -156,31 +156,30 @@ int main(int argc, char **argv){
     cout << "start computing serial SSS mv..." << endl;
     double row_i,row_e, val;
     double t = omp_get_wtime();
-    //for (int run = 0; run < 1000; run++) {
-    // middle -  lower
-    for (int i = 0; i < n; i++) {
-        val = matrixDiagonal[i] * x[i];
-        if(i==1)  cout << "adding diag: " << val << endl;
-        row_i = matrixRowptr[i] - 1;
-        row_e = matrixRowptr[i+1] - 1;
-        for (int j =row_i; j < row_e; j++) {
-            colInd = matrixColind[j] - 1;
-            // skew-symm
-            val += matrixOffDiagonal[j] * x[colInd];
-            //if(i==686172) cout << "accumulating on 238050 - offdiag: " << matrixOffDiagonal[j] << " x: " << x[colInd] << endl;
-            // middle -  upper
-            y[colInd] -= matrixOffDiagonal[j] * x[i];
-            //if(colInd==686172)  cout << "adding colInd to 686171: " <<  -matrixOffDiagonal[j] * x[i] << endl;
+    for (int run = 0; run < 100; run++) {
+        // middle -  lower
+        for (int i = 0; i < n; i++) {
+            val = matrixDiagonal[i] * x[i];
+            row_i = matrixRowptr[i] - 1;
+            row_e = matrixRowptr[i + 1] - 1;
+            for (int j = row_i; j < row_e; j++) {
+                colInd = matrixColind[j] - 1;
+                // skew-symm
+                val += matrixOffDiagonal[j] * x[colInd];
+                //if(i==686172) cout << "accumulating on 238050 - offdiag: " << matrixOffDiagonal[j] << " x: " << x[colInd] << endl;
+                // middle -  upper
+                y[colInd] -= matrixOffDiagonal[j] * x[i];
+                //if(colInd==686172)  cout << "adding colInd to 686171: " <<  -matrixOffDiagonal[j] * x[i] << endl;
+            }
+            y[i] += val;
         }
-        y[i] += val;
+        for (int i = 0; i < outer_row.size(); i++) {
+            // outer - lower
+            y[outer_row[i] - 1] += outer_val[i] * x[outer_col[i] - 1];
+            // outer - upper
+            y[outer_col[i] - 1] -= outer_val[i] * x[outer_row[i] - 1];
+        }
     }
-    for (int i = 0; i < outer_row.size(); i++) {
-        // outer - lower
-        y[outer_row[i]-1] +=  outer_val[i] * x[outer_col[i]-1];
-        // outer - upper
-        y[outer_col[i]-1] -=  outer_val[i] * x[outer_row[i]-1];
-    }
-    //}
     t = omp_get_wtime() - t;
     printf ("It took me %f seconds for 1000-times serial run.\n", t);
     myfile1.open ("/home/selin/3way-Seq-Results/" + matrix_names[inputType] + "/result.txt", ios::out | ios::trunc);
