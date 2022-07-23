@@ -394,34 +394,35 @@ int main(int argc, char **argv) {
     accumIndex=0;
     double time=0.0, end_time, start_time;
     start_time = MPI_Wtime();
-    for (int i = 0; i < myPieceSize; i++) {
-        val = myDiags[i] * myX[i];
-        for (int j = accumIndex; j < accumIndex+myRowDiff[i]; j++) {
-            colInd = myColInd[j] - 1;
-            processID = colIndProcessID[j];
-            colIndModulo = colIndOffset[j];
-            colIndModuloInterP = colIndOffsetInter[j];
-            if(colInd < my_rank*pieceSize) {
-                if(processID == my_rank-1) {
-                    val += myOffDiags[j] * neighbourX[colIndModuloInterP];
-                    //if(my_rank==3 && i==0)cout << "my rank: " << my_rank << " - accumulating for y[686172] " << myOffDiags[j] << " by " << neighbourX[colIndModulo]  << " and val: " << val << endl;
+    for (int ii = 0; ii < 100; ii++) {
+        for (int i = 0; i < myPieceSize; i++) {
+            val = myDiags[i] * myX[i];
+            for (int j = accumIndex; j < accumIndex + myRowDiff[i]; j++) {
+                colInd = myColInd[j] - 1;
+                processID = colIndProcessID[j];
+                colIndModulo = colIndOffset[j];
+                colIndModuloInterP = colIndOffsetInter[j];
+                if (colInd < my_rank * pieceSize) {
+                    if (processID == my_rank - 1) {
+                        val += myOffDiags[j] * neighbourX[colIndModuloInterP];
+                        //if(my_rank==3 && i==0)cout << "my rank: " << my_rank << " - accumulating for y[686172] " << myOffDiags[j] << " by " << neighbourX[colIndModulo]  << " and val: " << val << endl;
+                    } else {
+                        val += myOffDiags[j] * (Xsquares_in_process[processID])[colIndModuloInterP];
+                        //if(my_rank==3 && i==0) cout << "my rank: " << my_rank << " -- accumulating for y[686172] "  << myOffDiags[j] << " by " << (Xsquares_in_process[colInd / pieceSize])[colIndModulo] << endl;
+                    }
+                    (Ysquares_in_process[processID])[colIndModuloInterP] -= myOffDiags[j] * myX[i];
+                    //if(my_rank==3 &&  i==0) cout << "my rank: " << my_rank << " computed transposed y " << colInd / pieceSize << " at " << colIndModulo << " " <<  myOffDiags[j] * myX[i] << " by: " << myOffDiags[j]  << " x " <<  myX[i] << endl;
+                } else {
+                    y[colIndModulo] -= myOffDiags[j] * myX[i];
+                    val += myOffDiags[j] * myX[colIndModulo];
+                    //if(my_rank==3 && i==0) cout << "my rank: " << my_rank << " --- accumulating for y[238050] " << myOffDiags[j] << " by " << myX[colIndModulo] << endl;
+                    //if(my_rank==3 && (int) fmod(colInd-my_rank*pieceSize,myPieceSize)==0) cout << "my rank: " << my_rank << " --- accumulating for y[686172] " << -myOffDiags[j] << " by " << myX[i] << " with colInd "<< colInd << endl;
                 }
-                else{
-                    val += myOffDiags[j] * (Xsquares_in_process[processID])[colIndModuloInterP];
-                    //if(my_rank==3 && i==0) cout << "my rank: " << my_rank << " -- accumulating for y[686172] "  << myOffDiags[j] << " by " << (Xsquares_in_process[colInd / pieceSize])[colIndModulo] << endl;
-                }
-                (Ysquares_in_process[processID])[colIndModuloInterP] -= myOffDiags[j] * myX[i];
-                //if(my_rank==3 &&  i==0) cout << "my rank: " << my_rank << " computed transposed y " << colInd / pieceSize << " at " << colIndModulo << " " <<  myOffDiags[j] * myX[i] << " by: " << myOffDiags[j]  << " x " <<  myX[i] << endl;
             }
-            else{
-                y[colIndModulo] -= myOffDiags[j] * myX[i];
-                val += myOffDiags[j] * myX[colIndModulo];
-                //if(my_rank==3 && i==0) cout << "my rank: " << my_rank << " --- accumulating for y[238050] " << myOffDiags[j] << " by " << myX[colIndModulo] << endl;
-                 //if(my_rank==3 && (int) fmod(colInd-my_rank*pieceSize,myPieceSize)==0) cout << "my rank: " << my_rank << " --- accumulating for y[686172] " << -myOffDiags[j] << " by " << myX[i] << " with colInd "<< colInd << endl;
-            }
+            y[i] += val;
+            accumIndex += myRowDiff[i];
         }
-        y[i] += val;
-        accumIndex+=myRowDiff[i];
+        accumIndex=0;
     }
     time += MPI_Wtime() - start_time;
     if(my_rank==0)  cout << "Time for 1st part: " << time << endl << flush;
@@ -431,12 +432,15 @@ int main(int argc, char **argv) {
     MPI_Win_fence(0, window);
     // accumulate y results.
     start_time = MPI_Wtime();
-    if(my_rank) {
-        for (int i = 0; i < confSquares.size(); i++) {
-            {
-                MPI_Accumulate(Ysquares_in_process[confSquares[i]], pieceSize, MPI_DOUBLE, confSquares[i], 0, pieceSize,
-                               MPI_DOUBLE, MPI_SUM, window);
-                //if(confSquares[i]==1) cout << "my rank: " << my_rank << " is sending : " << Ysquares_in_process[confSquares[i]][0]<< endl;
+    if (my_rank) {
+        for (int ii = 0; ii < 100; ii++) {
+            for (int i = 0; i < confSquares.size(); i++) {
+                {
+                    MPI_Accumulate(Ysquares_in_process[confSquares[i]], pieceSize, MPI_DOUBLE, confSquares[i], 0,
+                                   pieceSize,
+                                   MPI_DOUBLE, MPI_SUM, window);
+                    //if(confSquares[i]==1) cout << "my rank: " << my_rank << " is sending : " << Ysquares_in_process[confSquares[i]][0]<< endl;
+                }
             }
         }
     }
@@ -466,9 +470,11 @@ int main(int argc, char **argv) {
             output[firstEmptyProcess*pieceSize + i ] = closingYs[i];
         }
         start_time = MPI_Wtime();
-        for (int i = 0; i < outer_col.size(); i++) {
-            output[outer_col[i]-1] -= outer_val[i] * x[outer_row[i] -1];
-            output[outer_row[i]-1] += outer_val[i] * x[outer_col[i] -1];
+        for (int ii = 0; ii < 100; ii++) {
+            for (int i = 0; i < outer_col.size(); i++) {
+                output[outer_col[i] - 1] -= outer_val[i] * x[outer_row[i] - 1];
+                output[outer_row[i] - 1] += outer_val[i] * x[outer_col[i] - 1];
+            }
         }
         end_time = MPI_Wtime();
         time += end_time-start_time;
