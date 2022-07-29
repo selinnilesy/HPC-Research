@@ -156,7 +156,6 @@ int main(int argc, char **argv){
     cout << "start computing serial SSS mv..." << endl;
     double row_i,row_e, val;
     double t = omp_get_wtime();
-    for (int run = 0; run < 100; run++) {
         // middle -  lower
         for (int i = 0; i < n; i++) {
             val = matrixDiagonal[i] * x[i];
@@ -179,7 +178,6 @@ int main(int argc, char **argv){
             // outer - upper
             y[outer_col[i] - 1] -= outer_val[i] * x[outer_row[i] - 1];
         }
-    }
     t = omp_get_wtime() - t;
     printf ("It took me %f seconds for 1000-times serial run.\n", t);
     myfile1.open ("/home/selin/3way-Seq-Results/" + matrix_names[inputType] + "/result.txt", ios::out | ios::trunc);
