@@ -373,22 +373,28 @@ int main(int argc, char **argv) {
             for (int j = 0; j < pieceSize; j++) Ysquares_in_process[confSquares[i]][j] = 0.0;
         }
     }
-    int accumIndex=0;
+    // new row ptr
+    int *rowPtr = new int[myPieceSize+1];
+    rowPtr[0] = 0;
+    for(int i=1; i<myPieceSize+1; i++){
+        rowPtr[i] = rowPtr[i-1] + myRowDiff[i-1];
+    }
+
     int colIndModulo, processID, colIndModuloInterP;
     int *colIndOffset, *colIndProcessID, *colIndOffsetInter;
     colIndOffset = new int[myNNZ];
     colIndProcessID = new int[myNNZ];
     colIndOffsetInter = new int[myNNZ];
     for (int i = 0; i < myPieceSize; i++) {
-        for (int j = accumIndex; j < accumIndex + myRowDiff[i]; j++) {
+        for (int j =  rowPtr[i]; j <  rowPtr[i+1]; j++) {
             colInd = myColInd[j] - 1;
             colIndModulo = (int) fmod(colInd-my_rank*pieceSize,myPieceSize);
             colIndOffsetInter[j] = (int) fmod(colInd,pieceSize);
             colIndOffset[j] = colIndModulo;
             colIndProcessID[j] = colInd / pieceSize;
         }
-        accumIndex+=myRowDiff[i];
     }
+
     // pre-determine outer's offsets
     int *outer_colIndOffset, *outer_colIndProcessID;
     int *outer_rowIndOffset, *outer_rowIndProcessID;
@@ -418,44 +424,39 @@ int main(int argc, char **argv) {
         }
     }
 
-    accumIndex=0;
     if(my_rank==0) {
         displs[0] = 0;
         for (int i=1; i<firstEmptyProcess; i++)
             displs[i] = displs[i-1] + pieceSizeArr[i-1];
     }
 
-
-
+    double maxTime = 0.0;
     MPI_Barrier(newworld);
 
     start_time = MPI_Wtime();
     //cout << (bool) MPI_WTIME_IS_GLOBAL << endl;
     for (int i = 0; i < myPieceSize; i++) {
         val = myDiags[i] * myX[i];
-        for (int j = accumIndex; j < accumIndex + myRowDiff[i]; j++) {
-            colInd = myColInd[j] - 1;
+        for (int j = rowPtr[i]; j < rowPtr[i+1]; j++) {
             processID = colIndProcessID[j];
-            colIndModulo = colIndOffset[j];
-            colIndModuloInterP = colIndOffsetInter[j];
-            if (colInd < my_rank * pieceSize) {
+            if ((myColInd[j] - 1) < my_rank * pieceSize) {
                 if (processID == my_rank - 1) {
-                    val += myOffDiags[j] * neighbourX[colIndModuloInterP];
+                    val += myOffDiags[j] * neighbourX[colIndOffsetInter[j]];
                 } else {
-                    val += myOffDiags[j] * (Xsquares_in_process[processID])[colIndModuloInterP];
+                    val += myOffDiags[j] * (Xsquares_in_process[processID])[colIndOffsetInter[j]];
                 }
-                (Ysquares_in_process[processID])[colIndModuloInterP] -= myOffDiags[j] * myX[i];
+                (Ysquares_in_process[processID])[colIndOffsetInter[j]] -= myOffDiags[j] * myX[i];
             } else {
-                y[colIndModulo] -= myOffDiags[j] * myX[i];
-                val += myOffDiags[j] * myX[colIndModulo];
+                y[colIndOffset[j]] -= myOffDiags[j] * myX[i];
+                val += myOffDiags[j] * myX[colIndOffset[j]];
             }
         }
         y[i] += val;
-        accumIndex += myRowDiff[i];
+        //accumIndex += myRowDiff[i];
     }
     end_time = MPI_Wtime();
     time += end_time - start_time;
-   cout << my_rank << ": computation - multiplication " << end_time - start_time << endl << flush;
+    //cout << my_rank << ": computation - multiplication " << end_time - start_time << endl << flush;
 
     MPI_Win window;
     MPI_Win_create(y, pieceSize*sizeof(double), sizeof(double), MPI_INFO_NULL, newworld, &window);
@@ -473,9 +474,11 @@ int main(int argc, char **argv) {
     }
     end_time = MPI_Wtime();
     time += end_time-start_time;
-    cout << my_rank << ": communication - accumulation " << end_time - start_time << endl << flush;
+    //cout << my_rank << ": communication - accumulation " << end_time - start_time << endl << flush;
     MPI_Win_fence(0, window);
     MPI_Win_free(&window);
+
+    MPI_Reduce(&time, &maxTime, 1, MPI_DOUBLE, MPI_MAX, 0, newworld);
 
     MPI_Win window1;
     MPI_Win_create(y, sizeof(double), sizeof(double), MPI_INFO_NULL, newworld, &window1);
@@ -493,28 +496,30 @@ int main(int argc, char **argv) {
 
         }
         end_time = MPI_Wtime();
-        time += end_time - start_time;
-        cout << my_rank << ": computation - outer " << end_time - start_time << endl << flush;
+        maxTime += end_time - start_time;
+        //cout << my_rank << ": computation - outer " << end_time - start_time << endl << flush;
     }
 
     MPI_Win_fence(0, window1);
     MPI_Win_free(&window1);
     // gather just to conform code works.
-   // MPI_Gatherv(y, myPieceSize, MPI_DOUBLE, output, pieceSizeArr, displs, MPI_DOUBLE, 0, newworld);
+    //MPI_Gatherv(y, myPieceSize, MPI_DOUBLE, output, pieceSizeArr, displs, MPI_DOUBLE, 0, newworld);
 
     if(my_rank == 0){
         //printf("The max of all ranks is %lf.\n", maxTime);
-        cout << my_rank << ": Total time " << time << endl << flush;
+        cout << my_rank << ": Total time " << maxTime << endl << flush;
         cout << "-----------------------------------------------" << endl << flush;
 
-        ofstream myfile;
+       /*
+        * ofstream myfile;
         myfile.open ("/home/selin/3way-Par-Results/" + matrix_names[inputType] + "/result.txt", ios::out | ios::trunc);
-       // cout << "Writing to output... " << endl;
+        // cout << "Writing to output... " << endl;
         for (int i=0; i<n; i++) {
             myfile << std::fixed << std::setprecision(dbl::max_digits10) << output[i] << '\t';
         }
         myfile.close();
         //cout << "Completed output... " << endl;
+        */
 
         delete [] x;
         delete[] matrixRowptr;

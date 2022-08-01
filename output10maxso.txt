@@ -1,0 +1,184 @@
+"/home/selin/SSS-Data/boneS10/diag.txt" has been read with size: 914898
+"/home/selin/Split-Data/boneS10/middle/CSR-Data/1.000000-13724.000000-row.txt" has been read with size: 914899
+"/home/selin/Split-Data/boneS10/middle/CSR-Data/1.000000-13724.000000-col.txt" has been read with size: 19981899
+"/home/selin/Split-Data/boneS10/middle/CSR-Data/1.000000-13724.000000-val.txt" has been read with size: 19981899
+0: Total time 0.0905182
+-----------------------------------------------
+"/home/selin/SSS-Data/boneS10/diag.txt" has been read with size: 914898
+"/home/selin/Split-Data/boneS10/middle/CSR-Data/1.000000-13724.000000-row.txt" has been read with size: 914899
+"/home/selin/Split-Data/boneS10/middle/CSR-Data/1.000000-13724.000000-col.txt" has been read with size: 19981899
+"/home/selin/Split-Data/boneS10/middle/CSR-Data/1.000000-13724.000000-val.txt" has been read with size: 19981899
+0: Total time 0.0468152
+-----------------------------------------------
+"/home/selin/SSS-Data/boneS10/diag.txt" has been read with size: 914898
+"/home/selin/Split-Data/boneS10/middle/CSR-Data/1.000000-13724.000000-row.txt" has been read with size: 914899
+"/home/selin/Split-Data/boneS10/middle/CSR-Data/1.000000-13724.000000-col.txt" has been read with size: 19981899
+"/home/selin/Split-Data/boneS10/middle/CSR-Data/1.000000-13724.000000-val.txt" has been read with size: 19981899
+0: Total time 0.0260171
+-----------------------------------------------
+"/home/selin/SSS-Data/boneS10/diag.txt" has been read with size: 914898
+"/home/selin/Split-Data/boneS10/middle/CSR-Data/1.000000-13724.000000-row.txt" has been read with size: 914899
+"/home/selin/Split-Data/boneS10/middle/CSR-Data/1.000000-13724.000000-col.txt" has been read with size: 19981899
+"/home/selin/Split-Data/boneS10/middle/CSR-Data/1.000000-13724.000000-val.txt" has been read with size: 19981899
+0: Total time 0.0188027
+-----------------------------------------------
+"/home/selin/SSS-Data/boneS10/diag.txt" has been read with size: 914898
+"/home/selin/Split-Data/boneS10/middle/CSR-Data/1.000000-13724.000000-row.txt" has been read with size: 914899
+"/home/selin/Split-Data/boneS10/middle/CSR-Data/1.000000-13724.000000-col.txt" has been read with size: 19981899
+"/home/selin/Split-Data/boneS10/middle/CSR-Data/1.000000-13724.000000-val.txt" has been read with size: 19981899
+0: Total time 0.0290207
+-----------------------------------------------
+"/home/selin/SSS-Data/Emilia_923/diag.txt" has been read with size: 923136
+"/home/selin/Split-Data/Emilia_923/middle/CSR-Data/1.000000-14669.000000-row.txt" has been read with size: 923137
+"/home/selin/Split-Data/Emilia_923/middle/CSR-Data/1.000000-14669.000000-val.txt" has been read with size: 19725093
+"/home/selin/Split-Data/Emilia_923/middle/CSR-Data/1.000000-14669.000000-col.txt" has been read with size: 19725093
+0: Total time 0.0900448
+-----------------------------------------------
+"/home/selin/SSS-Data/Emilia_923/diag.txt" has been read with size: 923136
+"/home/selin/Split-Data/Emilia_923/middle/CSR-Data/1.000000-14669.000000-row.txt" has been read with size: 923137
+"/home/selin/Split-Data/Emilia_923/middle/CSR-Data/1.000000-14669.000000-val.txt" has been read with size: 19725093
+"/home/selin/Split-Data/Emilia_923/middle/CSR-Data/1.000000-14669.000000-col.txt" has been read with size: 19725093
+0: Total time 0.0462021
+-----------------------------------------------
+"/home/selin/SSS-Data/Emilia_923/diag.txt" has been read with size: 923136
+"/home/selin/Split-Data/Emilia_923/middle/CSR-Data/1.000000-14669.000000-row.txt" has been read with size: 923137
+"/home/selin/Split-Data/Emilia_923/middle/CSR-Data/1.000000-14669.000000-val.txt" has been read with size: 19725093
+"/home/selin/Split-Data/Emilia_923/middle/CSR-Data/1.000000-14669.000000-col.txt" has been read with size: 19725093
+0: Total time 0.0258451
+-----------------------------------------------
+"/home/selin/SSS-Data/Emilia_923/diag.txt" has been read with size: 923136
+"/home/selin/Split-Data/Emilia_923/middle/CSR-Data/1.000000-14669.000000-row.txt" has been read with size: 923137
+"/home/selin/Split-Data/Emilia_923/middle/CSR-Data/1.000000-14669.000000-val.txt" has been read with size: 19725093
+"/home/selin/Split-Data/Emilia_923/middle/CSR-Data/1.000000-14669.000000-col.txt" has been read with size: 19725093
+0: Total time 0.0189899
+-----------------------------------------------
+"/home/selin/SSS-Data/Emilia_923/diag.txt" has been read with size: 923136
+"/home/selin/Split-Data/Emilia_923/middle/CSR-Data/1.000000-14669.000000-row.txt" has been read with size: 923137
+"/home/selin/Split-Data/Emilia_923/middle/CSR-Data/1.000000-14669.000000-val.txt" has been read with size: 19725093
+"/home/selin/Split-Data/Emilia_923/middle/CSR-Data/1.000000-14669.000000-col.txt" has been read with size: 19725093
+0: Total time 0.0289008
+-----------------------------------------------
+"/home/selin/SSS-Data/ldoor/diag.txt" has been read with size: 952203
+"/home/selin/Split-Data/ldoor/middle/CSR-Data/1.000000-8704.000000-row.txt" has been read with size: 952204
+"/home/selin/Split-Data/ldoor/middle/CSR-Data/1.000000-8704.000000-val.txt" has been read with size: 20770801
+"/home/selin/Split-Data/ldoor/middle/CSR-Data/1.000000-8704.000000-col.txt" has been read with size: 20770801
+0: Total time 0.0947197
+-----------------------------------------------
+"/home/selin/SSS-Data/ldoor/diag.txt" has been read with size: 952203
+"/home/selin/Split-Data/ldoor/middle/CSR-Data/1.000000-8704.000000-row.txt" has been read with size: 952204
+"/home/selin/Split-Data/ldoor/middle/CSR-Data/1.000000-8704.000000-val.txt" has been read with size: 20770801
+"/home/selin/Split-Data/ldoor/middle/CSR-Data/1.000000-8704.000000-col.txt" has been read with size: 20770801
+0: Total time 0.0488706
+-----------------------------------------------
+"/home/selin/SSS-Data/ldoor/diag.txt" has been read with size: 952203
+"/home/selin/Split-Data/ldoor/middle/CSR-Data/1.000000-8704.000000-row.txt" has been read with size: 952204
+"/home/selin/Split-Data/ldoor/middle/CSR-Data/1.000000-8704.000000-val.txt" has been read with size: 20770801
+"/home/selin/Split-Data/ldoor/middle/CSR-Data/1.000000-8704.000000-col.txt" has been read with size: 20770801
+0: Total time 0.0265508
+-----------------------------------------------
+"/home/selin/SSS-Data/ldoor/diag.txt" has been read with size: 952203
+"/home/selin/Split-Data/ldoor/middle/CSR-Data/1.000000-8704.000000-row.txt" has been read with size: 952204
+"/home/selin/Split-Data/ldoor/middle/CSR-Data/1.000000-8704.000000-val.txt" has been read with size: 20770801
+"/home/selin/Split-Data/ldoor/middle/CSR-Data/1.000000-8704.000000-col.txt" has been read with size: 20770801
+31: Communication - empty process 0.000168033
+0: Total time 0.0190912
+-----------------------------------------------
+"/home/selin/SSS-Data/ldoor/diag.txt" has been read with size: 952203
+"/home/selin/Split-Data/ldoor/middle/CSR-Data/1.000000-8704.000000-row.txt" has been read with size: 952204
+"/home/selin/Split-Data/ldoor/middle/CSR-Data/1.000000-8704.000000-val.txt" has been read with size: 20770801
+"/home/selin/Split-Data/ldoor/middle/CSR-Data/1.000000-8704.000000-col.txt" has been read with size: 20770801
+62: Communication - empty process 0.00011415
+63: Communication - empty process 0.000100061
+0: Total time 0.0311073
+-----------------------------------------------
+"/home/selin/SSS-Data/af_5_k101/diag.txt" has been read with size: 503625
+"/home/selin/Split-Data/af_5_k101/middle/CSR-Data/1.000000-1271.000000-val.txt" has been read with size: 8522511
+"/home/selin/Split-Data/af_5_k101/middle/CSR-Data/1.000000-1271.000000-row.txt" has been read with size: 503626
+"/home/selin/Split-Data/af_5_k101/middle/CSR-Data/1.000000-1271.000000-col.txt" has been read with size: 8522511
+0: Total time 0.0383105
+-----------------------------------------------
+"/home/selin/SSS-Data/af_5_k101/diag.txt" has been read with size: 503625
+"/home/selin/Split-Data/af_5_k101/middle/CSR-Data/1.000000-1271.000000-val.txt" has been read with size: 8522511
+"/home/selin/Split-Data/af_5_k101/middle/CSR-Data/1.000000-1271.000000-row.txt" has been read with size: 503626
+"/home/selin/Split-Data/af_5_k101/middle/CSR-Data/1.000000-1271.000000-col.txt" has been read with size: 8522511
+0: Total time 0.0220203
+-----------------------------------------------
+"/home/selin/SSS-Data/af_5_k101/diag.txt" has been read with size: 503625
+"/home/selin/Split-Data/af_5_k101/middle/CSR-Data/1.000000-1271.000000-val.txt" has been read with size: 8522511
+"/home/selin/Split-Data/af_5_k101/middle/CSR-Data/1.000000-1271.000000-row.txt" has been read with size: 503626
+"/home/selin/Split-Data/af_5_k101/middle/CSR-Data/1.000000-1271.000000-col.txt" has been read with size: 8522511
+0: Total time 0.0128535
+-----------------------------------------------
+"/home/selin/SSS-Data/af_5_k101/diag.txt" has been read with size: 503625
+"/home/selin/Split-Data/af_5_k101/middle/CSR-Data/1.000000-1271.000000-val.txt" has been read with size: 8522511
+"/home/selin/Split-Data/af_5_k101/middle/CSR-Data/1.000000-1271.000000-row.txt" has been read with size: 503626
+"/home/selin/Split-Data/af_5_k101/middle/CSR-Data/1.000000-1271.000000-col.txt" has been read with size: 8522511
+0: Total time 0.00849325
+-----------------------------------------------
+"/home/selin/SSS-Data/af_5_k101/diag.txt" has been read with size: 503625
+"/home/selin/Split-Data/af_5_k101/middle/CSR-Data/1.000000-1271.000000-val.txt" has been read with size: 8522511
+"/home/selin/Split-Data/af_5_k101/middle/CSR-Data/1.000000-1271.000000-row.txt" has been read with size: 503626
+"/home/selin/Split-Data/af_5_k101/middle/CSR-Data/1.000000-1271.000000-col.txt" has been read with size: 8522511
+0: Total time 0.0125484
+-----------------------------------------------
+"/home/selin/SSS-Data/Serena/diag.txt" has been read with size: 1391349
+"/home/selin/Split-Data/Serena/middle/CSR-Data/1.000000-87869.000000-row.txt" has been read with size: 1391350
+"/home/selin/Split-Data/Serena/middle/CSR-Data/1.000000-87869.000000-col.txt" has been read with size: 31370305
+"/home/selin/Split-Data/Serena/middle/CSR-Data/1.000000-87869.000000-val.txt" has been read with size: 31370305
+0: Total time 0.151795
+-----------------------------------------------
+"/home/selin/SSS-Data/Serena/diag.txt" has been read with size: 1391349
+"/home/selin/Split-Data/Serena/middle/CSR-Data/1.000000-87869.000000-row.txt" has been read with size: 1391350
+"/home/selin/Split-Data/Serena/middle/CSR-Data/1.000000-87869.000000-col.txt" has been read with size: 31370305
+"/home/selin/Split-Data/Serena/middle/CSR-Data/1.000000-87869.000000-val.txt" has been read with size: 31370305
+0: Total time 0.0951597
+-----------------------------------------------
+"/home/selin/SSS-Data/Serena/diag.txt" has been read with size: 1391349
+"/home/selin/Split-Data/Serena/middle/CSR-Data/1.000000-87869.000000-row.txt" has been read with size: 1391350
+"/home/selin/Split-Data/Serena/middle/CSR-Data/1.000000-87869.000000-col.txt" has been read with size: 31370305
+"/home/selin/Split-Data/Serena/middle/CSR-Data/1.000000-87869.000000-val.txt" has been read with size: 31370305
+0: Total time 0.0471746
+-----------------------------------------------
+"/home/selin/SSS-Data/Serena/diag.txt" has been read with size: 1391349
+"/home/selin/Split-Data/Serena/middle/CSR-Data/1.000000-87869.000000-row.txt" has been read with size: 1391350
+"/home/selin/Split-Data/Serena/middle/CSR-Data/1.000000-87869.000000-col.txt" has been read with size: 31370305
+"/home/selin/Split-Data/Serena/middle/CSR-Data/1.000000-87869.000000-val.txt" has been read with size: 31370305
+0: Total time 0.0321989
+-----------------------------------------------
+Rank: 16 confs in squares: 14	Rank: 15 confs in squares: 13	Rank: 7 confs in squares: 5	Rank: 10 confs in squares: 8	Rank: 21 confs in squares: 19	Rank: 6 confs in squares: 4	Rank: 11 confs in squares: 9	Rank: 18 confs in squares: 16	Rank: 23 confs in squares: 21	Rank: 3 confs in squares: 1	Rank: 4 confs in squares: 2	Rank: 5 confs in squares: 3	Rank: 8 confs in squares: 6	Rank: 9 confs in squares: 7	Rank: 13 confs in squares: 11	Rank: 14 confs in squares: 12	Rank: 17 confs in squares: 15	Rank: 19 confs in squares: 17	Rank: 22 confs in squares: 20	Rank: 12 confs in squares: 10	Rank: 20 confs in squares: 18	"/home/selin/SSS-Data/Serena/diag.txt" has been read with size: 1391349
+"/home/selin/Split-Data/Serena/middle/CSR-Data/1.000000-87869.000000-row.txt" has been read with size: 1391350
+"/home/selin/Split-Data/Serena/middle/CSR-Data/1.000000-87869.000000-col.txt" has been read with size: 31370305
+"/home/selin/Split-Data/Serena/middle/CSR-Data/1.000000-87869.000000-val.txt" has been read with size: 31370305
+0: Total time 0.0462143
+-----------------------------------------------
+Rank: 2 confs in squares: 0Rank: 3 confs in squares: 1	Rank: 20 confs in squares: 16	Rank: 20 confs in squares: 18	Rank: 20 confs in squares: 17	Rank: 24 confs in squares: 20	Rank: 24 confs in squares: 22	Rank: 24 confs in squares: 21		Rank: 14 confs in squares: 10	Rank: 14 confs in squares: 11	Rank: 14 confs in squares: 12	Rank: 5 confs in squares: 3Rank: 51 confs in squares: 49		Rank: 10 confs in squares: 6	Rank: 10 confs in squares: 7	Rank: 10 confs in squares: 8	Rank: 11 confs in squares: 7	Rank: 11 confs in squares: 9	Rank: 11 confs in squares: 8	Rank: 49 confs in squares: 47	Rank: 18 confs in squares: 14	Rank: 18 confs in squares: 16	Rank: 18 confs in squares: 15	Rank: 25 confs in squares: 21	Rank: 25 confs in squares: 23	Rank: 25 confs in squares: 22	Rank: 7 confs in squares: 4	Rank: 7 confs in squares: 5	Rank: 5 confs in squares: 2	Rank: 13 confs in squares: 9	Rank: 13 confs in squares: 10	Rank: 13 confs in squares: 11	Rank: 16 confs in squares: 12	Rank: 16 confs in squares: 13	Rank: 16 confs in squares: 14	Rank: 17 confs in squares: 13	Rank: 17 confs in squares: 15	Rank: 17 confs in squares: 14	Rank: 21 confs in squares: 17	Rank: 21 confs in squares: 18	Rank: 21 confs in squares: 19	Rank: 22 confs in squares: 18	Rank: 22 confs in squares: 19	Rank: 22 confs in squares: 20	Rank: 23 confs in squares: 19	Rank: 23 confs in squares: 20	Rank: 23 confs in squares: 21	Rank: 26 confs in squares: 22	Rank: 26 confs in squares: 24	Rank: 26 confs in squares: 23	Rank: 27 confs in squares: 23	Rank: 27 confs in squares: 24	Rank: 27 confs in squares: 25	Rank: 29 confs in squares: 25	Rank: 29 confs in squares: 26	Rank: 29 confs in squares: 27	Rank: 30 confs in squares: 26	Rank: 30 confs in squares: 27	Rank: 30 confs in squares: 28	Rank: 32 confs in squares: 28	Rank: 32 confs in squares: 30	Rank: 32 confs in squares: 29	Rank: 33 confs in squares: 29	Rank: 33 confs in squares: 31	Rank: 33 confs in squares: 30	Rank: 35 confs in squares: 31	Rank: 35 confs in squares: 33	Rank: 35 confs in squares: 32	Rank: 36 confs in squares: 32	Rank: 36 confs in squares: 33	Rank: 36 confs in squares: 34	Rank: 37 confs in squares: 33	Rank: 37 confs in squares: 35	Rank: 37 confs in squares: 34	Rank: 38 confs in squares: 35	Rank: 38 confs in squares: 34	Rank: 38 confs in squares: 36	Rank: 39 confs in squares: 35	Rank: 39 confs in squares: 36	Rank: 39 confs in squares: 37	Rank: 40 confs in squares: 36	Rank: 40 confs in squares: 37	Rank: 40 confs in squares: 38	Rank: 47 confs in squares: 44	Rank: 47 confs in squares: 45	Rank: 53 confs in squares: 51	Rank: 6 confs in squares: 3	Rank: 6 confs in squares: 4	Rank: 19 confs in squares: 15	Rank: 19 confs in squares: 17	Rank: 19 confs in squares: 16	Rank: 31 confs in squares: 27	Rank: 31 confs in squares: 28	Rank: 31 confs in squares: 29	Rank: 34 confs in squares: 30	Rank: 34 confs in squares: 31	Rank: 34 confs in squares: 32	Rank: 41 confs in squares: 37	Rank: 41 confs in squares: 38	Rank: 41 confs in squares: 39	Rank: 42 confs in squares: 40	Rank: 42 confs in squares: 38	Rank: 42 confs in squares: 39	Rank: 44 confs in squares: 41	Rank: 44 confs in squares: 42	Rank: 45 confs in squares: 43	Rank: 45 confs in squares: 42	Rank: 46 confs in squares: 43	Rank: 46 confs in squares: 44	Rank: 50 confs in squares: 48	Rank: 56 confs in squares: 54	Rank: 57 confs in squares: 55	Rank: 8 confs in squares: 4	Rank: 8 confs in squares: 5	Rank: 8 confs in squares: 6	Rank: 12 confs in squares: 8	Rank: 12 confs in squares: 9	Rank: 12 confs in squares: 10	Rank: 15 confs in squares: 11	Rank: 15 confs in squares: 12	Rank: 15 confs in squares: 13	Rank: 28 confs in squares: 24	Rank: 28 confs in squares: 26	Rank: 28 confs in squares: 25	Rank: 43 confs in squares: 40	Rank: 43 confs in squares: 41	Rank: 48 confs in squares: 46	Rank: 55 confs in squares: 53	Rank: 54 confs in squares: 52	Rank: 4 confs in squares: 2	Rank: 9 confs in squares: 5	Rank: 9 confs in squares: 6	Rank: 9 confs in squares: 7	Rank: 52 confs in squares: 50	"/home/selin/SSS-Data/audikw_1/diag.txt" has been read with size: 943695
+"/home/selin/Split-Data/audikw_1/middle/CSR-Data/1.000000-35099.000000-val.txt" has been read with size: 38354070
+"/home/selin/Split-Data/audikw_1/middle/CSR-Data/1.000000-35099.000000-col.txt" has been read with size: 38354070
+"/home/selin/Split-Data/audikw_1/middle/CSR-Data/1.000000-35099.000000-row.txt" has been read with size: 943696
+0: Total time 0.170758
+-----------------------------------------------
+"/home/selin/SSS-Data/audikw_1/diag.txt" has been read with size: 943695
+"/home/selin/Split-Data/audikw_1/middle/CSR-Data/1.000000-35099.000000-val.txt" has been read with size: 38354070
+"/home/selin/Split-Data/audikw_1/middle/CSR-Data/1.000000-35099.000000-col.txt" has been read with size: 38354070
+"/home/selin/Split-Data/audikw_1/middle/CSR-Data/1.000000-35099.000000-row.txt" has been read with size: 943696
+0: Total time 0.0905677
+-----------------------------------------------
+"/home/selin/SSS-Data/audikw_1/diag.txt" has been read with size: 943695
+"/home/selin/Split-Data/audikw_1/middle/CSR-Data/1.000000-35099.000000-val.txt" has been read with size: 38354070
+"/home/selin/Split-Data/audikw_1/middle/CSR-Data/1.000000-35099.000000-col.txt" has been read with size: 38354070
+"/home/selin/Split-Data/audikw_1/middle/CSR-Data/1.000000-35099.000000-row.txt" has been read with size: 943696
+0: Total time 0.0502683
+-----------------------------------------------
+"/home/selin/SSS-Data/audikw_1/diag.txt" has been read with size: 943695
+"/home/selin/Split-Data/audikw_1/middle/CSR-Data/1.000000-35099.000000-val.txt" has been read with size: 38354070
+"/home/selin/Split-Data/audikw_1/middle/CSR-Data/1.000000-35099.000000-col.txt" has been read with size: 38354070
+"/home/selin/Split-Data/audikw_1/middle/CSR-Data/1.000000-35099.000000-row.txt" has been read with size: 943696
+0: Total time 0.0362574
+-----------------------------------------------
+Rank: 21 confs in squares: 19	Rank: 22 confs in squares: 20	"/home/selin/SSS-Data/audikw_1/diag.txt" has been read with size: 943695
+"/home/selin/Split-Data/audikw_1/middle/CSR-Data/1.000000-35099.000000-val.txt" has been read with size: 38354070
+"/home/selin/Split-Data/audikw_1/middle/CSR-Data/1.000000-35099.000000-col.txt" has been read with size: 38354070
+"/home/selin/Split-Data/audikw_1/middle/CSR-Data/1.000000-35099.000000-row.txt" has been read with size: 943696
+0: Total time 0.0530961
+-----------------------------------------------
+Rank: 36 confs in squares: 34	Rank: 14 confs in squares: 12	Rank: 15 confs in squares: 13	Rank: 30 confs in squares: 28	Rank: 29 confs in squares: 27	Rank: 46 confs in squares: 44	Rank: 33 confs in squares: 31	Rank: 16 confs in squares: 14	Rank: 37 confs in squares: 35	Rank: 40 confs in squares: 38	Rank: 42 confs in squares: 39	Rank: 42 confs in squares: 40	Rank: 52 confs in squares: 50	Rank: 53 confs in squares: 51	Rank: 19 confs in squares: 17	Rank: 38 confs in squares: 36	Rank: 18 confs in squares: 16	Rank: 49 confs in squares: 47	Rank: 32 confs in squares: 30	Rank: 47 confs in squares: 45	Rank: 22 confs in squares: 20	Rank: 41 confs in squares: 38	Rank: 41 confs in squares: 39	Rank: 35 confs in squares: 33	Rank: 43 confs in squares: 40	Rank: 43 confs in squares: 41	Rank: 50 confs in squares: 48	Rank: 17 confs in squares: 15	Rank: 20 confs in squares: 18	Rank: 23 confs in squares: 21	Rank: 28 confs in squares: 26	Rank: 31 confs in squares: 29	Rank: 34 confs in squares: 32	Rank: 39 confs in squares: 37	Rank: 44 confs in squares: 41	Rank: 44 confs in squares: 42	Rank: 45 confs in squares: 43	Rank: 45 confs in squares: 42	Rank: 48 confs in squares: 46	Rank: 51 confs in squares: 49	Rank: 21 confs in squares: 19	
