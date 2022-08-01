@@ -195,8 +195,8 @@ int main(int argc, char **argv){
     middleBandwith = (int) ((bandwithSize[inputType] - innerBandwith) * restRatio);
 
     innerBandwith = 0;
-    middleBandwith = bandwithSize[inputType]-3;
-    outerBandwith=3;
+    middleBandwith = bandwithSize[inputType]-10;
+    outerBandwith=10;
     cout << "inner bandwith: " << innerBandwith << endl;
     cout << "middle bandwith: " << middleBandwith << endl;
     cout << "total bandwith: " << bandwithSize[inputType] << endl;
@@ -254,7 +254,7 @@ int main(int argc, char **argv){
     }
     cout << "write grouped 3way bandwiths in coo formats : " << nnz_extracted << endl;
     // MODIFIED FOR NEW SOLUTION!!! :
-    //writeCooFormat(inputType, 1, middleBandwith);
+    writeCooFormat(inputType, 1, middleBandwith);
 
 
 
