@@ -178,7 +178,7 @@ int main(int argc, char **argv){
     double inputRatio =  atof(argv[2]);
 
     inputRatio = 1;
-    middleRatio = bandwithSize[inputType]-20;
+    middleRatio = bandwithSize[inputType]-0;
 
     std::cout  <<  "reversed ?: " << reversed << endl;
     std::cout  <<  "inner_equal_middle ?: " << inner_equal_middle << endl;
