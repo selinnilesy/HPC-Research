@@ -129,6 +129,7 @@ int main(int argc, char **argv) {
     MPI_Comm_group(MPI_COMM_WORLD, &world_group);
     MPI_Comm newworld;
 
+    double time=0.0, end_time, start_time;
     int n, inputType, pieceSize, nnz;
     double *matrixOffDiagonal, *matrixDiagonal;
     double *x, *y;
@@ -145,12 +146,12 @@ int main(int argc, char **argv) {
             return -1;
         }
         readSSSFormat(atoi(argv[1]));
-        readCSRFormat(atoi(argv[1]), 20);
+        readCSRFormat(atoi(argv[1]), 3);
 
         n = matrixSize[atoi(argv[1])];
         inputType = atoi(argv[1]);
-        pieceSize = floor(n / world_size);
-        nnz = colindSize[inputType];
+        pieceSize = ceil(n / world_size);
+        nnz = colindSize[0];
         //cout << my_rank << " : nnz " << nnz << endl;
     }
 
@@ -168,48 +169,75 @@ int main(int argc, char **argv) {
         for (int i = 0; i < n; i++) x[i] = 1.0;
     }
     pieceSizeArr = new int[world_size];
-    if(my_rank==0)  {
-        int balanceFactor = 1;
-        pieceSizeArr[0] = balanceFactor * pieceSize + ((n - balanceFactor * pieceSize) % (world_size - 1));
-        remainingPieceSize = (n - pieceSizeArr[0]) / (world_size - 1);
-        cout << "root okk " << remainingPieceSize << " 0th: " << pieceSizeArr[0] << endl;
-
-        for (int i = 1; i < world_size; i++) pieceSizeArr[i] = remainingPieceSize;
-        for (int i = 0; i < world_size; i++) {
-            cout << pieceSizeArr[i] << '\t' << flush;
-        }
-    }
     displs = new int[world_size];
-    if(my_rank==0) {
-        displs[0] = 0;
-        for (int i=1; i<world_size; i++)
-            displs[i] = displs[i-1] + pieceSizeArr[i-1];
+    int approx_nnz;
+    if(my_rank==0)  {
 
         matrixRowDiff = new int[n];
         for (int i = 0; i < n; i++) {
             matrixRowDiff[i] = matrixRowptr[i+1] - matrixRowptr[i];
         }
-    }
+        approx_nnz = nnz/world_size + 0.5; //  ceiling
 
+
+        int temp_nnz, temp_limit=0;
+        for (int i = 0; i < world_size; i++) {
+            temp_nnz=0;
+            for (int j = temp_limit; j < n; j++) {
+                temp_nnz += matrixRowDiff[j];
+                if(i==world_size-1){
+                    if(j == n-1 ){
+                        pieceSizeArr[i] = j-temp_limit+1;
+                        temp_limit = j+1;
+                        break;
+                    }
+                }
+                else {
+                    if (temp_nnz >= approx_nnz) {
+                        pieceSizeArr[i] = j - temp_limit+1;
+                        temp_limit = j+1;
+                        break;
+                    }
+                }
+            }
+        }
+        remainingPieceSize= pieceSizeArr[world_size-1];
+
+        for (int i = 0; i < world_size; i++) {
+            cout << "row count for process " << i << ": " << pieceSizeArr[i] << '\n' << flush;
+        }
+
+        displs[0] = 0;
+        for (int i=1; i<world_size; i++)
+            displs[i] = displs[i-1] + pieceSizeArr[i-1];
+
+    }
+    myPieceSize = displs[my_rank+1] - displs[my_rank];
+    //start_time = MPI_Wtime();
     MPI_Bcast( (void*) displs, world_size, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast( (void*) pieceSizeArr, world_size, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(&remainingPieceSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
     // scatter pieceSizeArr.
     MPI_Scatter(pieceSizeArr, 1, MPI_INT, &myPieceSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
     // broadcast expected global piece size.
     MPI_Bcast(&pieceSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    //end_time = MPI_Wtime();
+    //time += end_time-start_time;
 
     assert (myPieceSize!=0);
     myX = new double[myPieceSize];
     myRowDiff = new int[myPieceSize];
     myDiags = new double[myPieceSize];
+
+    //start_time = MPI_Wtime();
     // scatter x.
     MPI_Scatterv(x, pieceSizeArr, displs, MPI_DOUBLE, myX, myPieceSize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     // scatter matrixRowptr.
     MPI_Scatterv(matrixRowDiff, pieceSizeArr, displs, MPI_INT, myRowDiff, myPieceSize, MPI_INT, 0, MPI_COMM_WORLD);
     // scatter matrixDiagonal.
     MPI_Scatterv(matrixDiagonal, pieceSizeArr, displs, MPI_DOUBLE, myDiags, myPieceSize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    //end_time = MPI_Wtime();
+    //time += end_time-start_time;
 
     if(my_rank==0) NNZs = new int[world_size];
 
@@ -217,9 +245,12 @@ int main(int argc, char **argv) {
     for (int i = 0; i < myPieceSize; i++) {
         myNNZ += myRowDiff[i];
     }
-   cout << "my nnz: " << myNNZ << '\t' << flush;
 
+   // start_time = MPI_Wtime();
     MPI_Gather(&myNNZ, 1, MPI_INT, NNZs, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    //end_time = MPI_Wtime();
+    //time += end_time-start_time;
+    cout << my_rank<< ": myNNZ-" << myNNZ << '\n' << flush;
 
     int firstEmptyProcess = world_size;
     if(my_rank==0) {
@@ -230,6 +261,7 @@ int main(int argc, char **argv) {
         }
     }
     MPI_Bcast(&firstEmptyProcess, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
     y = new double[myPieceSize];
     for (int i = 0; i < myPieceSize; i++) y[i] = 0.0;
 
@@ -237,24 +269,24 @@ int main(int argc, char **argv) {
     double* closingYs;
     double *output;
     if(!my_rank){
+        cout << "firstEmptyProcess: " << firstEmptyProcess << '\t' << flush;
         output = new double[n];
         for (int i = 0; i < n; i++) output[i]=0.0;
     }
     MPI_Request request;
     MPI_Status status;
     int totalSize=0;
-    double time=0.0, end_time, start_time;
     if(firstEmptyProcess < world_size) {
         MPI_Win window2;
-        MPI_Win_create(output, myPieceSize*sizeof(double), sizeof(double), MPI_INFO_NULL, MPI_COMM_WORLD, &window2);
+        MPI_Win_create(output, 1*sizeof(double), sizeof(double), MPI_INFO_NULL, MPI_COMM_WORLD, &window2);
         MPI_Win_fence(0, window2);
         if(my_rank >= firstEmptyProcess){
             // process diagonals before quitting
             start_time = MPI_Wtime();
-            for (int i = 0; i < myPieceSize; i++) y[i] = myDiags[i] * myX[i];
+            for (int i = 0; i < (displs[my_rank+1] - displs[my_rank]); i++) y[i] = myDiags[i] * myX[i];
             // accumulate diag results onto output vector.
-            MPI_Accumulate(y, myPieceSize, MPI_DOUBLE, 0, displs[my_rank],
-                           myPieceSize, MPI_DOUBLE, MPI_SUM, window2);
+            MPI_Accumulate(y, (displs[my_rank+1] - displs[my_rank]), MPI_DOUBLE, 0, displs[my_rank],
+                           (displs[my_rank+1] - displs[my_rank]), MPI_DOUBLE, MPI_SUM, window2);
             end_time = MPI_Wtime();
             time+= end_time-start_time;
             cout << my_rank<< ": Communication - empty process " << time << endl;
@@ -298,11 +330,13 @@ int main(int argc, char **argv) {
             displs[i] = displs[i - 1] + NNZs[i - 1];
         }
     }
+    //start_time = MPI_Wtime();
     MPI_Bcast( (void*) displs, firstEmptyProcess, MPI_INT, 0, newworld);
-
     MPI_Scatterv(matrixColind, NNZs2, displs, MPI_INT, myColInd, myNNZ, MPI_INT, 0, newworld);
     // scatter matrixOffDiagonal.
     MPI_Scatterv(matrixOffDiagonal, NNZs2, displs, MPI_DOUBLE, myOffDiags, myNNZ, MPI_DOUBLE, 0, newworld);
+    //end_time = MPI_Wtime();
+    //time += end_time-start_time;
 
 
     displs[0] = 0;
@@ -310,17 +344,18 @@ int main(int argc, char **argv) {
         displs[i] = displs[i-1] + pieceSizeArr[i-1];
 
 
+    // detect conflicts and their square ids.
     vector<int> confSquares;
-    int squareIndex;
+    int squareIndex=-1;
     int accum_colInd=0, colInd, lastConfSquare=-1;
     for (int i = 0; i < myPieceSize; i++) {
         for (int j =accum_colInd ; j< accum_colInd + myRowDiff[i]; j++) {
             colInd = myColInd[j] - 1;
-            if(colInd < displs[1]) {
-                squareIndex = 0;
-            }
-            else{
-                squareIndex = 1 + (colInd - displs[1] )/remainingPieceSize;
+            for (int i=0; i<firstEmptyProcess; i++){
+                if(colInd >= displs[i] && colInd<displs[i+1]) {
+                    if(i!=my_rank) squareIndex = i;
+                    break;
+                }
             }
             if(lastConfSquare!=squareIndex && find(confSquares.begin(), confSquares.end(), squareIndex) == confSquares.end() ) {
                 lastConfSquare = squareIndex;
@@ -329,9 +364,10 @@ int main(int argc, char **argv) {
         }
         accum_colInd+=myRowDiff[i];
     }
-    for (int i = 0; i < confSquares.size(); i++)  cout << "Rank: " << my_rank << " confs in squares: " << confSquares[i] << '\t' << flush;
+    for (int i = 0; i < confSquares.size(); i++)  cout << "Rank: " << my_rank << " confs: " << confSquares[i] << '\t' << flush;
 
     double *neighbourX;
+    //start_time = MPI_Wtime();
     // send X pieces between neighbours.
     if(my_rank==0){
         MPI_Send(&myPieceSize, 1, MPI_INT, my_rank+1, 0, newworld);
@@ -349,16 +385,19 @@ int main(int argc, char **argv) {
         neighbourX = new double[neighbourSize];
         MPI_Recv(neighbourX, neighbourSize, MPI_DOUBLE, my_rank-1, 0, newworld, &status);
     }
+    //end_time = MPI_Wtime();
+    //time += end_time-start_time;
 
-    if(my_rank==firstEmptyProcess-1) cout << my_rank << ": done with sending neigbours " <<  endl << flush;
-    // send info of X pieces of remaining confs to root.
+    //cout << my_rank << ": done with sending neigbours " <<  endl << flush;
+    // send ids of requested X pieces to root, for non-neighbour confs.
     int tobesent, temp_tobesent;
     vector<double*> Xsquares_in_process;
     for(int i=0; i<firstEmptyProcess; i++){
         double *ptr = nullptr;
         Xsquares_in_process.push_back(ptr);
     }
-    // store first process id then needed square id.
+    // store first process id then needed square id that needs another X.
+    //start_time = MPI_Wtime();
     vector<int> send_Xids;
     if(my_rank){
         tobesent = confSquares.size() -1 ;
@@ -367,6 +406,7 @@ int main(int argc, char **argv) {
             for (int i = 0; i < confSquares.size(); i++) {
                 if (confSquares[i] == my_rank - 1) continue;
                 else {
+                    cout << my_rank << " sending to: " << confSquares[i] << endl << flush;
                     MPI_Send(&(confSquares[i]), 1, MPI_INT, 0, my_rank, newworld);
                 }
             }
@@ -394,20 +434,12 @@ int main(int argc, char **argv) {
             send_Xids.clear();
         }
     }
-    if(my_rank==firstEmptyProcess-1) cout << my_rank << ": done with sending far neighbours " <<  endl << flush;
+    //end_time = MPI_Wtime();
+    //time += end_time-start_time;
+
+    //cout << my_rank << ": done with sending far neighbours " <<  endl << flush;
 
     double val;
-    vector<double*> Ysquares_in_process;
-    if(my_rank) {
-        for (int i = 0; i < firstEmptyProcess; i++) {
-            double *ptr = nullptr;
-            Ysquares_in_process.push_back(ptr);
-        }
-        for (int i = 0; i < confSquares.size(); i++) {
-            Ysquares_in_process[confSquares[i]] = new double[ displs[confSquares[i] + 1] - displs[confSquares[i]] ];
-            for (int j = 0; j < displs[confSquares[i] + 1] - displs[confSquares[i]]; j++) Ysquares_in_process[confSquares[i]][j] = 0.0;
-        }
-    }
     // new row ptr
     int *rowPtr = new int[myPieceSize+1];
     rowPtr[0] = 0;
@@ -429,15 +461,21 @@ int main(int argc, char **argv) {
                 colIndOffset[j] = colInd;
             }
             else {
-                colIndProcessID[j] = 1 + (colInd - displs[1]) / remainingPieceSize;
+                for (int i=0; i<firstEmptyProcess; i++){
+                    if(colInd >= displs[i] && colInd<displs[i+1]) {
+                        colIndProcessID[j] = i;
+                        break;
+                    }
+                }
                 colIndModulo = (int) fmod(colInd - displs[colIndProcessID[j]],myPieceSize );
                 colIndOffsetInter[j] = colIndModulo;
                 colIndOffset[j] = colIndModulo;
             }
         }
     }
-    cout << my_rank << ": donw with indices for middle " <<  endl << flush;
+    //cout << my_rank << ": donw with indices for middle " <<  endl << flush;
     // pre-determine outer's offsets
+
     int *outer_colIndOffset, *outer_colIndProcessID;
     int *outer_rowIndOffset, *outer_rowIndProcessID;
     if(my_rank==0) {
@@ -453,25 +491,39 @@ int main(int argc, char **argv) {
                 outer_colIndProcessID[i] = 0;
                 outer_colIndOffset[i] = colInd;
             } else {
-                outer_colIndProcessID[i] = 1 + (colInd - displs[1]) / remainingPieceSize;
-                outer_colIndOffset[i] = (int) fmod(colInd - displs[outer_colIndProcessID[i]], remainingPieceSize);
+                for (int i=0; i<firstEmptyProcess; i++){
+                    if(colInd >= displs[i] && colInd<displs[i+1]) {
+                        outer_colIndProcessID[i] = i;
+                        break;
+                    }
+                }
+                outer_colIndOffset[i] = (int) (colInd - displs[outer_colIndProcessID[i]]);
             }
             if (rowInd < displs[1]) {
                 outer_rowIndProcessID[i] = 0;
                 outer_rowIndOffset[i] = rowInd;
             } else {
-                outer_rowIndProcessID[i] = 1 + (rowInd - displs[1]) / remainingPieceSize;
-                outer_rowIndOffset[i] = (int) fmod(rowInd - displs[outer_rowIndProcessID[i]], remainingPieceSize);
+                for (int i=0; i<firstEmptyProcess; i++){
+                    if(rowInd >= displs[i] && rowInd<displs[i+1]) {
+                        outer_rowIndProcessID[i] = i;
+                        break;
+                    }
+                }
+                outer_rowIndOffset[i] = (int) (rowInd - displs[outer_rowIndProcessID[i]]);
             }
         }
     }
-    cout << my_rank << ": donw with indices for outer " <<  endl << flush;
+    //cout << my_rank << ": done with indices for outer " <<  endl << flush;
 
     double maxTime = 0.0;
     MPI_Barrier(newworld);
 
+    // do the actual multiplication for non-conflicting region and store results in y's.
+    // transpose of non-conflciting region is also handled here.
+    // conflicting ones are multiplied and stored in array y to be communicated later on.
+    vector<double>  conflicting_mult;
+    vector<int> conflicting_targetID, conflicting_targetOffset;
     start_time = MPI_Wtime();
-    //cout << (bool) MPI_WTIME_IS_GLOBAL << endl;
     for (int i = 0; i < myPieceSize; i++) {
         val = myDiags[i] * myX[i];
         for (int j = rowPtr[i]; j < rowPtr[i+1]; j++) {
@@ -483,7 +535,11 @@ int main(int argc, char **argv) {
                 else {
                     val += myOffDiags[j] * (Xsquares_in_process[processID])[colIndOffsetInter[j]];
                 }
-                (Ysquares_in_process[processID])[colIndOffsetInter[j]] -= myOffDiags[j] * myX[i];
+                conflicting_targetID.push_back(processID);
+                conflicting_targetOffset.push_back(colIndOffsetInter[j]);
+                conflicting_mult.push_back(myOffDiags[j] * myX[i]);
+                // for older solution with mPI_accumualte and it did not work (now P2P send/receives using above vectors).
+                //(Ysquares_in_process[processID])[colIndOffsetInter[j]] -= myOffDiags[j] * myX[i];
             } else {
                 y[colIndOffset[j]] -= myOffDiags[j] * myX[i];
                 val += myOffDiags[j] * myX[colIndOffset[j]];
@@ -495,60 +551,88 @@ int main(int argc, char **argv) {
     time += end_time - start_time;
     cout << my_rank << ": computation - multiplication " << end_time - start_time << endl << flush;
 
-    MPI_Win window;
-    MPI_Win_create(y, 1*sizeof(double), sizeof(double), MPI_INFO_NULL, newworld, &window);
-    MPI_Win_fence(0, window);
-    // accumulate y results.
-    start_time = MPI_Wtime();
-    if (my_rank) {
-        for (int i = 0; i < confSquares.size(); i++) {
-            {
-                if(confSquares[i] == 0 )
-                    MPI_Accumulate(Ysquares_in_process[0], displs[1], MPI_DOUBLE, 0, 0,
-                                   displs[1], MPI_DOUBLE, MPI_SUM, window);
+    int confSize = conflicting_targetID.size();
 
-                else MPI_Accumulate(Ysquares_in_process[confSquares[i]], remainingPieceSize, MPI_DOUBLE, confSquares[i], 0,
-                                    remainingPieceSize, MPI_DOUBLE, MPI_SUM, window);
+    double *conf_arry_mult = new double[conflicting_mult.size()];
+    int *conf_arry_targetID = new int[conflicting_targetID.size()];
+    int *conf_arry_targetOffset = new int[conflicting_targetID.size()];
+    for(int i=0; i<conflicting_mult.size(); i++) conf_arry_mult[i] = conflicting_mult[i];
+    for(int i=0; i<conflicting_targetID.size(); i++) conf_arry_targetID[i] = conflicting_targetID[i];
+    for(int i=0; i<conflicting_targetOffset.size(); i++) conf_arry_targetOffset[i] = conflicting_targetOffset[i];
+
+
+    if(conflicting_mult.size() != conflicting_targetID.size()) cout << "ERROR-conflicting_mult"  << endl << flush;
+    if(conflicting_targetOffset.size() != conflicting_targetID.size()) cout << "ERROR-conflicting_targetOffset"  << endl << flush;
+
+
+    // gather just to confirm code works.
+   // start_time = MPI_Wtime();
+    MPI_Gatherv(y, myPieceSize, MPI_DOUBLE, output, pieceSizeArr, displs, MPI_DOUBLE, 0, newworld);
+    //end_time = MPI_Wtime();
+    //cout << my_rank << ": communication - gather output vector " << end_time - start_time << endl << flush;
+    //time += end_time - start_time;
+
+    // accumulate conflicting results in array y's in each process.
+    start_time = MPI_Wtime();
+    if(my_rank){
+        MPI_Send(&confSize, 1, MPI_INT, 0, my_rank, newworld);
+        if(confSize) {
+            MPI_Send(conf_arry_mult, conflicting_mult.size(), MPI_DOUBLE, 0, my_rank, newworld);
+            MPI_Send(conf_arry_targetID, conflicting_targetID.size(), MPI_INT, 0, my_rank, newworld);
+            MPI_Send(conf_arry_targetOffset, conflicting_targetOffset.size(), MPI_INT, 0, my_rank, newworld);
+        }
+    }
+    else{
+        double *val, mult ;
+        int *offset, *targetID, offs, id;
+        int tempSize;
+        for(int i=1; i<firstEmptyProcess; i++){
+            MPI_Recv(&tempSize, 1, MPI_INT, i, i, newworld, &status);
+            if(tempSize) {
+                val = new double[tempSize];
+                offset = new int[tempSize];
+                targetID = new int[tempSize];
+                MPI_Recv(val, tempSize, MPI_DOUBLE, i, i, newworld, &status);
+                MPI_Recv(targetID , tempSize, MPI_INT, i, i, newworld, &status);
+                MPI_Recv(offset, tempSize, MPI_INT, i, i, newworld, &status);
+                for (int j = 0; j < tempSize; j++) {
+                    mult = val[j];
+                    offs = offset[j];
+                    id = targetID[j];
+                    output[displs[id] + offs] -= mult;
+                }
+                delete[] val;
+                delete[] offset;
+                delete[] targetID;
             }
         }
     }
     end_time = MPI_Wtime();
     time += end_time-start_time;
-    cout << my_rank << ": communication - accumulation " << end_time - start_time << endl << flush;
-    MPI_Win_fence(0, window);
-    MPI_Win_free(&window);
+    cout << my_rank << ": communication - conflicts " << end_time - start_time << endl << flush;
 
-    MPI_Reduce(&time, &maxTime, 1, MPI_DOUBLE, MPI_MAX, 0, newworld);
 
-    MPI_Win window1;
-    MPI_Win_create(y, sizeof(double), sizeof(double), MPI_INFO_NULL, newworld, &window1);
-    MPI_Win_fence(0, window1);
+    // accumulate serially outer region's sparse results.
     if(my_rank == 0) {
         int val1, val2;
         start_time = MPI_Wtime();
         for (int i = 0; i < outer_col.size(); i++) {
             val1 = -outer_val[i] * x[outer_row[i] - 1];  // output[colindoffset]
             val2 = outer_val[i] * x[outer_col[i] - 1]; // output[row]
-            MPI_Accumulate(&val1, 1, MPI_DOUBLE, outer_colIndProcessID[i], outer_colIndOffset[i], 1, MPI_DOUBLE,
-                           MPI_SUM, window1);
-            MPI_Accumulate(&val2, 1, MPI_DOUBLE, outer_rowIndProcessID[i], outer_rowIndOffset[i], 1, MPI_DOUBLE,
-                           MPI_SUM, window1);
-
+            output[displs[outer_colIndProcessID[i]] + outer_colIndOffset[i] ]  +=val1;
+            output[displs[outer_rowIndProcessID[i]] + outer_rowIndOffset[i] ]  +=val2;
         }
         end_time = MPI_Wtime();
-        maxTime += end_time - start_time;
+        time += end_time - start_time;
         cout << my_rank << ": computation - outer " << end_time - start_time << endl << flush;
     }
 
-    MPI_Win_fence(0, window1);
-    MPI_Win_free(&window1);
-    // gather just to conform code works.
-    MPI_Gatherv(y, myPieceSize, MPI_DOUBLE, output, pieceSizeArr, displs, MPI_DOUBLE, 0, newworld);
+    MPI_Reduce(&time, &maxTime, 1, MPI_DOUBLE, MPI_MAX, 0, newworld);
 
     if(my_rank == 0){
         //printf("The max of all ranks is %lf.\n", maxTime);
-        cout << my_rank << ": Total time " << maxTime << endl << flush;
         cout << "-----------------------------------------------" << endl << flush;
+        cout << my_rank << ": Total time " << maxTime << endl << flush;
 
         ofstream myfile;
         myfile.open ("/home/selin/3way-Par-Results/" + matrix_names[inputType] + "/result.txt", ios::out | ios::trunc);
@@ -559,7 +643,7 @@ int main(int argc, char **argv) {
         myfile.close();
         //cout << "Completed output... " << endl;
 
-
+        // Clean-up root specific data
         delete [] x;
         delete[] matrixRowptr;
         delete[] matrixRowDiff;
@@ -571,15 +655,14 @@ int main(int argc, char **argv) {
     }
 
 
-    // Finalize MPI
-    // This must always be called after all other MPI functions
+    // Clean-up all Processes and Finalize MPI
     delete [] myX;
     delete [] myColInd;
     delete [] myOffDiags;
     delete [] myDiags;
     delete [] myRowDiff;
 
-    //cout << "Rank: " << my_rank << " Bitti." << endl << flush;
+    //cout << "Rank: " << my_rank << " Exiting" << endl << flush;
 
     MPI_Finalize();
 

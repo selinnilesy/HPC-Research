@@ -7,7 +7,7 @@ CSR_encoder.o: CSR_encoder.cpp header.h
 	g++ -Wall -g -c CSR_encoder.cpp header.h
 
 SSSconflictFree: SSSconflictFree.cpp
-	mpic++  SSSconflictFree.cpp  header.h  -o SSSconflictFree -lgfortran -lstdc++fs -std=c++17
+	mpic++  SSSconflictFree.cpp  header.h -O3  -o SSSconflictFree -lgfortran -lstdc++fs -std=c++17
 
 clean:
 	 rm CSR_encoder.o
