@@ -43,12 +43,12 @@ int readSSSFormat(int z) {
     }
     return 0;
 }
-int readCSRFormat(int z, int cikartilanBW) {
+int readCSRFormat(int z, int outerBW) {
     fs::path matrixFolder;
     matrixFolder = "/home/selin/Split-Data/" + matrix_names[z] + "/middle/CSR-Data";
     for(auto const& dir_entry: fs::directory_iterator{matrixFolder}){
         std::fstream myfile(dir_entry.path(), std::ios_base::in);
-        if(dir_entry.path().stem() == ("1.000000-" + to_string((double) bandwithSize[z]-cikartilanBW) + "-row")) {
+        if(dir_entry.path().stem() == ("1.000000-" + to_string((double) bandwithSize[z]-outerBW) + "-row")) {
             int tempValInt;
             vector<int> tempVecInt;
             while (myfile >> tempValInt) {
@@ -61,7 +61,7 @@ int readCSRFormat(int z, int cikartilanBW) {
             cout << dir_entry.path() << " has been read with size: " <<tempVecInt.size() << endl;
             myfile.close();
         }
-        else if(dir_entry.path().stem() == ("1.000000-" + to_string( (double) bandwithSize[z]-cikartilanBW) + "-col")) {
+        else if(dir_entry.path().stem() == ("1.000000-" + to_string( (double) bandwithSize[z]-outerBW) + "-col")) {
             int tempValInt;
             vector<int> tempVecInt;
             while (myfile >> tempValInt) {
@@ -74,7 +74,7 @@ int readCSRFormat(int z, int cikartilanBW) {
             cout << dir_entry.path() << " has been read with size: " <<  tempVecInt.size() << endl;
             myfile.close();
         }
-        else if(dir_entry.path().stem() == ("1.000000-" + to_string((double) bandwithSize[z]-cikartilanBW) + "-val")){
+        else if(dir_entry.path().stem() == ("1.000000-" + to_string((double) bandwithSize[z]-outerBW) + "-val")){
             double tempVal;
             vector<double> tempVec;
             while (myfile >> tempVal) {
@@ -91,21 +91,21 @@ int readCSRFormat(int z, int cikartilanBW) {
     matrixFolder = "/home/selin/Split-Data/" + matrix_names[z] + "/outer/";
     for(auto const& dir_entry: fs::directory_iterator{matrixFolder}) {
         std::fstream myfile(dir_entry.path(), std::ios_base::in);
-        if (dir_entry.path().stem() == ("1.000000-" + to_string((double) bandwithSize[z] - cikartilanBW) + "-row")) {
+        if (dir_entry.path().stem() == ("coordinate-1.000000-" + to_string((double) bandwithSize[z] - outerBW) + "-row")) {
             int tempValInt;
             while (myfile >> tempValInt) {
                 outer_row.push_back(tempValInt);
             }
             cout << dir_entry.path() << " has been read with size: " << outer_row.size() << endl;
             myfile.close();
-        } else if (dir_entry.path().stem() == ("1.000000-" + to_string((double) bandwithSize[z] - cikartilanBW) + "-col")) {
+        } else if (dir_entry.path().stem() == ("coordinate-1.000000-" + to_string((double) bandwithSize[z] - outerBW) + "-col")) {
             int tempValInt;
             while (myfile >> tempValInt) {
                 outer_col.push_back(tempValInt);
             }
             cout << dir_entry.path() << " has been read with size: " << outer_col.size() << endl;
             myfile.close();
-        } else if (dir_entry.path().stem() == ("1.000000-" + to_string((double) bandwithSize[z] - cikartilanBW) + "val")) {
+        } else if (dir_entry.path().stem() == ("coordinate-1.000000-" + to_string((double) bandwithSize[z] - outerBW) + "val")) {
             double tempVal;
             while (myfile >> tempVal) {
                 outer_val.push_back(tempVal);
@@ -166,7 +166,7 @@ int main(int argc, char **argv) {
         matrixColind = colindPtrs[0];
         matrixRowptr = rowptrPtrs[0];
         x = new double[n];
-        for (int i = 0; i < n; i++) x[i] = 1.0;
+        for (size_t i = 0; i < n; i++) x[i] = 1.0;
     }
     pieceSizeArr = new int[world_size];
     displs = new int[world_size];
@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
     if(my_rank==0)  {
 
         matrixRowDiff = new int[n];
-        for (int i = 0; i < n; i++) {
+        for (size_t i = 0; i < n; i++) {
             matrixRowDiff[i] = matrixRowptr[i+1] - matrixRowptr[i];
         }
         approx_nnz = nnz/world_size + 0.5; //  ceiling
@@ -183,7 +183,7 @@ int main(int argc, char **argv) {
         int temp_nnz, temp_limit=0;
         for (int i = 0; i < world_size; i++) {
             temp_nnz=0;
-            for (int j = temp_limit; j < n; j++) {
+            for (size_t j = temp_limit; j < n; j++) {
                 temp_nnz += matrixRowDiff[j];
                 if(i==world_size-1){
                     if(j == n-1 ){
@@ -263,7 +263,7 @@ int main(int argc, char **argv) {
     MPI_Bcast(&firstEmptyProcess, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
     y = new double[myPieceSize];
-    for (int i = 0; i < myPieceSize; i++) y[i] = 0.0;
+    for (size_t i = 0; i < myPieceSize; i++) y[i] = 0.0;
 
     int neighbourSize;
     double* closingYs;
@@ -271,7 +271,7 @@ int main(int argc, char **argv) {
     if(!my_rank){
         cout << "firstEmptyProcess: " << firstEmptyProcess << '\t' << flush;
         output = new double[n];
-        for (int i = 0; i < n; i++) output[i]=0.0;
+        for (size_t i = 0; i < n; i++) output[i]=0.0;
     }
     MPI_Request request;
     MPI_Status status;
@@ -283,7 +283,7 @@ int main(int argc, char **argv) {
         if(my_rank >= firstEmptyProcess){
             // process diagonals before quitting
             start_time = MPI_Wtime();
-            for (int i = 0; i < (displs[my_rank+1] - displs[my_rank]); i++) y[i] = myDiags[i] * myX[i];
+            for (size_t i = 0; i < (displs[my_rank+1] - displs[my_rank]); i++) y[i] = myDiags[i] * myX[i];
             // accumulate diag results onto output vector.
             MPI_Accumulate(y, (displs[my_rank+1] - displs[my_rank]), MPI_DOUBLE, 0, displs[my_rank],
                            (displs[my_rank+1] - displs[my_rank]), MPI_DOUBLE, MPI_SUM, window2);
@@ -348,8 +348,8 @@ int main(int argc, char **argv) {
     vector<int> confSquares;
     int squareIndex=-1;
     int accum_colInd=0, colInd, lastConfSquare=-1;
-    for (int i = 0; i < myPieceSize; i++) {
-        for (int j =accum_colInd ; j< accum_colInd + myRowDiff[i]; j++) {
+    for (size_t i = 0; i < myPieceSize; i++) {
+        for (size_t j =accum_colInd ; j< accum_colInd + myRowDiff[i]; j++) {
             colInd = myColInd[j] - 1;
             for (int i=0; i<firstEmptyProcess; i++){
                 if(colInd >= displs[i] && colInd<displs[i+1]) {
@@ -364,7 +364,7 @@ int main(int argc, char **argv) {
         }
         accum_colInd+=myRowDiff[i];
     }
-    for (int i = 0; i < confSquares.size(); i++)  cout << "Rank: " << my_rank << " confs: " << confSquares[i] << '\t' << flush;
+    for (size_t i = 0; i < confSquares.size(); i++)  cout << "Rank: " << my_rank << " confs: " << confSquares[i] << '\t' << flush;
 
     double *neighbourX;
     //start_time = MPI_Wtime();
@@ -403,14 +403,14 @@ int main(int argc, char **argv) {
         tobesent = confSquares.size() -1 ;
         MPI_Send(&tobesent, 1, MPI_INT, 0, my_rank, newworld);
         if(tobesent) {
-            for (int i = 0; i < confSquares.size(); i++) {
+            for (size_t i = 0; i < confSquares.size(); i++) {
                 if (confSquares[i] == my_rank - 1) continue;
                 else {
                     cout << my_rank << " sending to: " << confSquares[i] << endl << flush;
                     MPI_Send(&(confSquares[i]), 1, MPI_INT, 0, my_rank, newworld);
                 }
             }
-            for (int i = 0; i < confSquares.size(); i++) {
+            for (size_t i = 0; i < confSquares.size(); i++) {
                 if (confSquares[i] == my_rank - 1) continue;
                 else {
                     double *temp = new double[myPieceSize];
@@ -428,7 +428,7 @@ int main(int argc, char **argv) {
                 MPI_Recv(&temp_tobesent, 1, MPI_INT, i, i, newworld, &status);
                 send_Xids.push_back(temp_tobesent);
             }
-            for(int j=0; j< send_Xids.size(); j++){
+            for(size_t j=0; j< send_Xids.size(); j++){
                 MPI_Send(x+displs[send_Xids[j]], displs[send_Xids[j]+1]-displs[send_Xids[j]], MPI_DOUBLE, i, 0, newworld);
             }
             send_Xids.clear();
@@ -443,7 +443,7 @@ int main(int argc, char **argv) {
     // new row ptr
     int *rowPtr = new int[myPieceSize+1];
     rowPtr[0] = 0;
-    for(int i=1; i<myPieceSize+1; i++){
+    for(size_t i=1; i<myPieceSize+1; i++){
         rowPtr[i] = rowPtr[i-1] + myRowDiff[i-1];
     }
 
@@ -452,8 +452,8 @@ int main(int argc, char **argv) {
     colIndOffset = new int[myNNZ];
     colIndProcessID = new int[myNNZ];
     colIndOffsetInter = new int[myNNZ];
-    for (int i = 0; i < myPieceSize; i++) {
-        for (int j = rowPtr[i]; j < rowPtr[i + 1]; j++) {
+    for (size_t i = 0; i < myPieceSize; i++) {
+        for (size_t j = rowPtr[i]; j < rowPtr[i + 1]; j++) {
             colInd = myColInd[j] - 1;
             if(colInd < displs[1]) {
                 colIndProcessID[j] = 0;
@@ -475,45 +475,35 @@ int main(int argc, char **argv) {
     }
     //cout << my_rank << ": donw with indices for middle " <<  endl << flush;
     // pre-determine outer's offsets
-
-    int *outer_colIndOffset, *outer_colIndProcessID;
+    int *outer_transposedProcessID, *outer_transposedOffset;
     int *outer_rowIndOffset, *outer_rowIndProcessID;
     if(my_rank==0) {
         int rowInd;
-        outer_colIndOffset = new int[outer_col.size()];
-        outer_colIndProcessID = new int[outer_col.size()];
+        outer_transposedOffset = new int[outer_col.size()];
+        outer_transposedProcessID = new int[outer_col.size()];
         outer_rowIndOffset = new int[outer_col.size()];
         outer_rowIndProcessID = new int[outer_col.size()];
-        for (int i = 0; i < outer_col.size(); i++) {
-            colInd = outer_col[i] - 1;
-            rowInd = outer_row[i] - 1;
-            if (colInd < displs[1] ) {
-                outer_colIndProcessID[i] = 0;
-                outer_colIndOffset[i] = colInd;
-            } else {
-                for (int i=0; i<firstEmptyProcess; i++){
-                    if(colInd >= displs[i] && colInd<displs[i+1]) {
-                        outer_colIndProcessID[i] = i;
-                        break;
-                    }
+        for (size_t id = 0; id < outer_col.size(); id++) {
+            colInd = outer_col[id] - 1;
+            rowInd = outer_row[id] - 1;
+            for (int i=0; i<firstEmptyProcess; i++){
+                if(colInd >= displs[i] && colInd<displs[i+1]) {
+                    outer_transposedProcessID[id] = i;
+                    break;
                 }
-                outer_colIndOffset[i] = (int) (colInd - displs[outer_colIndProcessID[i]]);
             }
-            if (rowInd < displs[1]) {
-                outer_rowIndProcessID[i] = 0;
-                outer_rowIndOffset[i] = rowInd;
-            } else {
-                for (int i=0; i<firstEmptyProcess; i++){
+            outer_transposedOffset[id] = (int) (colInd - displs[outer_transposedProcessID[id]]);
+
+            for (int i=0; i<firstEmptyProcess; i++){
                     if(rowInd >= displs[i] && rowInd<displs[i+1]) {
-                        outer_rowIndProcessID[i] = i;
+                        outer_rowIndProcessID[id] = i;
                         break;
                     }
-                }
-                outer_rowIndOffset[i] = (int) (rowInd - displs[outer_rowIndProcessID[i]]);
             }
+            outer_rowIndOffset[id] = (int) (rowInd - displs[outer_rowIndProcessID[id]]);
         }
     }
-    //cout << my_rank << ": done with indices for outer " <<  endl << flush;
+    cout << my_rank << ": done with indices for outer " <<  endl << flush;
 
     double maxTime = 0.0;
     MPI_Barrier(newworld);
@@ -524,9 +514,9 @@ int main(int argc, char **argv) {
     vector<double>  conflicting_mult;
     vector<int> conflicting_targetID, conflicting_targetOffset;
     start_time = MPI_Wtime();
-    for (int i = 0; i < myPieceSize; i++) {
+    for (size_t i = 0; i < myPieceSize; i++) {
         val = myDiags[i] * myX[i];
-        for (int j = rowPtr[i]; j < rowPtr[i+1]; j++) {
+        for (size_t j = rowPtr[i]; j < rowPtr[i+1]; j++) {
             processID = colIndProcessID[j];
             if ((myColInd[j] - 1) <  displs[my_rank]) {
                 if (processID == my_rank - 1) {
@@ -556,9 +546,9 @@ int main(int argc, char **argv) {
     double *conf_arry_mult = new double[conflicting_mult.size()];
     int *conf_arry_targetID = new int[conflicting_targetID.size()];
     int *conf_arry_targetOffset = new int[conflicting_targetID.size()];
-    for(int i=0; i<conflicting_mult.size(); i++) conf_arry_mult[i] = conflicting_mult[i];
-    for(int i=0; i<conflicting_targetID.size(); i++) conf_arry_targetID[i] = conflicting_targetID[i];
-    for(int i=0; i<conflicting_targetOffset.size(); i++) conf_arry_targetOffset[i] = conflicting_targetOffset[i];
+    for(size_t i=0; i<conflicting_mult.size(); i++) conf_arry_mult[i] = conflicting_mult[i];
+    for(size_t i=0; i<conflicting_targetID.size(); i++) conf_arry_targetID[i] = conflicting_targetID[i];
+    for(size_t i=0; i<conflicting_targetOffset.size(); i++) conf_arry_targetOffset[i] = conflicting_targetOffset[i];
 
 
     if(conflicting_mult.size() != conflicting_targetID.size()) cout << "ERROR-conflicting_mult"  << endl << flush;
@@ -595,7 +585,7 @@ int main(int argc, char **argv) {
                 MPI_Recv(val, tempSize, MPI_DOUBLE, i, i, newworld, &status);
                 MPI_Recv(targetID , tempSize, MPI_INT, i, i, newworld, &status);
                 MPI_Recv(offset, tempSize, MPI_INT, i, i, newworld, &status);
-                for (int j = 0; j < tempSize; j++) {
+                for (size_t j = 0; j < tempSize; j++) {
                     mult = val[j];
                     offs = offset[j];
                     id = targetID[j];
@@ -615,16 +605,20 @@ int main(int argc, char **argv) {
     // accumulate serially outer region's sparse results.
     if(my_rank == 0) {
         int val1, val2;
+        cout << my_rank << "-size of outer " << outer_col.size() << endl << flush;
         start_time = MPI_Wtime();
-        for (int i = 0; i < outer_col.size(); i++) {
-            val1 = -outer_val[i] * x[outer_row[i] - 1];  // output[colindoffset]
-            val2 = outer_val[i] * x[outer_col[i] - 1]; // output[row]
-            output[displs[outer_colIndProcessID[i]] + outer_colIndOffset[i] ]  +=val1;
-            output[displs[outer_rowIndProcessID[i]] + outer_rowIndOffset[i] ]  +=val2;
+        for (size_t i = 0; i < outer_col.size(); i++) {
+            val1 = -outer_val[i] * x[outer_row[i] - 1];  // transposed output
+            val2 = outer_val[i] * x[outer_col[i] - 1];
+            //output[displs[outer_transposedProcessID[i]] + outer_transposedOffset[i] ]  += val1;
+            //output[displs[outer_rowIndProcessID[i]] + outer_rowIndOffset[i] ]  += val2;
+            cout << my_rank << ": computing output elm with processID " << outer_rowIndProcessID[i] << endl << flush;
+            cout << my_rank << ": computing output elm with transposed processID " << outer_transposedProcessID[i] << endl << flush;
+
         }
         end_time = MPI_Wtime();
         time += end_time - start_time;
-        cout << my_rank << ": computation - outer " << end_time - start_time << endl << flush;
+        //cout << my_rank << ": computation - outer " << end_time - start_time << endl << flush;
     }
 
     MPI_Reduce(&time, &maxTime, 1, MPI_DOUBLE, MPI_MAX, 0, newworld);
@@ -637,7 +631,7 @@ int main(int argc, char **argv) {
         ofstream myfile;
         myfile.open ("/home/selin/3way-Par-Results/" + matrix_names[inputType] + "/result.txt", ios::out | ios::trunc);
         // cout << "Writing to output... " << endl;
-        for (int i=0; i<n; i++) {
+        for (size_t i=0; i<n; i++) {
             myfile << std::fixed << std::setprecision(dbl::max_digits10) << output[i] << '\t';
         }
         myfile.close();

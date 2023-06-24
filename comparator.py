@@ -5,23 +5,26 @@ z=int(sys.argv[1])
 file1 = open('/home/selin/3way-Par-Results/' + names[z] + '/result.txt')
 data = file1.read().split('\t')
 file2 = open('/home/selin/3way-Seq-Results/' + names[z] + '/result.txt')
+#file2 = open('/home/selin/Seq-Results/' + names[z] + '/banded/result.txt')
 data2 = file2.read().split('\t')
 file1.close()
 file2.close()
 if(len(data) != len(data2))  :
     print("Size error.")
+else :
+    print("Output elements size:",len(data))
 
 for i in range(len(data)):
-    # matching line1 from both files
+    # matching lines from both files
     try:
-        if abs(float(data[i]) - float(data2[i])) > 0.01:
-            print("\tLine-", i, end='')
-            print("\tPar:", float(data[i]), end='')
-            print("\tSeq:", float(data2[i]), end='')
+        if abs(float(data[i]) - float(data2[i])) > 0.000001:
+            print("\tLine-", i)
+            print("\tPar:", float(data[i]))
+            print("\tSeq:", float(data2[i]))
             print("\n")
             break
 
     except ValueError:
-        print("\tLine-", i, end='')
+        print("\tLine-", i)
         print(data[i])
         print(data2[i])
