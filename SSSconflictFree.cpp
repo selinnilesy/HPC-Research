@@ -194,9 +194,9 @@ int main(int argc, char **argv){
    // middleBandwith = bandwithSize[inputType] - innerBandwith;
     middleBandwith = (int) ((bandwithSize[inputType] - innerBandwith) * restRatio);
 
-    innerBandwith = 0;
-    middleBandwith = bandwithSize[inputType]-0;
-    outerBandwith=0;
+    innerBandwith = 1;
+    middleBandwith = bandwithSize[inputType]-innerBandwith-3;
+    outerBandwith=3;
     cout << "inner bandwith: " << innerBandwith << endl;
     cout << "middle bandwith: " << middleBandwith << endl;
     cout << "total bandwith: " << bandwithSize[inputType] << endl;
@@ -238,13 +238,13 @@ int main(int argc, char **argv){
             // middle Region
             // for inner-outer equality case:
             //else if(colInd >= i-middleBandwith){
-            if(colInd >= i-innerBandwith-middleBandwith){
+            if((colInd >= (i-bandwithSize[inputType]+outerBandwith)) &&  (colInd < i)){
                 row_middle.push_back(i+1);
                 col_middle.push_back(colInd+1);
                 vals_middle.push_back(val);
             }
             // outer Dense Region
-            else{
+            else if ( colInd >= (i-bandwithSize[inputType]) && (colInd < (i-bandwithSize[inputType]+outerBandwith))  ) {
                 row_outer.push_back(i+1);
                 col_outer.push_back(colInd+1);
                 vals_outer.push_back(val);
