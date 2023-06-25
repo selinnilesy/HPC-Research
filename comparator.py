@@ -14,6 +14,7 @@ if(len(data) != len(data2))  :
 else :
     print("Output elements size:",len(data))
 
+count = 0
 for i in range(len(data)):
     # matching lines from both files
     try:
@@ -22,7 +23,9 @@ for i in range(len(data)):
             print("\tPar:", float(data[i]))
             print("\tSeq:", float(data2[i]))
             print("\n")
-            break
+            count += 1
+            if count == 2 :
+                break
 
     except ValueError:
         print("\tLine-", i)

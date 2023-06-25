@@ -540,8 +540,9 @@ int main(int argc, char **argv) {
     end_time = MPI_Wtime();
     time += end_time - start_time;
     cout << my_rank << ": computation - multiplication " << end_time - start_time << endl << flush;
-
+    if(my_rank==1) cout << my_rank << " at [1]:" << y[1]   << endl << flush;
     int confSize = conflicting_targetID.size();
+
 
     double *conf_arry_mult = new double[conflicting_mult.size()];
     int *conf_arry_targetID = new int[conflicting_targetID.size()];
@@ -557,43 +558,96 @@ int main(int argc, char **argv) {
 
     // gather just to confirm code works.
    // start_time = MPI_Wtime();
-    MPI_Gatherv(y, myPieceSize, MPI_DOUBLE, output, pieceSizeArr, displs, MPI_DOUBLE, 0, newworld);
+
     //end_time = MPI_Wtime();
     //cout << my_rank << ": communication - gather output vector " << end_time - start_time << endl << flush;
     //time += end_time - start_time;
 
     // accumulate conflicting results in array y's in each process.
     start_time = MPI_Wtime();
-    if(my_rank){
-        MPI_Send(&confSize, 1, MPI_INT, 0, my_rank, newworld);
-        if(confSize) {
-            MPI_Send(conf_arry_mult, conflicting_mult.size(), MPI_DOUBLE, 0, my_rank, newworld);
-            MPI_Send(conf_arry_targetID, conflicting_targetID.size(), MPI_INT, 0, my_rank, newworld);
-            MPI_Send(conf_arry_targetOffset, conflicting_targetOffset.size(), MPI_INT, 0, my_rank, newworld);
-        }
-    }
-    else{
-        double *val, mult ;
-        int *offset, *targetID, offs, id;
-        int tempSize;
-        for(int i=1; i<firstEmptyProcess; i++){
-            MPI_Recv(&tempSize, 1, MPI_INT, i, i, newworld, &status);
-            if(tempSize) {
-                val = new double[tempSize];
-                offset = new int[tempSize];
-                targetID = new int[tempSize];
-                MPI_Recv(val, tempSize, MPI_DOUBLE, i, i, newworld, &status);
-                MPI_Recv(targetID , tempSize, MPI_INT, i, i, newworld, &status);
-                MPI_Recv(offset, tempSize, MPI_INT, i, i, newworld, &status);
-                for (size_t j = 0; j < tempSize; j++) {
-                    mult = val[j];
-                    offs = offset[j];
-                    id = targetID[j];
-                    output[displs[id] + offs] -= mult;
+    for(int comm_index=1; comm_index<firstEmptyProcess; comm_index++ ) {
+        // send only
+        if (my_rank==firstEmptyProcess-1) {
+            if(my_rank-comm_index >= 0 ) {
+                MPI_Send(&confSize, 1, MPI_INT, my_rank - comm_index, 0, newworld);
+                if (confSize) {
+                    MPI_Send(conf_arry_mult, conflicting_mult.size(), MPI_DOUBLE, my_rank-comm_index, 0, newworld);
+                    MPI_Send(conf_arry_targetID, conflicting_targetID.size(), MPI_INT, my_rank-comm_index, 0, newworld);
+                    MPI_Send(conf_arry_targetOffset, conflicting_targetOffset.size(), MPI_INT, my_rank-comm_index, 0, newworld);
                 }
-                delete[] val;
-                delete[] offset;
-                delete[] targetID;
+            }
+        }
+        // interm. processes other than root and last
+        else if (my_rank && my_rank!=firstEmptyProcess-1) {
+            if (my_rank + comm_index < firstEmptyProcess) {
+                double *val, mult;
+                int *offset, *targetID, offs, id, tempSize;
+                MPI_Recv(&tempSize, 1, MPI_INT, my_rank + comm_index, 0, newworld, &status);
+                if (tempSize) {
+                    val = new double[tempSize];
+                    offset = new int[tempSize];
+                    targetID = new int[tempSize];
+                    MPI_Recv(val, tempSize, MPI_DOUBLE, my_rank + comm_index, 0, newworld, &status);
+                    MPI_Recv(targetID, tempSize, MPI_INT, my_rank + comm_index, 0, newworld, &status);
+                    MPI_Recv(offset, tempSize, MPI_INT, my_rank + comm_index, 0, newworld, &status);
+                    // cout << my_rank << " receiving conflicting from: " << my_rank + comm_index
+                    //     << " with data checks val[0] : " << val[0]
+                    //     << endl << flush;
+
+                    int ncf = 0;
+                    cout << "proc1 confs: " ;
+                    for (size_t j = 0; j < tempSize; j++) {
+                        if(targetID[j]==my_rank) {
+                            y[offset[j]] -= val[j];
+                            ncf++;
+                            if(my_rank ==1 && offset[j]==1) cout << -val[j] << '\t' << flush;
+                        }
+                    }
+                    //cout << endl << my_rank << " processed " << ncf << " conflicts"  << endl << flush;
+
+                    delete[] val;
+                    delete[] offset;
+                    delete[] targetID;
+                }
+            }
+            // both does receive and send
+            if(my_rank-comm_index >= 0) {
+                MPI_Send(&confSize, 1, MPI_INT, my_rank-comm_index, 0, newworld);
+                if (confSize) {
+                    MPI_Send(conf_arry_mult, conflicting_mult.size(), MPI_DOUBLE, my_rank-comm_index, 0, newworld);
+                    MPI_Send(conf_arry_targetID, conflicting_targetID.size(), MPI_INT, my_rank-comm_index, 0, newworld);
+                    MPI_Send(conf_arry_targetOffset, conflicting_targetOffset.size(), MPI_INT, my_rank-comm_index, 0, newworld);
+                }
+            }
+        }
+        // just receive
+        else if(my_rank==0) {
+            if (my_rank + comm_index < firstEmptyProcess) {
+                double *val, mult;
+                int *offset, *targetID, offs, id, tempSize;
+                MPI_Recv(&tempSize, 1, MPI_INT, my_rank + comm_index, 0, newworld, &status);
+                if (tempSize) {
+                    val = new double[tempSize];
+                    offset = new int[tempSize];
+                    targetID = new int[tempSize];
+                    MPI_Recv(val, tempSize, MPI_DOUBLE, my_rank + comm_index, 0, newworld, &status);
+                    MPI_Recv(targetID, tempSize, MPI_INT, my_rank + comm_index, 0, newworld, &status);
+                    MPI_Recv(offset, tempSize, MPI_INT, my_rank + comm_index, 0, newworld, &status);
+                    cout << my_rank << " receiving conflicting from: " << my_rank + comm_index
+                         << " with data checks val[0] : " << val[0]
+                         << endl << flush;
+                    int ncf = 0;
+                    for (size_t j = 0; j < tempSize; j++) {
+                        if(targetID[j]==my_rank) {
+                            y[offset[j]] -= val[j];
+                            ncf++;
+                        }
+                    }
+                    cout << my_rank << " processed " << ncf << " conflicts"  << endl << flush;
+                    delete[] val;
+                    delete[] offset;
+                    delete[] targetID;
+                }
             }
         }
     }
@@ -601,6 +655,7 @@ int main(int argc, char **argv) {
     time += end_time-start_time;
     cout << my_rank << ": communication - conflicts " << end_time - start_time << endl << flush;
 
+    MPI_Gatherv(y, myPieceSize, MPI_DOUBLE, output, pieceSizeArr, displs, MPI_DOUBLE, 0, newworld);
 
     // accumulate serially outer region's sparse results.
     if(my_rank == 0) {
@@ -610,8 +665,8 @@ int main(int argc, char **argv) {
         for (size_t i = 0; i < outer_col.size(); i++) {
             val1 = -outer_val[i] * x[outer_row[i] - 1];  // transposed output
             val2 = outer_val[i] * x[outer_col[i] - 1];
-            //output[displs[outer_transposedProcessID[i]] + outer_transposedOffset[i] ]  += val1;
-            //output[displs[outer_rowIndProcessID[i]] + outer_rowIndOffset[i] ]  += val2;
+            output[displs[outer_transposedProcessID[i]] + outer_transposedOffset[i] ]  += val1;
+            output[displs[outer_rowIndProcessID[i]] + outer_rowIndOffset[i] ]  += val2;
             cout << my_rank << ": computing output elm with processID " << outer_rowIndProcessID[i] << endl << flush;
             cout << my_rank << ": computing output elm with transposed processID " << outer_transposedProcessID[i] << endl << flush;
 
