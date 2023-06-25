@@ -194,7 +194,7 @@ int main(int argc, char **argv){
    // middleBandwith = bandwithSize[inputType] - innerBandwith;
     middleBandwith = (int) ((bandwithSize[inputType] - innerBandwith) * restRatio);
 
-    innerBandwith = 1;
+    innerBandwith = 0;
     middleBandwith = bandwithSize[inputType]-innerBandwith-3;
     outerBandwith=3;
     cout << "inner bandwith: " << innerBandwith << endl;
