@@ -95,21 +95,21 @@ int readCSRFormat(int z) {
         matrixFolder = "/home/selin/Split-Data/" + matrix_names[z] + "/outer/";
         for(auto const& dir_entry: fs::directory_iterator{matrixFolder}) {
             std::fstream myfile(dir_entry.path(), std::ios_base::in);
-            if (dir_entry.path().stem() == ("1.000000-" + to_string((double) bandwithSize[z] - 3) + "-row")) {
+            if (dir_entry.path().stem() == ("coordinate-1.000000-" + to_string((double) bandwithSize[z] - 3) + "-row")) {
                 int tempValInt;
                 while (myfile >> tempValInt) {
                     outer_row.push_back(tempValInt);
                 }
                 cout << dir_entry.path() << " has been read with size: " << outer_row.size() << endl;
                 myfile.close();
-            } else if (dir_entry.path().stem() == ("1.000000-" + to_string((double) bandwithSize[z] - 3) + "-col")) {
+            } else if (dir_entry.path().stem() == ("coordinate-1.000000-" + to_string((double) bandwithSize[z] - 3) + "-col")) {
                 int tempValInt;
                 while (myfile >> tempValInt) {
                     outer_col.push_back(tempValInt);
                 }
                 cout << dir_entry.path() << " has been read with size: " << outer_col.size() << endl;
                 myfile.close();
-            } else if (dir_entry.path().stem() == ("1.000000-" + to_string((double) bandwithSize[z] - 3) + "val")) {
+            } else if (dir_entry.path().stem() == ("coordinate-1.000000-" + to_string((double) bandwithSize[z] - 3) + "val")) {
                 double tempVal;
                 while (myfile >> tempVal) {
                     outer_val.push_back(tempVal);
@@ -165,14 +165,15 @@ int main(int argc, char **argv){
                 colInd = matrixColind[j] - 1;
                 // skew-symm
                 val += matrixOffDiagonal[j] * x[colInd];
-                //if(i==686172) cout << "accumulating on 238050 - offdiag: " << matrixOffDiagonal[j] << " x: " << x[colInd] << endl;
+                //if(i==235181) cout << "accumulating on 238050 - offdiag: " << matrixOffDiagonal[j] << " x: " << x[colInd] << endl;
                 // middle -  upper
                 y[colInd] -= matrixOffDiagonal[j] * x[i];
-                //if(colInd==686172)  cout << "adding colInd to 686171: " <<  -matrixOffDiagonal[j] * x[i] << endl;
             }
             y[i] += val;
         }
-        for (int i = 0; i < outer_row.size(); i++) {
+     cout << "y[235181]: " <<  y[235181] << endl;
+
+    for (int i = 0; i < outer_row.size(); i++) {
             // outer - lower
             y[outer_row[i] - 1] += outer_val[i] * x[outer_col[i] - 1];
             // outer - upper
