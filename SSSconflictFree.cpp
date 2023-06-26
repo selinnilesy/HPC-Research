@@ -212,7 +212,7 @@ int main(int argc, char **argv){
 
     int counter_inner, counter_middle, counter_outer;
     int nnz_extracted=0;
-    for (int i = 0; i < rowptrSize[0] - 1; i++) {
+    for (int i = 0; i < rowptrSize[inputType] - 1; i++) {
         // row ptrs start from 1 !!!
         rowBegin = matrixRowptr[i] - 1;
         elmCountPerRow = matrixRowptr[i + 1] - matrixRowptr[i];
