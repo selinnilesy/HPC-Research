@@ -182,7 +182,9 @@ int main(int argc, char **argv){
 
     std::cout  <<  "reversed ?: " << reversed << endl;
     std::cout  <<  "inner_equal_middle ?: " << inner_equal_middle << endl;
-    if(!inner_equal_middle) readCooFormatNotEqual(inputType,   inputRatio, middleRatio ,reversed);
+
+    // CAREFUL : HARCODED HERE TO TEST
+    if(!inner_equal_middle) readCooFormatNotEqual(inputType,   inputRatio, 13727-3 ,reversed);
     else if(inner_equal_middle)  readCooFormatEqual(inputType,  inputRatio,middleRatio,  reversed);
 
     if(nonzeroSize_row != nonzeroSize_col) std::cout  <<  " nonzeroSize_row and nonzeroSize_col not equal"  << endl;
